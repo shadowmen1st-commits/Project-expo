@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  --background-primary: #FAF6F0;
+  --background-secondary: #F4EFE6;
+  --background-tertiary: #EFE9DF;
+
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #FFFBF7;
+  --surface-tertiary: #FFF5EA;
+  --surface-hover: #FFF2E2;
+
+  --border-default: #E7E0D8;
+  --border-hover: #DCD4C8;
+  --border-strong: #E87A1E;
+
+  --text-primary: #1C1917;
+  --text-secondary: #44403C;
+  --text-muted: #78716C;
+  --text-subtle: #A8A29E;
+
+  --brand-primary: #E87A1E;
+  --brand-secondary: #F28C28;
+  --brand-orange: #EA862B;
+  --brand-orange-light: #FDBA74;
+  --brand-orange-tint: #FFF5EB;
+
+  --success: #16A34A;
+  --warning: #D97706;
+  --error: #DC2626;
+  --info: #2563EB;
+}
+
+body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Custom scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--background-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
+/* ─── Brand Gradient Utilities ─── */
+.btn-primary-gradient {
+  background: linear-gradient(90deg, #E87A1E 0%, #F28C28 50%, #EA862B 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(232, 122, 30, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary-gradient:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 20px rgba(232, 122, 30, 0.35);
+}
+
+.logo-gradient {
+  background: linear-gradient(135deg, #E87A1E 0%, #F28C28 60%, #EA862B 100%);
+}
+
+.text-highlight-gradient {
+  background: linear-gradient(90deg, #E87A1E 0%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-panel-bg {
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(232, 122, 30, 0.12) 0%,
+    rgba(242, 140, 40, 0.05) 30%,
+    rgba(250, 246, 240, 0) 60%
+  ),
+  linear-gradient(
+    135deg,
+    #FFFBF7 0%,
+    #FFF5EA 50%,
+    #FAF6F0 100%
+  );
+}
+
+.input-field-style {
+  background-color: #FFFFFF;
+  border: 1px solid #E7E0D8;
+  color: #1C1917;
+  transition: all 0.2s ease;
+}
+
+.input-field-style:hover {
+  border-color: #DCD4C8;
+}
+
+.input-field-style:focus {
+  border-color: #E87A1E;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(232, 122, 30, 0.15);
+}
+
+/* ─── Keyframes ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-up { animation: fadeUp 0.5s ease-out both; }
+.animate-fade-in { animation: fadeIn 0.4s ease-out both; }

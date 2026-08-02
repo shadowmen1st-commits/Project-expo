@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/.env*
+!**/.env.example
+**/*.log
+**/uploads
+**/dist
+*.apk
+*.aab
+*.pem
+*.key
+backups

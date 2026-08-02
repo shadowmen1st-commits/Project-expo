@@ -1,0 +1,25 @@
+import { Router } from 'express';
+import { submitOnboarding, updateLocation, searchWorkers, getWorkerProfile } from '../controllers/workerController.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { requirePermission } from '../middleware/rbac.js';
+import { createWorkerPayoutAccount, listWorkerPayoutAccounts, getWorkerPayoutAccount, setDefaultWorkerPayoutAccount, validateWorkerPayoutAccount, disableWorkerPayoutAccount, createWorkerPayout, listWorkerPayouts, getWorkerPayout } from '../controllers/payoutController.js';
+import { publicList, summary } from '../controllers/reviewController.js';
+const router = Router();
+// Public routes
+router.get('/search', searchWorkers);
+router.get('/profile/:id', getWorkerProfile);
+router.get('/:workerId/reviews', publicList);
+router.get('/:workerId/rating-summary', summary);
+// Authenticated routes
+router.post('/onboarding', authMiddleware, submitOnboarding);
+router.post('/location', authMiddleware, updateLocation);
+router.post('/payout-accounts', authMiddleware, requirePermission('payouts.manage'), createWorkerPayoutAccount);
+router.get('/payout-accounts', authMiddleware, requirePermission('payouts.manage'), listWorkerPayoutAccounts);
+router.get('/payout-accounts/:id', authMiddleware, requirePermission('payouts.manage'), getWorkerPayoutAccount);
+router.post('/payout-accounts/:id/set-default', authMiddleware, requirePermission('payouts.manage'), setDefaultWorkerPayoutAccount);
+router.post('/payout-accounts/:id/validate', authMiddleware, requirePermission('payouts.manage'), validateWorkerPayoutAccount);
+router.post('/payout-accounts/:id/disable', authMiddleware, requirePermission('payouts.manage'), disableWorkerPayoutAccount);
+router.post('/payouts', authMiddleware, requirePermission('payouts.manage'), createWorkerPayout);
+router.get('/payouts', authMiddleware, requirePermission('payouts.manage'), listWorkerPayouts);
+router.get('/payouts/:id', authMiddleware, requirePermission('payouts.manage'), getWorkerPayout);
+export default router;

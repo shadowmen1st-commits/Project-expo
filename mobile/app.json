@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "HyperLocal",
+    "slug": "hyperlocal-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#070b13"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hyperlocal.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#070b13"
+      },
+      "package": "com.hyperlocal.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+import {Router} from 'express';import rateLimit from 'express-rate-limit';import {authMiddleware} from '../middleware/auth.js';import {requirePermission} from '../middleware/rbac.js';import * as c from '../controllers/reviewController.js';
+const router=Router(),mutate=rateLimit({windowMs:3600000,max:process.env.NODE_ENV==='test'?100000:20,standardHeaders:true,legacyHeaders:false});
+router.get('/public/workers/:workerId/reviews',c.publicList);router.get('/public/workers/:workerId/rating-summary',c.summary);
+router.use(authMiddleware);router.get('/eligibility/:bookingId',requirePermission('reviews.manage'),c.eligibility);router.post('/',mutate,requirePermission('reviews.manage'),c.create);router.get('/mine',requirePermission('reviews.manage'),c.mine);router.get('/mine/:id',requirePermission('reviews.manage'),c.getMine);router.patch('/:id',mutate,requirePermission('reviews.manage'),c.edit);router.post('/:id/request-removal',mutate,requirePermission('reviews.manage'),c.remove);router.post('/:id/report',mutate,c.report);
+export default router;
