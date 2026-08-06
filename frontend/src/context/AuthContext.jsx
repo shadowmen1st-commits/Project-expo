@@ -6,7 +6,11 @@ export const AuthProvider=({children})=>{
  const restoreSession=useCallback(async()=>{try{const response=await api.get('/auth/me');setUser(response.data.user);}catch{setUser(null);}finally{setLoading(false);}},[]);
  useEffect(()=>{restoreSession();const expired=()=>setUser(null);window.addEventListener('auth:expired',expired);return()=>window.removeEventListener('auth:expired',expired);},[restoreSession]);
  const login=async(email,password)=>{setLoading(true);try{const response=await api.post('/auth/login',{email:email.trim().toLowerCase(),password});setUser(response.data.user);return response.data.user;}finally{setLoading(false);}};
- const registerUser=async data=>(await api.post('/auth/register',{...data,email:data.email.trim().toLowerCase()})).data.user;
+ const registerUser=async data=>{
+    const url = `${api.defaults.baseURL || ''}/auth/register`;
+    console.log("REGISTER URL:", url);
+    return (await api.post('/auth/register',{...data,email:data.email.trim().toLowerCase()})).data.user;
+  };
  const logout=async()=>{try{await api.post('/auth/logout');}finally{setUser(null);}};
  return <AuthContext.Provider value={{user,token:null,loading,login,registerUser,logout,restoreSession}}>{children}</AuthContext.Provider>;
 };
