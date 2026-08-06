@@ -9,6 +9,7 @@ export const authMiddleware = async (req, res, next) => {
     res.setHeader('x-request-id', requestId);
     // 2. Extract authorization header
     const authHeader = req.headers.authorization;
+    console.log("AUTHORIZATION HEADER:", authHeader);
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : cookieValue(req, 'access_token');
     if (!token) {
         res.status(401).json({
