@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 if (!API_BASE_URL) throw new Error('VITE_API_URL is required. Configure it in frontend/.env.');
 
-const api = axios.create({ baseURL: API_BASE_URL.replace(/\/$/, ''), withCredentials: true, headers: { 'Content-Type': 'application/json' } });
+const api = axios.create({ baseURL: `${API_BASE_URL.replace(/\/$/, '')}/api`, withCredentials: true, headers: { 'Content-Type': 'application/json' } });
 let refreshPromise = null;
 api.interceptors.response.use(response => response, async error => {
     const request = error.config;

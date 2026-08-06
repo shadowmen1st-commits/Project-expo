@@ -10,6 +10,7 @@ const PORT = parseInt(process.env.PORT || '5001', 10);
 const MONGODB_URI = process.env.MONGODB_URI;
 const CUSTOMER_APP_URL = process.env.CUSTOMER_APP_URL;
 const WEB_ADMIN_URL = process.env.WEB_ADMIN_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL || CUSTOMER_APP_URL;
 const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS;
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
@@ -81,7 +82,7 @@ const defaultDevOrigins = [
 ];
 
 const parsedCorsOrigins = Array.from(new Set([
-    ...(CORS_ALLOWED_ORIGINS ? CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [CUSTOMER_APP_URL, WEB_ADMIN_URL]),
+    ...(CORS_ALLOWED_ORIGINS ? CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [CUSTOMER_APP_URL, WEB_ADMIN_URL, FRONTEND_URL]),
     ...(NODE_ENV !== 'production' ? defaultDevOrigins : [])
 ])).filter(Boolean);
 
@@ -91,6 +92,7 @@ export const config = {
     MONGODB_URI,
     CUSTOMER_APP_URL,
     WEB_ADMIN_URL,
+    FRONTEND_URL,
     CORS_ALLOWED_ORIGINS: parsedCorsOrigins,
     JWT_ACCESS_SECRET,
     JWT_REFRESH_SECRET,

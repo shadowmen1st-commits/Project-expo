@@ -36,7 +36,29 @@ export const createApp = () => {
     app.use(pinoHttp({ logger }));
     
     app.use(helmet());
-    app.use(cors({ origin: (origin, callback) => { if(!origin||config.CORS_ALLOWED_ORIGINS.includes(origin))return callback(null,true);const error=new Error('Origin is not allowed.');error.statusCode=403;error.errorCode='CORS_ORIGIN_REJECTED';callback(error); }, credentials: true, methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization','Idempotency-Key','X-Request-Id'] }));
+    const isOriginAllowed = (origin) => {
+        if (!origin) return true;
+        if (config.CORS_ALLOWED_ORIGINS.includes(origin)) return true;
+        if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+        return false;
+    };
+
+    app.use(cors({
+        origin: (origin, callback) => {
+            if (isOriginAllowed(origin)) {
+                callback(null, true);
+            } else {
+                const error = new Error('Origin is not allowed.');
+                error.statusCode = 403;
+                error.errorCode = 'CORS_ORIGIN_REJECTED';
+                callback(error);
+            }
+        },
+        credentials: true,
+        methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+        allowedHeaders: ['Content-Type','Authorization','Idempotency-Key','X-Request-Id']
+    }));
     app.use('/api/v1/webhooks', rawBodyMiddleware, webhookRoutes);
     app.use(browserOriginGuard(config.CORS_ALLOWED_ORIGINS));
     app.use(express.json({ limit: '2mb' }));

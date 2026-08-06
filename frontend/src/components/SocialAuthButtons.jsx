@@ -27,7 +27,8 @@ export default function SocialAuthButtons({ mode = 'login', role = 'CUSTOMER', o
     const [isRedirecting, setIsRedirecting] = useState(null); // 'google' | 'apple' | null
     const [tooltip, setTooltip] = useState(null); // 'google' | 'apple' | null
 
-    const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+    const baseApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/$/, '');
+    const apiUrl = baseApiUrl.endsWith('/api') ? baseApiUrl : `${baseApiUrl}/api`;
     const isDev = import.meta.env.DEV;
 
     useEffect(() => {
