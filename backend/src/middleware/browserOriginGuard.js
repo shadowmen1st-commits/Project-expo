@@ -1,5 +1,5 @@
 const unsafe = new Set(['POST','PUT','PATCH','DELETE']);
-const cookieAuth = req => /(?:^|;\s*)(?:access_token|refresh_token)=/.test(String(req.headers.cookie || ''));
+const cookieAuth = req => /(?:^|;\s*)(?:access_token|refreshToken)=/.test(String(req.headers.cookie || ''));
 
 const isOriginAllowed = (origin, allowedOrigins) => {
   if (!origin) return false;

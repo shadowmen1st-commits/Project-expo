@@ -6,7 +6,7 @@ import AuditLog from '../models/AuditLog.js';
 import { registerSchema, loginSchema } from '../utils/validation.js';
 import { hashPassword, comparePassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/authUtils.js';
 
-const ACCESS_COOKIE='access_token', REFRESH_COOKIE='refresh_token';
+const ACCESS_COOKIE='access_token', REFRESH_COOKIE='refreshToken';
 const hashToken = token => crypto.createHash('sha256').update(token).digest('hex');
 const cookies = req => Object.fromEntries(String(req.headers.cookie||'').split(';').map(v=>v.trim().split('=').map(decodeURIComponent)).filter(v=>v.length===2));
 const cookieOptions = (maxAge,path='/') => ({httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:process.env.NODE_ENV==='production'?'none':'lax',path,maxAge});
