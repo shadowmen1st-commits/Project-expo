@@ -6,6 +6,8 @@ import CommissionRule from '../models/CommissionRule.js';
 import PlatformPricingConfig from '../models/PlatformPricingConfig.js';
 import Coupon from '../models/Coupon.js';
 import WorkerProfile from '../models/WorkerProfile.js';
+import VerificationDocument from '../models/VerificationDocument.js';
+import VerificationSubmission from '../models/VerificationSubmission.js';
 import { hashPassword } from '../utils/authUtils.js';
 
 dotenv.config();
@@ -31,13 +33,21 @@ const seed = async () => {
         await mongoose.connect(MONGODB_URI);
         console.log('Connected to MongoDB successfully.');
 
-        // 1. Clear existing test documents
+        // Safeguard for Production environment
+        if (process.env.NODE_ENV === 'production' || MONGODB_URI.includes('production') || MONGODB_URI.includes('prod')) {
+            console.error('🚫 CRITICAL ERROR: Seeding is disabled in production environments for safety.');
+            process.exit(1);
+        }
+
+        // 1. Clear existing documents
         await User.deleteMany({});
         await ServiceCategory.deleteMany({});
         await CommissionRule.deleteMany({});
         await PlatformPricingConfig.deleteMany({});
         await Coupon.deleteMany({});
         await WorkerProfile.deleteMany({});
+        await VerificationDocument.deleteMany({});
+        await VerificationSubmission.deleteMany({});
         console.log('Cleared existing database tables.');
 
         // 2. Hash default passwords
@@ -105,11 +115,14 @@ const seed = async () => {
                 name: 'Alice Worker',
                 email: 'worker@hyperlocal.com',
                 phone: '7777777777',
-                bio: 'Professional senior care specialist and house manager with over 5 years of verified local experience.',
-                skills: ['Elderly Care', 'Laundry', 'Cooking', 'Bilingual'],
+                bio: 'Professional senior care specialist and house manager with over 5 years of experience.',
+                skills: ['Elderly Care', 'Laundry', 'Cooking'],
                 categories: [categoryMap['senior-care'], categoryMap['housekeeping']],
                 hourlyRate: 35000,
                 dailyRate: 250000,
+                verificationStatus: 'INCOMPLETE_PROFILE',
+                verificationBadge: false,
+                isPubliclyVisible: false
             },
             {
                 name: 'Rajesh Kumar',
@@ -120,6 +133,9 @@ const seed = async () => {
                 categories: [categoryMap['electrical-work'], categoryMap['plumbing']],
                 hourlyRate: 40000,
                 dailyRate: 280000,
+                verificationStatus: 'APPROVED',
+                verificationBadge: true,
+                isPubliclyVisible: true
             },
             {
                 name: 'Sunita Sharma',
@@ -130,6 +146,9 @@ const seed = async () => {
                 categories: [categoryMap['cooking'], categoryMap['babysitting']],
                 hourlyRate: 30000,
                 dailyRate: 220000,
+                verificationStatus: 'PENDING_APPROVAL',
+                verificationBadge: false,
+                isPubliclyVisible: false
             },
             {
                 name: 'Vikram Singh',
@@ -140,6 +159,9 @@ const seed = async () => {
                 categories: [categoryMap['driver'], categoryMap['cleaning']],
                 hourlyRate: 45000,
                 dailyRate: 300000,
+                verificationStatus: 'CHANGES_REQUIRED',
+                verificationBadge: false,
+                isPubliclyVisible: false
             },
         ];
 
@@ -158,11 +180,14 @@ const seed = async () => {
 
             const profile = new WorkerProfile({
                 userId: workerUser._id,
+                fullName: wData.name,
+                phone: wData.phone,
+                primaryServiceCategoryId: wData.categories[0],
                 serviceCategoryIds: wData.categories.filter(Boolean),
-                verificationStatus: 'APPROVED',
-                verificationBadge: true,
+                verificationStatus: wData.verificationStatus,
+                verificationBadge: wData.verificationBadge,
                 isOnline: true,
-                isPubliclyVisible: true,
+                isPubliclyVisible: wData.isPubliclyVisible,
                 experienceYears: 5,
                 bio: wData.bio,
                 skills: wData.skills,
@@ -171,15 +196,153 @@ const seed = async () => {
                 dailyRate: wData.dailyRate,
                 minimumBookingDuration: 2,
                 serviceRadiusKm: 15,
-                averageRating: null,
-                ratingCount: 0,
+                averageRating: wData.verificationStatus === 'APPROVED' ? 4.8 : null,
+                ratingCount: wData.verificationStatus === 'APPROVED' ? 12 : 0,
                 location: {
                     type: 'Point',
                     coordinates: [77.5946, 12.9716],
                 },
             });
             await profile.save();
-            console.log(`✅ Worker created: ${wData.email} / worker123 (${wData.name})`);
+
+            // Seed Verification Documents and Submissions depending on the state
+            if (wData.verificationStatus === 'APPROVED') {
+                const aadDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'AADHAAR',
+                    documentNumberEncrypted: 'mock-encrypted-aadhaar',
+                    documentNumberLast4: '4321',
+                    documentNumberHash: 'mock-hash-aadhaar',
+                    frontFileId: 'uploads/mock-aadhaar.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'APPROVED',
+                    isCurrent: true,
+                    verifiedAt: new Date(),
+                    verifiedBy: adminUser._id,
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+                const panDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'PAN',
+                    documentNumberEncrypted: 'mock-encrypted-pan',
+                    documentNumberLast4: '9876',
+                    documentNumberHash: 'mock-hash-pan',
+                    frontFileId: 'uploads/mock-pan.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'APPROVED',
+                    isCurrent: true,
+                    verifiedAt: new Date(),
+                    verifiedBy: adminUser._id,
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+
+                await VerificationSubmission.create({
+                    workerId: workerUser._id,
+                    submissionNumber: 1,
+                    version: 1,
+                    profileSnapshot: profile.toObject(),
+                    serviceSnapshot: { primaryServiceCategory: wData.categories[0] },
+                    documentIds: [aadDoc._id, panDoc._id],
+                    declarationAccepted: true,
+                    consentAccepted: true,
+                    status: 'APPROVED',
+                    submittedAt: new Date(Date.now() - 86400000 * 2),
+                    reviewedBy: adminUser._id,
+                    finalDecisionAt: new Date(Date.now() - 86400000)
+                });
+            } else if (wData.verificationStatus === 'PENDING_APPROVAL') {
+                const aadDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'AADHAAR',
+                    documentNumberEncrypted: 'mock-encrypted-aadhaar-pending',
+                    documentNumberLast4: '1111',
+                    documentNumberHash: 'mock-hash-aadhaar-pending',
+                    frontFileId: 'uploads/mock-aadhaar-pending.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'PENDING_REVIEW',
+                    isCurrent: true,
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+                const panDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'PAN',
+                    documentNumberEncrypted: 'mock-encrypted-pan-pending',
+                    documentNumberLast4: '2222',
+                    documentNumberHash: 'mock-hash-pan-pending',
+                    frontFileId: 'uploads/mock-pan-pending.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'PENDING_REVIEW',
+                    isCurrent: true,
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+
+                await VerificationSubmission.create({
+                    workerId: workerUser._id,
+                    submissionNumber: 1,
+                    version: 1,
+                    profileSnapshot: profile.toObject(),
+                    serviceSnapshot: { primaryServiceCategory: wData.categories[0] },
+                    documentIds: [aadDoc._id, panDoc._id],
+                    declarationAccepted: true,
+                    consentAccepted: true,
+                    status: 'PENDING_APPROVAL',
+                    submittedAt: new Date()
+                });
+            } else if (wData.verificationStatus === 'CHANGES_REQUIRED') {
+                const aadDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'AADHAAR',
+                    documentNumberEncrypted: 'mock-encrypted-aadhaar-approved',
+                    documentNumberLast4: '3333',
+                    documentNumberHash: 'mock-hash-aadhaar-approved',
+                    frontFileId: 'uploads/mock-aadhaar-approved.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'APPROVED',
+                    isCurrent: true,
+                    verifiedAt: new Date(Date.now() - 3600000),
+                    verifiedBy: adminUser._id,
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+                const panDoc = await VerificationDocument.create({
+                    workerId: workerUser._id,
+                    documentType: 'PAN',
+                    documentNumberEncrypted: 'mock-encrypted-pan-rejected',
+                    documentNumberLast4: '4444',
+                    documentNumberHash: 'mock-hash-pan-rejected',
+                    frontFileId: 'uploads/mock-pan-rejected.png',
+                    fileMimeType: 'image/png',
+                    fileSize: 10240,
+                    status: 'REJECTED',
+                    isCurrent: true,
+                    verifiedAt: new Date(Date.now() - 3600000),
+                    verifiedBy: adminUser._id,
+                    rejectionReason: 'Image is blurred. Please upload a clear photo.',
+                    expiryDate: new Date(Date.now() + 31536000000)
+                });
+
+                await VerificationSubmission.create({
+                    workerId: workerUser._id,
+                    submissionNumber: 1,
+                    version: 1,
+                    profileSnapshot: profile.toObject(),
+                    serviceSnapshot: { primaryServiceCategory: wData.categories[0] },
+                    documentIds: [aadDoc._id, panDoc._id],
+                    declarationAccepted: true,
+                    consentAccepted: true,
+                    status: 'CHANGES_REQUIRED',
+                    submittedAt: new Date(Date.now() - 86400000),
+                    reviewedBy: adminUser._id,
+                    finalDecisionAt: new Date(Date.now() - 3600000),
+                    finalComment: 'Please re-upload a clear PAN card image.'
+                });
+            }
+
+            console.log(`✅ Worker created: ${wData.email} / worker123 (${wData.name}) - Status: ${wData.verificationStatus}`);
         }
 
         // 7. Seed Platform Pricing Config

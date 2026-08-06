@@ -80,6 +80,10 @@ export const initializeSocket = (server) => {
             }
         });
 
+        socket.on('ping', (data) => {
+            socket.emit('pong', data);
+        });
+
         socket.on('disconnect', () => {
             for(const [key,timer] of typingTimers){if(key.startsWith(`${user.id}:`)){clearTimeout(timer);typingTimers.delete(key);}}
             console.log(`Socket disconnected: ${socket.id}`);

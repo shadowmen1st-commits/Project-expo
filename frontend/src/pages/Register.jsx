@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, User, Wrench, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, User, Wrench, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import SocialAuthButtons from '../components/SocialAuthButtons';
+
+// Mirror of backend Zod password rules
+const passwordRules = [
+    { id: 'len',    label: 'At least 8 characters',  test: (p) => p.length >= 8 },
+    { id: 'letter', label: 'Contains a letter (A-Z)', test: (p) => /[A-Za-z]/.test(p) },
+    { id: 'number', label: 'Contains a number (0-9)', test: (p) => /\d/.test(p) },
+];
 
 export const Register = () => {
     const { registerUser } = useAuth();
@@ -17,11 +24,27 @@ export const Register = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+    const [passwordTouched, setPasswordTouched] = useState(false);
+    const [conflictField, setConflictField] = useState('');
+    const submitInFlight = useRef(false);
+    const phoneInputRef = useRef(null);
+    const emailInputRef = useRef(null);
+
+    const checks = useMemo(() => passwordRules.map(r => ({ ...r, pass: r.test(password) })), [password]);
+    const allChecksPassed = checks.every(c => c.pass);
+    const passedCount = checks.filter(c => c.pass).length;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitInFlight.current) return;
         if (!name || !email || !phone || !password || !confirmPassword) {
             setError('Please fill in all required fields.');
+            return;
+        }
+        if (!allChecksPassed) {
+            setPasswordTouched(true);
+            const failedRule = checks.find(c => !c.pass);
+            setError(`Password issue: ${failedRule?.label}.`);
             return;
         }
         if (password !== confirmPassword) {
@@ -33,14 +56,21 @@ export const Register = () => {
             return;
         }
         setError('');
+        setConflictField('');
+        submitInFlight.current = true;
         setLoading(true);
         try {
             await registerUser({ name, email, phone, password, role });
             setSuccess('Account created successfully! Redirecting to login...');
             setTimeout(() => navigate('/login'), 2000);
         } catch (err) {
+            const field = err.response?.data?.field;
+            setConflictField(field || '');
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            if (field === 'phone') phoneInputRef.current?.focus();
+            if (field === 'email') emailInputRef.current?.focus();
         } finally {
+            submitInFlight.current = false;
             setLoading(false);
         }
     };
@@ -102,6 +132,7 @@ export const Register = () => {
                     {error && (
                         <div className="bg-[#DC2626]/10 border border-[#DC2626]/30 text-[#DC2626] text-xs p-4 rounded-xl">
                             <span className="font-bold">Error:</span> {error}
+                            {conflictField && <Link to="/login" className="block mt-2 font-bold underline">Sign in to the existing account</Link>}
                         </div>
                     )}
 
@@ -143,10 +174,11 @@ export const Register = () => {
                             </label>
                             <input 
                                 type="text" 
+                                name="name"
                                 value={name} 
                                 onChange={e => setName(e.target.value)} 
                                 placeholder="Rahul Sharma" 
-                                className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm" 
+                                className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm"
                                 required
                             />
                         </div>
@@ -156,11 +188,13 @@ export const Register = () => {
                                 Email Address
                             </label>
                             <input 
+                                ref={emailInputRef}
                                 type="email" 
+                                name="email"
                                 value={email} 
-                                onChange={e => setEmail(e.target.value)} 
+                                onChange={e => { setEmail(e.target.value); if (conflictField === 'email') { setConflictField(''); setError(''); } }}
                                 placeholder="name@example.com" 
-                                className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm" 
+                                className={`w-full input-field-style rounded-xl px-4 py-2.5 text-sm ${conflictField === 'email' ? 'border-[#DC2626]' : ''}`}
                                 required
                             />
                         </div>
@@ -172,12 +206,14 @@ export const Register = () => {
                             <div className="relative">
                                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#78716C]">+91</span>
                                 <input 
+                                    ref={phoneInputRef}
                                     type="tel" 
+                                    name="phone"
                                     value={phone} 
-                                    onChange={e => setPhone(e.target.value)} 
+                                    onChange={e => { setPhone(e.target.value.replace(/\D/g, '')); if (conflictField === 'phone') { setConflictField(''); setError(''); } }}
                                     placeholder="9876543210" 
                                     maxLength={10}
-                                    className="w-full input-field-style rounded-xl pl-12 pr-4 py-2.5 text-sm" 
+                                    className={`w-full input-field-style rounded-xl pl-12 pr-4 py-2.5 text-sm ${conflictField === 'phone' ? 'border-[#DC2626]' : ''}`}
                                     required
                                 />
                             </div>
@@ -188,22 +224,60 @@ export const Register = () => {
                                 Password
                             </label>
                             <div className="relative">
-                                <input 
-                                    type={showPass ? 'text' : 'password'} 
-                                    value={password} 
-                                    onChange={e => setPassword(e.target.value)} 
-                                    placeholder="Min. 8 characters" 
-                                    className="w-full input-field-style rounded-xl pl-4 pr-11 py-2.5 text-sm" 
+                                <input
+                                    type={showPass ? 'text' : 'password'}
+                                    name="password"
+                                    value={password}
+                                    onChange={e => { setPassword(e.target.value); setPasswordTouched(true); setError(''); }}
+                                    onBlur={() => setPasswordTouched(true)}
+                                    placeholder="Min. 8 chars, 1 letter, 1 number"
+                                    className={`w-full input-field-style rounded-xl pl-4 pr-11 py-2.5 text-sm transition-colors ${
+                                        passwordTouched && !allChecksPassed
+                                            ? 'border-[#DC2626] focus:border-[#DC2626]'
+                                            : passwordTouched && allChecksPassed
+                                                ? 'border-[#16A34A] focus:border-[#16A34A]'
+                                                : ''
+                                    }`}
                                     required
                                 />
-                                <button 
-                                    type="button" 
-                                    onClick={() => setShowPass(p => !p)} 
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPass(p => !p)}
                                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#78716C] hover:text-[#1C1917] cursor-pointer"
                                 >
                                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
+
+                            {/* Real-time password rule checklist */}
+                            {(passwordTouched && password.length > 0) && (
+                                <div className="mt-2 space-y-1.5">
+                                    {/* Strength bar */}
+                                    <div className="flex gap-1">
+                                        {[0, 1, 2].map(i => (
+                                            <div
+                                                key={i}
+                                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                                                    i < passedCount
+                                                        ? passedCount === 1 ? 'bg-[#DC2626]'
+                                                            : passedCount === 2 ? 'bg-[#F59E0B]'
+                                                                : 'bg-[#16A34A]'
+                                                        : 'bg-[#E7E0D8]'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    {/* Individual rule indicators */}
+                                    {checks.map(c => (
+                                        <div key={c.id} className="flex items-center gap-1.5">
+                                            {c.pass
+                                                ? <CheckCircle2 className="w-3 h-3 text-[#16A34A] flex-shrink-0"/>
+                                                : <XCircle className="w-3 h-3 text-[#DC2626] flex-shrink-0"/>}
+                                            <span className={`text-[10px] ${c.pass ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>{c.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -212,6 +286,7 @@ export const Register = () => {
                             </label>
                             <input 
                                 type="password" 
+                                name="confirmPassword"
                                 value={confirmPassword} 
                                 onChange={e => setConfirmPassword(e.target.value)} 
                                 placeholder="Re-enter password" 

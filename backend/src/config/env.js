@@ -71,9 +71,19 @@ if (NODE_ENV === 'test' && PAYMENT_PROVIDER_MODE === 'mock') {
     console.warn('⚠️ WARNING: Mock Payment Provider Mode is ACTIVE for testing purposes.');
 }
 
-const parsedCorsOrigins = CORS_ALLOWED_ORIGINS
-    ? CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim())
-    : [CUSTOMER_APP_URL, WEB_ADMIN_URL].filter(Boolean);
+const defaultDevOrigins = [
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:8081',
+    'http://127.0.0.1:5173'
+];
+
+const parsedCorsOrigins = Array.from(new Set([
+    ...(CORS_ALLOWED_ORIGINS ? CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [CUSTOMER_APP_URL, WEB_ADMIN_URL]),
+    ...(NODE_ENV !== 'production' ? defaultDevOrigins : [])
+])).filter(Boolean);
 
 export const config = {
     NODE_ENV,

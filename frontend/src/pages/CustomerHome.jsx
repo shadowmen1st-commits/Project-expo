@@ -89,6 +89,8 @@ export const CustomerHome = () => {
     const [bookingDuration, setBookingDuration] = useState(2);
     const [pricingType] = useState('HOURLY');
     const [notes, setNotes] = useState('');
+    // Category selected specifically for booking (from the chosen worker's categories)
+    const [selectedBookingCategory, setSelectedBookingCategory] = useState('');
 
     // Availability & Server Quote State
     const [isCheckingSlot, setIsCheckingSlot] = useState(false);
@@ -193,10 +195,24 @@ export const CustomerHome = () => {
         setSlotError('');
         setActiveQuote(null);
         setCreatedBooking(null);
+        // Auto-select the worker's first category, falling back to global filter
+        const workerCatIds = worker.serviceCategoryIds || [];
+        const firstWorkerCat = workerCatIds[0];
+        const firstWorkerCatId = typeof firstWorkerCat === 'object' ? firstWorkerCat?._id || firstWorkerCat?.toString() : firstWorkerCat;
+        setSelectedBookingCategory(
+            firstWorkerCatId ||
+            (selectedCategory && workerCatIds.some(id => (id?._id || id)?.toString() === selectedCategory) ? selectedCategory : '') ||
+            categories[0]?._id ||
+            ''
+        );
     };
 
     const handleCheckAvailability = async () => {
         if (!selectedWorker || !bookingDate || !bookingTime) return;
+        if (!selectedBookingCategory) {
+            setSlotError('Please select a service category for this booking.');
+            return;
+        }
         setIsCheckingSlot(true);
         setSlotError('');
         setSlotAvailable(null);
@@ -209,7 +225,7 @@ export const CustomerHome = () => {
             // 1. Check availability
             const availRes = await api.post('/v1/bookings/availability/check', {
                 workerId: selectedWorker.workerId,
-                serviceCategoryId: selectedCategory || categories[0]?._id,
+                serviceCategoryId: selectedBookingCategory,
                 scheduledStart: start.toISOString(),
                 scheduledEnd: end.toISOString(),
                 pricingType,
@@ -221,7 +237,7 @@ export const CustomerHome = () => {
                 // 2. Fetch Authoritative Server-Side Price Quote
                 const quoteRes = await api.post('/v1/pricing/quote', {
                     workerId: selectedWorker.workerId,
-                    serviceCategoryId: selectedCategory || categories[0]?._id,
+                    serviceCategoryId: selectedBookingCategory,
                     scheduledStart: start.toISOString(),
                     scheduledEnd: end.toISOString(),
                     pricingType,
@@ -257,7 +273,7 @@ export const CustomerHome = () => {
             const res = await api.post('/v1/bookings', {
                 quoteId: activeQuote.quoteId,
                 workerId: selectedWorker.workerId,
-                serviceCategoryId: selectedCategory || categories[0]?._id,
+                serviceCategoryId: selectedBookingCategory,
                 serviceAddress: '123 Tech Park Road, Bengaluru',
                 scheduledStart: start.toISOString(),
                 scheduledEnd: end.toISOString(),
@@ -678,6 +694,53 @@ export const CustomerHome = () => {
                                         <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Duration (Hrs)</label>
                                         <input type="number" min={1} max={12} value={bookingDuration} onChange={(e) => { setBookingDuration(Number(e.target.value)); setSlotAvailable(null); }} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
                                     </div>
+                                </div>
+
+                                {/* Service Category Selector — all categories, worker's own highlighted first */}
+                                <div>
+                                    <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Service Type</label>
+                                    {categories.length === 0 ? (
+                                        <p className="text-[10px] text-[#A8A29E] mt-1">Loading categories…</p>
+                                    ) : (() => {
+                                        const workerCatIds = new Set(
+                                            (selectedWorker.serviceCategoryIds || []).map(id =>
+                                                typeof id === 'object' ? (id?._id || id)?.toString() : id?.toString()
+                                            ).filter(Boolean)
+                                        );
+                                        const workerCats  = categories.filter(c => workerCatIds.has(c._id?.toString()));
+                                        const otherCats   = categories.filter(c => !workerCatIds.has(c._id?.toString()));
+                                        return (
+                                            <select
+                                                value={selectedBookingCategory}
+                                                onChange={(e) => {
+                                                    setSelectedBookingCategory(e.target.value);
+                                                    setSlotAvailable(null);
+                                                    setActiveQuote(null);
+                                                }}
+                                                className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none cursor-pointer"
+                                            >
+                                                <option value="">-- Select Service --</option>
+
+                                                {/* Worker's speciality categories first */}
+                                                {workerCats.length > 0 && (
+                                                    <optgroup label="⭐ Worker's Speciality">
+                                                        {workerCats.map(cat => (
+                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                )}
+
+                                                {/* All other categories */}
+                                                {otherCats.length > 0 && (
+                                                    <optgroup label="All Other Services">
+                                                        {otherCats.map(cat => (
+                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                )}
+                                            </select>
+                                        );
+                                    })()}
                                 </div>
 
                                 <div>

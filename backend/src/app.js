@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import pinoHttp from 'pino-http';
+import logger from './utils/logger.js';
 import config from './config/env.js';
 import authRoutes from './routes/authRoutes.js';
 import workerRoutes from './routes/workerRoutes.js';
@@ -24,10 +26,15 @@ import { rawBodyMiddleware } from './middleware/rawBody.js';
 import browserOriginGuard from './middleware/browserOriginGuard.js';
 import mongoose from 'mongoose';
 import NotificationOutbox from './models/NotificationOutbox.js';
+import verificationRoutes from './routes/verificationRoutes.js';
 
 export const createApp = () => {
     const app = express();
     if (config.NODE_ENV === 'production') app.set('trust proxy', 1);
+    
+    // Structured JSON Logging
+    app.use(pinoHttp({ logger }));
+    
     app.use(helmet());
     app.use(cors({ origin: (origin, callback) => { if(!origin||config.CORS_ALLOWED_ORIGINS.includes(origin))return callback(null,true);const error=new Error('Origin is not allowed.');error.statusCode=403;error.errorCode='CORS_ORIGIN_REJECTED';callback(error); }, credentials: true, methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization','Idempotency-Key','X-Request-Id'] }));
     app.use('/api/v1/webhooks', rawBodyMiddleware, webhookRoutes);
@@ -54,9 +61,18 @@ export const createApp = () => {
     app.use('/api/v1/chat', chatRoutes);
     app.use('/api/v1/notifications', notificationRoutes);
     app.use('/api/v1/support', supportRoutes);
+    app.use('/api/v1', verificationRoutes);
     app.get('/api/categories', getCategories);
-    app.get('/health', (_req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
-    app.get('/ready', async (_req,res) => { try { if(mongoose.connection.readyState!==1)return res.status(503).json({status:'NOT_READY',database:'DOWN'});await mongoose.connection.db.admin().ping();const deadLetters=await NotificationOutbox.countDocuments({status:'DEAD_LETTER'});res.status(200).json({status:'READY',database:'UP',outbox:{dispatcher:'AVAILABLE',deadLetters}});}catch{res.status(503).json({status:'NOT_READY',database:'DOWN'});} });
+    const healthLimiter = rateLimit({
+        windowMs: 60000,
+        max: process.env.NODE_ENV === 'test' ? 100000 : 50000,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { statusCode: 429, errorCode: 'TOO_MANY_REQUESTS', message: 'Too many health check requests.' }
+    });
+
+    app.get('/health', healthLimiter, (_req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
+    app.get('/ready', healthLimiter, async (_req,res) => { try { if(mongoose.connection.readyState!==1)return res.status(503).json({status:'NOT_READY',database:'DOWN'});await mongoose.connection.db.admin().ping();const deadLetters=await NotificationOutbox.countDocuments({status:'DEAD_LETTER'});res.status(200).json({status:'READY',database:'UP',outbox:{dispatcher:'AVAILABLE',deadLetters}});}catch{res.status(503).json({status:'NOT_READY',database:'DOWN'});} });
     app.use(errorHandler);
     return app;
 };

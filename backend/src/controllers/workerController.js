@@ -174,6 +174,7 @@ export const searchWorkers = async (req, res, next) => {
             workerId: p.userId?._id,
             name: p.userId?.name,
             profileImage: p.userId?.profileImage,
+            serviceCategoryIds: p.serviceCategoryIds,
             skills: p.skills,
             experienceYears: p.experienceYears,
             bio: p.bio,

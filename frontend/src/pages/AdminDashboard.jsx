@@ -7,9 +7,9 @@ import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
 import AdminSupportPanel from '../components/AdminSupportPanel';import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
 
-export const AdminDashboard = () => {
+export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const { logout } = useAuth();
-    const [activeSection, setActiveSection] = useState('analytics');
+    const [activeSection, setActiveSection] = useState(initialSection);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -29,7 +29,7 @@ export const AdminDashboard = () => {
     const [ruleScope, setRuleScope] = useState('GLOBAL');
     const [ruleName, setRuleName] = useState('');
     const [rulePercent, setRulePercent] = useState(10);
-    const [rulePriority, setRulePriority] = useState(3);
+    const [rulePriority, setRulePriority] = useState(4);
     const [ruleCatId, setRuleCatId] = useState('');
     const [ruleWorkerId, setRuleWorkerId] = useState('');
     const [ruleMinCapRupees, setRuleMinCapRupees] = useState(0);
@@ -54,10 +54,53 @@ export const AdminDashboard = () => {
         if (res.data.success) setMetrics(res.data.metrics);
     };
 
-    const fetchVerificationQueue = async () => {
-        const res = await api.get('/admin/workers/pending');
-        if (res.data.success) {
-            setPendingWorkers((res.data.data || []).filter(item => item?.profile?.userId));
+    const [queueFilter, setQueueFilter] = useState('PENDING_APPROVAL');
+    const [activePreviewDoc, setActivePreviewDoc] = useState(null);
+    const [documentPreviewUrl, setDocumentPreviewUrl] = useState('');
+    const [documentPreviewMime, setDocumentPreviewMime] = useState('');
+    const [documentPreviewLoading, setDocumentPreviewLoading] = useState(false);
+    const [documentPreviewError, setDocumentPreviewError] = useState('');
+    const [reviewReasonCode, setReviewReasonCode] = useState('INVALID_DOCUMENT');
+
+    useEffect(() => {
+        let objectUrl = '';
+        let cancelled = false;
+        const loadPreview = async () => {
+            setDocumentPreviewUrl('');
+            setDocumentPreviewMime('');
+            setDocumentPreviewError('');
+            setZoomScale(1);
+            setRotateDeg(0);
+            if (!activePreviewDoc?._id) return;
+            setDocumentPreviewLoading(true);
+            try {
+                const response = await api.get(`/v1/worker/verification/documents/${activePreviewDoc._id}/access`, { responseType: 'blob' });
+                if (cancelled) return;
+                const mime = response.headers['content-type'] || activePreviewDoc.fileMimeType || response.data.type;
+                objectUrl = URL.createObjectURL(new Blob([response.data], { type: mime }));
+                setDocumentPreviewMime(mime);
+                setDocumentPreviewUrl(objectUrl);
+            } catch (err) {
+                if (!cancelled) setDocumentPreviewError(err.response?.status === 404 ? 'Document file is missing from private storage.' : 'Unable to load the protected document preview.');
+            } finally {
+                if (!cancelled) setDocumentPreviewLoading(false);
+            }
+        };
+        loadPreview();
+        return () => {
+            cancelled = true;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [activePreviewDoc?._id]);
+
+    const fetchVerificationQueue = async (status = queueFilter) => {
+        try {
+            const res = await api.get(`/v1/admin/worker-verifications?status=${status}&limit=50`);
+            if (res.data.success) {
+                setPendingWorkers(res.data.data || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch verification queue', err);
         }
     };
 
@@ -158,13 +201,24 @@ export const AdminDashboard = () => {
         setConflictWarning('');
         setError('');
         setSuccess('');
+
+        // Client-side guard: category scope needs a selected category
+        if (ruleScope === 'CATEGORY' && !ruleCatId) {
+            setError('Please select a target category for a CATEGORY-scoped rule.');
+            return;
+        }
+        if (ruleScope === 'WORKER' && !ruleWorkerId) {
+            setError('Please enter a Worker ID for a WORKER-scoped rule.');
+            return;
+        }
+
         try {
             const res = await api.post('/v1/pricing/admin/commission-rules', {
                 name: ruleName,
                 scope: ruleScope,
                 serviceCategoryId: ruleScope === 'CATEGORY' ? ruleCatId : undefined,
                 workerId: ruleScope === 'WORKER' ? ruleWorkerId : undefined,
-                percentageBps: Math.round(Number(rulePercent) * 100), // e.g. 10% = 1000 bps
+                percentageBps: Math.round(Number(rulePercent) * 100),
                 minimumCommissionPaise: Number(ruleMinCapRupees) * 100,
                 maximumCommissionPaise: ruleMaxCapRupees ? Number(ruleMaxCapRupees) * 100 : undefined,
                 priority: Number(rulePriority),
@@ -180,7 +234,10 @@ export const AdminDashboard = () => {
             }
         } catch (err) {
             if (err.response?.status === 409) {
-                setConflictWarning(err.response.data.message || 'Conflicting active commission rule exists.');
+                setConflictWarning(
+                    (err.response.data.message || 'Conflicting active commission rule exists.') +
+                    ' Try a different priority number or adjust the scope.'
+                );
             } else {
                 setError(err.response?.data?.message || 'Failed to create commission override.');
             }
@@ -216,20 +273,67 @@ export const AdminDashboard = () => {
         }
     };
 
-    const handleVerifyAction = async (workerId, action) => {
-        if (!reviewReason) {
-            setError('A verification reason is mandatory.');
+    const handleDocVerifyAction = async (submissionId, documentId, action) => {
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            let res;
+            if (action === 'APPROVE') {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/documents/${documentId}/approve`);
+            } else if (action === 'REQUEST_CHANGES') {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/documents/${documentId}/request-changes`, {
+                    reasonCode: reviewReasonCode,
+                    comment: reviewReason
+                });
+            } else {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/documents/${documentId}/reject`, {
+                    reasonCode: reviewReasonCode,
+                    comment: reviewReason
+                });
+            }
+            if (res.data.success) {
+                setSuccess(`Document action ${action.toLowerCase()} complete.`);
+                setReviewReason('');
+                // Refresh detail view
+                const detailRes = await api.get(`/v1/admin/worker-verifications/${submissionId}`);
+                setSelectedReview(detailRes.data.data.submission);
+                fetchVerificationQueue();
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update document status.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFinalVerifyAction = async (submissionId, action) => {
+        if (action !== 'APPROVE' && !reviewReason) {
+            setError('A decision comment is mandatory.');
             return;
         }
         setLoading(true);
+        setError('');
+        setSuccess('');
         try {
-            const res = await api.post(`/admin/workers/verify/${workerId}`, {
-                action,
-                reason: reviewReason,
-            });
+            let res;
+            if (action === 'APPROVE') {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/approve`);
+            } else if (action === 'REQUEST_CHANGES') {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/request-changes`, {
+                    reasonCode: reviewReasonCode,
+                    comment: reviewReason
+                });
+            } else {
+                res = await api.post(`/v1/admin/worker-verifications/${submissionId}/reject`, {
+                    reasonCode: reviewReasonCode,
+                    comment: reviewReason
+                });
+            }
             if (res.data.success) {
                 setSuccess(`Worker verification ${action.toLowerCase()} complete.`);
                 setSelectedReview(null);
+                setActivePreviewDoc(null);
                 setReviewReason('');
                 setDecryptedNumber('');
                 fetchVerificationQueue();
@@ -237,10 +341,44 @@ export const AdminDashboard = () => {
                 fetchAuditLogsList();
             }
         } catch (err) {
-            setError('Failed to process worker verification.');
+            setError(err.response?.data?.message || 'Failed to complete final verification action.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSuspendRestoreWorker = async (workerId, action) => {
+        if (action === 'SUSPEND' && !reviewReason) {
+            setError('A suspension reason is mandatory.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            let res;
+            if (action === 'SUSPEND') {
+                res = await api.post(`/v1/admin/workers/${workerId}/suspend`, { reason: reviewReason });
+            } else {
+                res = await api.post(`/v1/admin/workers/${workerId}/restore`);
+            }
+            if (res.data.success) {
+                setSuccess(`Worker ${action.toLowerCase()}ed successfully.`);
+                setSelectedReview(null);
+                setReviewReason('');
+                fetchVerificationQueue();
+                fetchAnalytics();
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to perform suspend/restore action.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyAction = async (workerId, action) => {
+        // Fallback backward compatibility
+        return handleFinalVerifyAction(selectedReview?._id, action);
     };
 
     const handleProcessPayout = async (txnId, action) => {
@@ -360,7 +498,7 @@ export const AdminDashboard = () => {
                         <div className="space-y-6">
                             <h1 className="text-xl font-extrabold text-[#1C1917]">Platform Metrics Dashboard</h1>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <div className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
                                     <div className="p-3 rounded-xl bg-[#FFF5EA] text-[#E87A1E]"><Users className="w-5 h-5"/></div>
                                     <div>
@@ -389,6 +527,13 @@ export const AdminDashboard = () => {
                                         <span className="text-lg font-black text-[#1C1917]">₹{((metrics.platformCommission || 0) / 100).toFixed(0)}</span>
                                     </div>
                                 </div>
+                                <div className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+                                    <div className="p-3 rounded-xl bg-[#FEF2F2] text-[#DC2626]"><UserCheck className="w-5 h-5"/></div>
+                                    <div>
+                                        <span className="block text-[10px] text-[#A8A29E] font-semibold uppercase">Pending Verification</span>
+                                        <span className="text-lg font-black text-[#1C1917]">{metrics.pendingApprovals || 0}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="bg-white border border-[#E7E0D8] rounded-3xl p-6 shadow-sm">
@@ -413,30 +558,67 @@ export const AdminDashboard = () => {
                     {/* Verification Queue Section */}
                     {activeSection === 'queue' && (
                         <div className="space-y-6">
-                            <h1 className="text-xl font-extrabold text-[#1C1917]">Worker Onboarding Verification Queue</h1>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <h1 className="text-xl font-extrabold text-[#1C1917]">Worker Onboarding Verification Queue</h1>
+                                <div className="flex gap-2">
+                                    {['PENDING_APPROVAL', 'CHANGES_REQUIRED', 'APPROVED', 'REJECTED', 'SUSPENDED'].map((status) => (
+                                        <button
+                                            key={status}
+                                            onClick={() => { setQueueFilter(status); fetchVerificationQueue(status); }}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                                                queueFilter === status 
+                                                    ? 'bg-[#FFF5EA] border-[#E87A1E] text-[#E87A1E]' 
+                                                    : 'bg-white border-[#E7E0D8] text-[#78716C] hover:bg-[#FAF6F0]'
+                                            }`}
+                                        >
+                                            {status.replace('_', ' ')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                             
                             {pendingWorkers.length === 0 ? (
                                 <div className="bg-white border border-[#E7E0D8] rounded-3xl p-8 text-center text-[#78716C] text-sm shadow-sm">
-                                    No workers currently pending verification review.
+                                    No submissions found for status '{queueFilter.replace('_', ' ')}'.
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
-                                    {pendingWorkers.map((review) => (
-                                        <div key={review.profile._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm">
+                                    {pendingWorkers.map((sub) => (
+                                        <div key={sub._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className="w-10 h-10 rounded-xl bg-[#FFF5EA] border border-[#FDBA74] flex items-center justify-center font-bold text-[#E87A1E] text-sm">
-                                                        {review.profile.userId?.name[0]}
+                                                        {sub.profileSnapshot?.fullName ? sub.profileSnapshot.fullName[0] : (sub.workerId?.name ? sub.workerId.name[0] : 'W')}
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-[#1C1917] text-sm">{review.profile.userId?.name}</h3>
-                                                        <span className="text-[10px] text-[#78716C]">{review.profile.userId?.email}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <h3 className="font-bold text-[#1C1917] text-sm">{sub.profileSnapshot?.fullName || sub.workerId?.name}</h3>
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                                                                sub.status === 'APPROVED' ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#16A34A]' :
+                                                                sub.status === 'CHANGES_REQUIRED' ? 'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]' :
+                                                                sub.status === 'REJECTED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
+                                                                sub.status === 'SUSPENDED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
+                                                                'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'
+                                                            }`}>
+                                                                {sub.status.replace('_', ' ')}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] text-[#78716C]">Version {sub.version} · Submitted {new Date(sub.submittedAt).toLocaleDateString()}</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-[#78716C] line-clamp-2 max-w-lg">{review.profile.bio}</p>
+                                                <p className="text-xs text-[#78716C] line-clamp-2 max-w-lg">{sub.profileSnapshot?.bio}</p>
                                             </div>
 
-                                            <button onClick={() => setSelectedReview(review)} className="btn-primary-gradient font-bold text-xs py-2 px-4 rounded-xl cursor-pointer">
+                                            <button 
+                                                onClick={async () => {
+                                                    setSelectedReview(sub);
+                                                    setDecryptedNumber('');
+                                                    if (sub.documentIds && sub.documentIds.length > 0) {
+                                                        setActivePreviewDoc(sub.documentIds[0]);
+                                                    }
+                                                }} 
+                                                className="btn-primary-gradient font-bold text-xs py-2 px-4 rounded-xl cursor-pointer"
+                                            >
                                                 Audit Documents
                                             </button>
                                         </div>
@@ -447,56 +629,206 @@ export const AdminDashboard = () => {
                             {selectedReview && (
                                 <div className="bg-white border border-[#E7E0D8] rounded-3xl p-6 space-y-6 shadow-md">
                                     <div className="flex items-center justify-between border-b border-[#E7E0D8] pb-3">
-                                        <h3 className="font-bold text-[#1C1917] text-base">KYC Document Auditor: {selectedReview.profile.userId?.name}</h3>
-                                        <button onClick={() => { setSelectedReview(null); setDecryptedNumber(''); }} className="text-[#78716C] hover:text-[#1C1917] cursor-pointer">Close Auditor</button>
+                                        <h3 className="font-bold text-[#1C1917] text-base">
+                                            KYC Document Auditor: {selectedReview.profileSnapshot?.fullName || selectedReview.workerId?.name}
+                                        </h3>
+                                        <button onClick={() => { setSelectedReview(null); setDecryptedNumber(''); setActivePreviewDoc(null); }} className="text-[#78716C] hover:text-[#1C1917] cursor-pointer text-xs font-bold border border-[#E7E0D8] rounded-xl px-3 py-1 bg-[#FAF6F0]">
+                                            Close Auditor
+                                        </button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Left Column: Documents List */}
                                         <div className="space-y-4">
                                             <span className="text-xs font-semibold text-[#44403C] uppercase tracking-wider block">Submitted Credentials</span>
                                             
                                             <div className="space-y-3">
-                                                {selectedReview.documents.map((doc) => (
-                                                    <div key={doc._id} className="bg-[#FAF6F0] border border-[#E7E0D8] rounded-2xl p-4 flex items-center justify-between">
-                                                        <div>
-                                                            <span className="block font-bold text-[#1C1917] text-xs">{doc.documentType}</span>
-                                                            <span className="block text-[10px] text-[#A8A29E] mt-0.5">Masked: {doc.documentNumberMasked}</span>
-                                                            {decryptedNumber && (<span className="block text-[10px] text-[#E87A1E] font-bold mt-1">Decrypted: {decryptedNumber}</span>)}
+                                                {(selectedReview.documentIds || []).map((doc) => (
+                                                    <div 
+                                                        key={doc._id} 
+                                                        onClick={() => setActivePreviewDoc(doc)}
+                                                        className={`border rounded-2xl p-4 flex flex-col gap-2 transition-all cursor-pointer ${
+                                                            activePreviewDoc?._id === doc._id 
+                                                                ? 'border-[#E87A1E] bg-[#FFF5EA]' 
+                                                                : 'border-[#E7E0D8] bg-[#FAF6F0] hover:bg-white'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-[#1C1917] text-xs">{doc.documentType}</span>
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                                                doc.verificationStatus === 'APPROVED' ? 'bg-[#16A34A]/10 text-[#16A34A]' :
+                                                                doc.verificationStatus === 'CHANGES_REQUIRED' ? 'bg-[#D97706]/10 text-[#D97706]' : 'bg-[#78716C]/10 text-[#78716C]'
+                                                            }`}>
+                                                                {doc.verificationStatus}
+                                                            </span>
                                                         </div>
-                                                        <button onClick={() => handleViewDecryptedDoc(doc._id)} className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E] text-[#44403C] font-bold text-[9px] py-1.5 px-3 rounded-lg cursor-pointer">
-                                                            Decrypt ID
-                                                        </button>
+                                                        <div className="text-[10px] text-[#A8A29E] flex items-center justify-between">
+                                                            <span>Last 4: •••• {doc.documentNumberLast4}</span>
+                                                            {doc.expiryDate && <span>Expires: {new Date(doc.expiryDate).toLocaleDateString()}</span>}
+                                                        </div>
+                                                        {decryptedNumber && activePreviewDoc?._id === doc._id && (
+                                                            <span className="block text-[10px] text-[#E87A1E] font-mono font-bold mt-1">Decrypted: {decryptedNumber}</span>
+                                                        )}
+                                                        <div className="flex gap-2 justify-end mt-1">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleViewDecryptedDoc(doc._id); }} 
+                                                                className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E] text-[#44403C] font-bold text-[9px] py-1 px-2.5 rounded-lg cursor-pointer"
+                                                            >
+                                                                Decrypt ID
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
-
-                                            <div className="border border-[#E7E0D8] bg-[#FAF6F0] rounded-3xl p-5 relative overflow-hidden h-64 flex items-center justify-center">
-                                                <div className="absolute top-3 right-3 flex gap-2 z-10">
-                                                    <button onClick={() => setZoomScale(Math.min(zoomScale + 0.2, 2))} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><ZoomIn className="w-3.5 h-3.5"/></button>
-                                                    <button onClick={() => setZoomScale(Math.max(zoomScale - 0.2, 0.5))} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><ZoomOut className="w-3.5 h-3.5"/></button>
-                                                    <button onClick={() => setRotateDeg(rotateDeg + 90)} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><RotateCw className="w-3.5 h-3.5"/></button>
-                                                </div>
-                                                <img src={selectedReview.documents[0]?.frontFile} alt="Doc Preview" style={{ transform: `scale(${zoomScale}) rotate(${rotateDeg}deg)`, transition: 'transform 0.2s ease-in-out' }} className="max-h-full max-w-full rounded-lg object-contain"/>
-                                            </div>
                                         </div>
 
+                                        {/* Center Column: Preview Canvas */}
+                                        <div className="space-y-4">
+                                            <span className="text-xs font-semibold text-[#44403C] uppercase tracking-wider block">Document Canvas</span>
+                                            
+                                            {activePreviewDoc ? (
+                                                <div className="space-y-3">
+                                                    <div className="border border-[#E7E0D8] bg-[#FAF6F0] rounded-3xl p-5 relative overflow-hidden h-64 flex items-center justify-center">
+                                                        <div className="absolute top-3 right-3 flex gap-2 z-10">
+                                                            <button onClick={() => setZoomScale(Math.min(zoomScale + 0.2, 2))} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><ZoomIn className="w-3.5 h-3.5"/></button>
+                                                            <button onClick={() => setZoomScale(Math.max(zoomScale - 0.2, 0.5))} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><ZoomOut className="w-3.5 h-3.5"/></button>
+                                                            <button onClick={() => setRotateDeg(rotateDeg + 90)} className="bg-white p-1.5 rounded-lg border border-[#E7E0D8] text-[#1C1917] cursor-pointer shadow-sm"><RotateCw className="w-3.5 h-3.5"/></button>
+                                                        </div>
+                                                        
+                                                        {documentPreviewLoading ? (
+                                                            <div className="text-xs font-bold text-[#78716C]">Loading protected preview...</div>
+                                                        ) : documentPreviewError ? (
+                                                            <div className="text-center text-xs font-bold text-[#DC2626] px-6">{documentPreviewError}</div>
+                                                        ) : documentPreviewMime === 'application/pdf' ? (
+                                                            <div className="text-center p-4">
+                                                                <FileText className="w-12 h-12 text-[#A8A29E] mx-auto mb-2"/>
+                                                                <span className="text-xs font-bold text-[#57534E]">PDF Document Uploaded</span>
+                                                                <a 
+                                                                    href={documentPreviewUrl} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    className="block text-[10px] text-[#E87A1E] font-bold mt-1 underline"
+                                                                >
+                                                                    Open PDF In New Tab
+                                                                </a>
+                                                            </div>
+                                                        ) : documentPreviewUrl ? (
+                                                            <img 
+                                                                src={documentPreviewUrl} 
+                                                                alt="Doc Preview" 
+                                                                style={{ transform: `scale(${zoomScale}) rotate(${rotateDeg}deg)`, transition: 'transform 0.2s ease-in-out' }} 
+                                                                className="max-h-full max-w-full rounded-lg object-contain"
+                                                            />
+                                                        ) : null}
+                                                    </div>
+
+                                                    {/* Document decision board */}
+                                                    {selectedReview.status === 'PENDING_APPROVAL' && (
+                                                        <div className="bg-[#FAF6F0] p-4 border border-[#E7E0D8] rounded-2xl space-y-3">
+                                                            <div className="text-[10px] font-bold uppercase tracking-wider text-[#57534E]">Review Selected ({activePreviewDoc.documentType})</div>
+                                                            <div className="flex gap-2">
+                                                                <button 
+                                                                    onClick={() => handleDocVerifyAction(selectedReview._id, activePreviewDoc._id, 'APPROVE')}
+                                                                    className="flex-1 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold py-2 rounded-xl cursor-pointer"
+                                                                >
+                                                                    Approve
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDocVerifyAction(selectedReview._id, activePreviewDoc._id, 'REQUEST_CHANGES')}
+                                                                    className="flex-1 bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-bold py-2 rounded-xl cursor-pointer"
+                                                                >
+                                                                    Request Changes
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="border border-[#E7E0D8] bg-[#FAF6F0] rounded-3xl h-64 flex items-center justify-center text-xs text-[#78716C]">
+                                                    Select a document to preview
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right Column: Final Board */}
                                         <div className="space-y-4">
                                             <span className="text-xs font-semibold text-[#44403C] uppercase tracking-wider block">Auditor Decision Board</span>
                                             
                                             <div className="bg-[#FAF6F0] border border-[#E7E0D8] rounded-2xl p-5 space-y-4">
                                                 <div>
-                                                    <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-2">Internal Verification Notes</label>
-                                                    <textarea rows={4} value={reviewReason} onChange={(e) => setReviewReason(e.target.value)} placeholder="Provide mandatory decision notes..." className="w-full bg-white border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-3 px-4 text-[#1C1917] text-xs outline-none resize-none" required/>
+                                                    <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">Reason Code</label>
+                                                    <select 
+                                                        value={reviewReasonCode} 
+                                                        onChange={(e) => setReviewReasonCode(e.target.value)}
+                                                        className="w-full bg-white border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"
+                                                    >
+                                                        <option value="INVALID_DOCUMENT">Invalid Document Photo</option>
+                                                        <option value="EXPIRED_DOCUMENT">Document Expired</option>
+                                                        <option value="NAME_MISMATCH">Name Mismatch</option>
+                                                        <option value="AGE_REQUIREMENT_NOT_MET">Under 18 Years Old</option>
+                                                        <option value="INCORRECT_NUMBER">Incorrect Document Identifier</option>
+                                                        <option value="SUSPECTED_FRAUD">Suspected Fraudulent Document</option>
+                                                    </select>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <button onClick={() => handleVerifyAction(selectedReview.profile.userId?._id, 'APPROVED')} disabled={loading} className="bg-[#16A34A] hover:bg-[#16A34A]/90 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer">
-                                                        Approve Profile
-                                                    </button>
-                                                    <button onClick={() => handleVerifyAction(selectedReview.profile.userId?._id, 'REJECTED')} disabled={loading} className="bg-[#DC2626] hover:bg-[#DC2626]/90 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer">
-                                                        Reject Profile
-                                                    </button>
+                                                <div>
+                                                    <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1.5">Mandatory Decision Notes</label>
+                                                    <textarea 
+                                                        rows={4} 
+                                                        value={reviewReason} 
+                                                        onChange={(e) => setReviewReason(e.target.value)} 
+                                                        placeholder="Write detailed reason notes..." 
+                                                        className="w-full bg-white border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2.5 px-4 text-[#1C1917] text-xs outline-none resize-none"
+                                                    />
                                                 </div>
+
+                                                {selectedReview.status === 'PENDING_APPROVAL' ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        <button 
+                                                            onClick={() => handleFinalVerifyAction(selectedReview._id, 'APPROVE')} 
+                                                            disabled={loading} 
+                                                            className="w-full bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                                        >
+                                                            Final Approve Profile
+                                                        </button>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <button 
+                                                                onClick={() => handleFinalVerifyAction(selectedReview._id, 'REQUEST_CHANGES')} 
+                                                                disabled={loading} 
+                                                                className="bg-[#D97706] hover:bg-[#B45309] text-white font-bold text-xs py-2 rounded-xl cursor-pointer"
+                                                            >
+                                                                Request Corrections
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleFinalVerifyAction(selectedReview._id, 'REJECT')} 
+                                                                disabled={loading} 
+                                                                className="bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-xs py-2 rounded-xl cursor-pointer"
+                                                            >
+                                                                Reject Profile
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col gap-2 pt-2 border-t border-[#E7E0D8]">
+                                                        {selectedReview.status === 'APPROVED' ? (
+                                                            <button 
+                                                                onClick={() => handleSuspendRestoreWorker(selectedReview.workerId?._id || selectedReview.profileSnapshot?.userId, 'SUSPEND')}
+                                                                className="w-full bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                                            >
+                                                                Suspend Worker Account
+                                                            </button>
+                                                        ) : selectedReview.status === 'SUSPENDED' ? (
+                                                            <button 
+                                                                onClick={() => handleSuspendRestoreWorker(selectedReview.workerId?._id || selectedReview.profileSnapshot?.userId, 'RESTORE')}
+                                                                className="w-full bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                                            >
+                                                                Restore Worker Account
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-center text-[10px] text-[#A8A29E]">No overrides allowed for this review state.</span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -610,11 +942,25 @@ export const AdminDashboard = () => {
                                             <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Rule Scope</label>
                                             <div className="grid grid-cols-3 gap-1 bg-[#FAF6F0] p-1 rounded-xl border border-[#E7E0D8] text-[10px] font-bold">
                                                 {['GLOBAL', 'CATEGORY', 'WORKER'].map((s) => (
-                                                    <button type="button" key={s} onClick={() => setRuleScope(s)} className={`py-1.5 rounded-lg cursor-pointer ${ruleScope === s ? 'bg-[#E87A1E] text-white' : 'text-[#78716C]'}`}>
+                                                    <button
+                                                        type="button" key={s}
+                                                        onClick={() => {
+                                                            setRuleScope(s);
+                                                            // Scope-aware priority defaults to avoid seeded-rule conflicts
+                                                            if (s === 'WORKER')    setRulePriority(1);
+                                                            else if (s === 'CATEGORY') setRulePriority(2);
+                                                            else setRulePriority(4); // GLOBAL seeded rule uses 3
+                                                            setConflictWarning('');
+                                                        }}
+                                                        className={`py-1.5 rounded-lg cursor-pointer ${ruleScope === s ? 'bg-[#E87A1E] text-white' : 'text-[#78716C]'}`}
+                                                    >
                                                         {s}
                                                     </button>
                                                 ))}
                                             </div>
+                                            <p className="text-[9px] text-[#A8A29E] mt-1">
+                                                Lower priority number = higher precedence. WORKER(1) &gt; CATEGORY(2) &gt; GLOBAL(3+). Seeded global rule uses P3.
+                                            </p>
                                         </div>
 
                                         <div>

@@ -1,48 +1,55 @@
-# Production deployment checklist
+# Production Deployment Go-Live Checklist
 
-## Governance and credentials
+## Infrastructure & DB
+- [ ] Production MongoDB Atlas cluster provisioned (Dedicated M10+)
+- [ ] Production database least-privilege user created
+- [ ] Production network peering / IP allowlisting configured
+- [ ] Production continuous backups enabled
+- [ ] Production restore drill successfully executed
+- [ ] Production domain registered and DNS configured
+- [ ] SSL certificates issued and enforced (HTTP-to-HTTPS redirect)
+- [ ] Load balancer / Proxy configured
 
-- [ ] Commit and review the intended repository contents; the current local Git index contains no tracked files.
-- [ ] Review the final readiness report and accept all business-owned risks.
-- [ ] Configure MongoDB Atlas replica-set networking, least-privilege user, encryption and automated backups.
-- [ ] Generate independent 32+ character JWT access and refresh secrets in a secret manager.
-- [ ] Configure payout data-encryption key and rotation version in a secret manager.
-- [ ] Complete Google OAuth consent, production origin and exact HTTPS callback verification.
-- [ ] Complete Apple Service ID, domain, return URL, Team ID, Key ID and private-key setup.
-- [ ] Configure and verify Razorpay payment keys and signed webhook on public HTTPS.
-- [ ] Configure and verify RazorpayX account, IP allow-list, payout credentials and webhook.
-- [ ] Configure private object storage and a fail-closed malware scanner before enabling production uploads.
-- [ ] Configure email sender verification, SPF, DKIM and DMARC before enabling email.
+## Application Configuration
+- [ ] Production `NODE_ENV=production` verified
+- [ ] Secure, 64+ char `JWT_ACCESS_SECRET` generated offline
+- [ ] Secure, 64+ char `JWT_REFRESH_SECRET` generated offline
+- [ ] Secure 32-byte `FIELD_ENCRYPTION_KEY` generated offline
+- [ ] Secure 32-byte `PAYOUT_DATA_ENCRYPTION_KEY` generated offline
+- [ ] `COOKIE_SECURE=true` configured
+- [ ] `COOKIE_SAME_SITE` properly restricted
+- [ ] CORS strictly limits to production frontend origin
 
-## Application configuration
+## External Providers
+- [ ] Google OAuth production Consent Screen approved
+- [ ] Google OAuth live Client ID and Secret obtained
+- [ ] Apple OAuth Developer registration complete and live keys obtained
+- [ ] Razorpay production account fully KYC approved
+- [ ] Razorpay live keys generated and rotated into secrets manager
+- [ ] Razorpay webhook signature strictly enforced
+- [ ] RazorpayX production virtual account activated and funded
+- [ ] RazorpayX live keys generated
+- [ ] Email sender domain verified (DKIM, SPF, DMARC)
+- [ ] Malware scanner (e.g., ClamAV API) provisioned for production file uploads
 
-- [ ] Set `NODE_ENV=production`, `PORT`, `MONGODB_URI`, `FRONTEND_URL`, exact `CORS_ALLOWED_ORIGINS`, `LOG_LEVEL` and `TRUST_PROXY=1`.
-- [ ] Set frontend `VITE_API_URL` and `VITE_SOCKET_URL` to public HTTPS/WSS endpoints.
-- [ ] Confirm cookie domain, Secure, HttpOnly and SameSite behavior on the chosen same-site/cross-site topology.
-- [ ] Confirm production validator rejects placeholders, localhost URLs and mock/test providers.
-- [ ] Configure payment, refund and payout webhook URLs and retain raw-body signature verification.
-- [ ] Keep optional providers explicitly disabled until complete; never use mock delivery in production.
+## Monitoring & Operations
+- [ ] Error monitoring (Sentry/Datadog) configured and alert routing verified
+- [ ] PagerDuty / OpsGenie incident contacts verified
+- [ ] `GET /health` and `GET /ready` synthetic monitoring active
+- [ ] Webhook failure alerts active
+- [ ] Ledger/Payout reconciliation mismatch alerts active
+- [ ] Rollback runbook tested and Rollback Owner assigned
 
-## Verification before release
+## Legal & Compliance
+- [ ] Privacy Policy published
+- [ ] Terms of Service published
+- [ ] Refund Policy published
+- [ ] Payout Policy published
+- [ ] Communication/Data-retention policies approved by legal
+- [ ] Accessibility business review passed
+- [ ] Final Security / Pentest Review signed off
 
-- [ ] Install and run real Playwright browser E2E for Customer, Worker and Admin journeys.
-- [ ] Run responsive checks at 320, 375, 768, 1024, 1280 and 1440 pixels.
-- [ ] Run automated accessibility tooling and a manual keyboard/screen-reader review.
-- [ ] Build both Docker images and scan them for vulnerabilities and embedded secrets.
-- [ ] Run staging performance tests and approve latency/capacity targets.
-- [ ] Run MongoDB query plans using staging-shaped datasets.
-- [ ] Execute `npm run test:all`, `test:readiness`, `test:backup-restore`, `test:shutdown`, Socket smoke, frontend lint/build/startup smoke.
-- [ ] Execute a staging backup and restore drill; approve RPO/RTO.
-- [ ] Verify `/health` and `/ready`, alerting, error monitoring and outbox/dead-letter alerts.
-
-## Release and rollback
-
-- [ ] Take a pre-release database backup and record deployment version/image digests.
-- [ ] Deploy backend with one Socket.IO instance initially; use Redis adapter/shared rate state before multi-instance scaling.
-- [ ] Deploy immutable frontend assets with SPA fallback and documented security headers.
-- [ ] Run post-deploy auth, booking, payment test-mode, chat and readiness smoke tests.
-- [ ] Monitor errors, webhook failures, reconciliation drift, dead letters and latency.
-- [ ] Roll back application images first if health/readiness or error budgets fail.
-- [ ] Do not roll back immutable financial ledger data; use forward corrective journals/migrations.
-- [ ] Restore the database only under an approved incident plan after validating backup timestamp and financial consistency.
-- [ ] Rotate any credential suspected of exposure and preserve audit/incident evidence.
+## Final Launch
+- [ ] Load test conducted against staging with production equivalence
+- [ ] Final User Acceptance Testing (UAT) completed by stakeholders
+- [ ] Launch approval recorded

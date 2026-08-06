@@ -9,6 +9,7 @@ export const ROLE_PERMISSIONS = {
         'workers.reject',
         'workers.suspend',
         'documents.review',
+        'workerVerification.read','workerVerification.viewDocuments','workerVerification.review','workerVerification.requestChanges','workerVerification.approve','workerVerification.reject','workerVerification.suspend',
         'bookings.read',
         'bookings.manage',
         'payments.read',

@@ -31,17 +31,25 @@ export const Button = ({ title, onPress, loading, variant = 'primary', style }) 
 };
 
 export const Input = ({ label, value, onChangeText, placeholder, secureTextEntry, error, autoCapitalize = 'none' }) => {
+  const [isFocused, setIsFocused] = React.useState(false);
+
   return (
     <View style={styles.inputContainer}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[
+          styles.input,
+          isFocused && styles.inputFocused,
+          error && styles.inputError
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={Colors.textDim}
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -50,49 +58,60 @@ export const Input = ({ label, value, onChangeText, placeholder, secureTextEntry
 
 const styles = StyleSheet.create({
   button: {
-    height: 52,
-    borderRadius: BorderRadius.lg,
+    height: 56,
+    borderRadius: BorderRadius.xl,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonPrimary: {
     backgroundColor: Colors.primary,
   },
   buttonOutline: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.primary,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   buttonTextPrimary: {
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   buttonTextOutline: {
     color: Colors.primary,
   },
   inputContainer: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
     width: '100%',
   },
   label: {
     color: Colors.textMuted,
     fontSize: 14,
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
     fontWeight: '600',
+    marginLeft: 4,
   },
   input: {
-    height: 52,
+    height: 56,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    paddingHorizontal: 20,
     color: Colors.text,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.border,
     fontSize: 16,
+  },
+  inputFocused: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.surfaceLight,
   },
   inputError: {
     borderColor: Colors.error,
@@ -100,6 +119,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: Colors.error,
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 6,
+    marginLeft: 4,
   },
 });

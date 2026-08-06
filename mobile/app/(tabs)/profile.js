@@ -1,10 +1,21 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Colors, Spacing, BorderRadius } from '../../constants/Theme';
 import { LogOut, ChevronRight, Settings, Shield, CreditCard } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (err) {
+      console.log('Logout navigation error:', err);
+    }
+  };
 
   const MenuItem = ({ icon: Icon, title, onPress }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
@@ -37,7 +48,7 @@ export default function ProfileScreen() {
         <MenuItem icon={Settings} title="Settings" />
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
         <LogOut size={20} color={Colors.error} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
@@ -118,7 +129,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: 'rgba(232, 122, 30, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },

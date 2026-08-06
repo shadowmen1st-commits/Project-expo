@@ -22,16 +22,35 @@ const blockedRangeSchema = new Schema(
 const workerProfileSchema = new Schema(
     {
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-        serviceCategoryIds: [{ type: Schema.Types.ObjectId, ref: 'ServiceCategory' }],
-        skills: [{ type: String, trim: true }],
-        experienceYears: { type: Number, default: 0, min: 0 },
+        fullName: { type: String, trim: true },
+        dateOfBirth: { type: Date },
+        gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'] },
+        phone: { type: String, trim: true },
+        alternatePhone: { type: String, trim: true },
+        address: { type: String, trim: true },
+        city: { type: String, trim: true },
+        state: { type: String, trim: true },
+        postalCode: { type: String, trim: true },
+        country: { type: String, default: 'India', trim: true },
+        profilePhotoId: { type: String }, // URL or File key
         bio: { type: String, trim: true },
+        yearsOfExperience: { type: Number, default: 0, min: 0 },
+        primaryServiceCategoryId: { type: Schema.Types.ObjectId, ref: 'ServiceCategory' },
+        serviceIds: [{ type: Schema.Types.ObjectId, ref: 'ServiceCategory' }], // Sub-services if any, or just category mappings
+        serviceCategoryIds: [{ type: Schema.Types.ObjectId, ref: 'ServiceCategory' }], // Preserve legacy field for compatibility
+        skills: [{ type: String, trim: true }],
         languages: [{ type: String, trim: true }],
         hourlyRate: { type: Number, required: true, default: 0 }, // in paise
         dailyRate: { type: Number, required: true, default: 0 }, // in paise
         minimumBookingDuration: { type: Number, default: 1 }, // hours or days
         bufferMinutes: { type: Number, default: 30 },
         serviceRadiusKm: { type: Number, default: 10 },
+        workRadiusKm: { type: Number, default: 10 },
+        emergencyContact: {
+            name: { type: String, trim: true },
+            phone: { type: String, trim: true },
+            relationship: { type: String, trim: true }
+        },
         timezone: { type: String, default: 'Asia/Kolkata' },
         location: {
             type: { type: String, enum: ['Point'], default: 'Point' },
@@ -44,17 +63,26 @@ const workerProfileSchema = new Schema(
         verificationStatus: {
             type: String,
             enum: [
+                'INCOMPLETE_PROFILE',
                 'DRAFT',
                 'PENDING_APPROVAL',
-                'UNDER_REVIEW',
-                'MORE_INFO_REQUIRED',
+                'CHANGES_REQUIRED',
                 'APPROVED',
                 'REJECTED',
-                'SUSPENDED',
-                'BLOCKED',
+                'SUSPENDED'
             ],
-            default: 'DRAFT',
+            default: 'INCOMPLETE_PROFILE',
         },
+        onboardingProgressPercent: { type: Number, default: 0 },
+        submittedAt: { type: Date },
+        approvedAt: { type: Date },
+        approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        rejectedAt: { type: Date },
+        rejectionReason: { type: String },
+        suspendedAt: { type: Date },
+        suspensionReason: { type: String },
+        latestSubmissionId: { type: Schema.Types.ObjectId, ref: 'VerificationSubmission' },
+        verificationVersion: { type: Number, default: 1 },
         verificationBadge: { type: Boolean, default: false },
         availability: {
             type: [availabilitySlotSchema],
@@ -72,11 +100,7 @@ const workerProfileSchema = new Schema(
         blockedRanges: [blockedRangeSchema],
         isOnline: { type: Boolean, default: true },
         isTemporarilyUnavailable: { type: Boolean, default: false },
-        isPubliclyVisible: { type: Boolean, default: true },
-        approvedAt: { type: Date },
-        approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-        rejectionReason: { type: String },
-        suspensionReason: { type: String },
+        isPubliclyVisible: { type: Boolean, default: false }, // Set false by default until approved
     },
     {
         timestamps: true,

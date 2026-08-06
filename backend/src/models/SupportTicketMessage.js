@@ -18,7 +18,7 @@ const supportTicketMessageSchema = new Schema(
 
 supportTicketMessageSchema.index({ ticketId: 1, createdAt: 1 });
 supportTicketMessageSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
-supportTicketMessageSchema.index({ senderId: 1, clientMessageId: 1 }, { unique: true, sparse: true });
+supportTicketMessageSchema.index({ senderId: 1, clientMessageId: 1 }, { unique: true, partialFilterExpression: { clientMessageId: { $type: "string" } } });
 
 export const SupportTicketMessage = model('SupportTicketMessage', supportTicketMessageSchema);
 export default SupportTicketMessage;

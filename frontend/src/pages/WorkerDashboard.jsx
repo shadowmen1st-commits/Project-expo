@@ -21,6 +21,7 @@ export const WorkerDashboard = () => {
     const [success, setSuccess] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
     const [chatBooking,setChatBooking]=useState(null);
+    const [uploadedDocs, setUploadedDocs] = useState([]);
 
     useEffect(() => {
         fetchDashboardDetails();
@@ -32,13 +33,14 @@ export const WorkerDashboard = () => {
             const userId = user?.id || user?._id;
             if (userId) {
                 try {
-                    const resProf = await api.get(`/workers/profile/${userId}`);
+                    const resProf = await api.get('/v1/worker/verification');
                     if (resProf.data.success) {
-                        setProfile(resProf.data.data);
+                        setProfile(resProf.data.data.profile);
+                        setUploadedDocs(resProf.data.data.uploadedDocuments || []);
                     }
                 } catch (pErr) {
                     console.log('Worker profile draft initialized:', pErr);
-                    setProfile({ verificationStatus: 'DRAFT' });
+                    setProfile({ verificationStatus: 'INCOMPLETE_PROFILE' });
                 }
             }
             const resBook = await api.get('/v1/bookings/worker');
@@ -156,38 +158,79 @@ export const WorkerDashboard = () => {
             {/* Dashboard Container */}
             <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-black tracking-tight text-[#1C1917]">
+                            Hello, {profile?.fullName || user?.name || 'Worker'}!
+                        </h1>
+                        <p className="text-xs text-[#78716C]">
+                            Monitor your onboarding status, manage verified wallet earnings, and complete bookings.
+                        </p>
+                    </div>
+
                     {profile && (
-                        <div className="p-6 rounded-3xl border border-[#E7E0D8] bg-white flex items-center gap-4 shadow-sm">
-                            {profile.verificationStatus === 'APPROVED' ? (
-                                <CheckCircle2 className="w-8 h-8 text-[#16A34A] flex-shrink-0"/>
-                            ) : profile.verificationStatus === 'PENDING_APPROVAL' ? (
-                                <Clock className="w-8 h-8 text-[#D97706] flex-shrink-0 animate-pulse"/>
-                            ) : (
-                                <AlertCircle className="w-8 h-8 text-[#E87A1E] flex-shrink-0"/>
-                            )}
-                            <div className="flex-grow">
-                                <div className="font-extrabold text-[#1C1917]">
-                                    Verification Status: {profile.verificationStatus}
+                        <div className="p-6 rounded-3xl border border-[#E7E0D8] bg-white flex flex-col gap-6 shadow-sm">
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                                {profile.verificationStatus === 'APPROVED' ? (
+                                    <CheckCircle2 className="w-8 h-8 text-[#16A34A] flex-shrink-0"/>
+                                ) : ['PENDING_APPROVAL', 'UNDER_REVIEW'].includes(profile.verificationStatus) ? (
+                                    <Clock className="w-8 h-8 text-[#D97706] flex-shrink-0 animate-pulse"/>
+                                ) : (
+                                    <AlertCircle className="w-8 h-8 text-[#DC2626] flex-shrink-0"/>
+                                )}
+                                <div className="flex-grow">
+                                    <div className="font-extrabold text-[#1C1917] flex items-center gap-2">
+                                        Verification Status: 
+                                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                                            profile.verificationStatus === 'APPROVED' ? 'bg-[#16A34A]/10 text-[#16A34A]' :
+                                            ['PENDING_APPROVAL', 'UNDER_REVIEW'].includes(profile.verificationStatus) ? 'bg-[#D97706]/10 text-[#D97706]' : 'bg-[#DC2626]/10 text-[#DC2626]'
+                                        }`}>
+                                            {profile.verificationStatus}
+                                        </span>
+                                    </div>
+                                    <div className="text-[#78716C] text-xs mt-1">
+                                        {profile.verificationStatus === 'APPROVED' && 'Your profile is approved and active in local customer search listings.'}
+                                        {profile.verificationStatus === 'PENDING_APPROVAL' && 'Your documents have been submitted and are pending admin review.'}
+                                        {profile.verificationStatus === 'INCOMPLETE_PROFILE' && 'Please fill in your personal, professional, and required document details.'}
+                                        {profile.verificationStatus === 'DRAFT' && 'Your onboarding progress is saved as draft. Click Complete Verification to submit.'}
+                                        {profile.verificationStatus === 'CHANGES_REQUIRED' && `Action Required: Admin has requested corrections: ${profile.rejectionReason || 'Please audit uploaded documents.'}`}
+                                        {profile.verificationStatus === 'REJECTED' && `Verification Rejected: ${profile.rejectionReason || 'Contact support for details.'}`}
+                                        {profile.verificationStatus === 'SUSPENDED' && `Account Suspended: ${profile.suspensionReason || 'Please contact support immediately.'}`}
+                                    </div>
                                 </div>
-                                <div className="text-[#78716C] text-xs mt-1">
-                                    {profile.verificationStatus === 'APPROVED'
-                                        ? 'Your profile is approved and active in local customer search listings.'
-                                        : profile.verificationStatus === 'PENDING_APPROVAL'
-                                            ? 'Your documents have been submitted and are pending admin review.'
-                                            : 'Please complete your onboarding documentation.'}
+
+                                <div className="text-xs text-[#78716C] min-w-[200px]">
+                                    {payoutAccounts.length ? payoutAccounts.map((account) => <div key={account.id} className="font-mono text-[10px]">{account.accountType === 'VPA' ? account.vpaMasked : `Account •••• ${account.accountNumberLast4}`} · {account.verificationStatus}</div>) : 'No payout account configured.'}
+                                    <div className="mt-1 text-[10px] text-[#A8A29E]">Withdrawal limits are verified by the server.</div>
                                 </div>
+
+                                <button data-testid="worker-verification-action" onClick={() => navigate('/worker/verification')} className="btn-primary-gradient text-xs font-bold py-2 px-4 rounded-xl cursor-pointer w-full md:w-auto text-center">
+                                    {{INCOMPLETE_PROFILE:'Complete Verification',DRAFT:'Continue Verification',PENDING_APPROVAL:'View Submitted Verification',CHANGES_REQUIRED:'Update Documents & Resubmit',APPROVED:'View Verification',REJECTED:'View Rejection Details',SUSPENDED:'View Suspension Details'}[profile.verificationStatus] || 'View Verification'}
+                                </button>
                             </div>
 
-                            <div className="text-xs text-[#78716C]">
-                                {payoutAccounts.length ? payoutAccounts.map((account) => <div key={account.id}>{account.accountType === 'VPA' ? account.vpaMasked : `Account •••• ${account.accountNumberLast4}`} · {account.verificationStatus}</div>) : 'No payout account configured.'}
-                                <div className="mt-2">Withdrawal limits are verified by the server.</div>
-                            </div>
-                            {profile.verificationStatus === 'DRAFT' && (
-                                <button onClick={() => navigate('/onboarding')} className="btn-primary-gradient text-xs font-bold py-2 px-4 rounded-xl cursor-pointer">
-                                    Onboard Now
-                                </button>
+                            {/* Documents list */}
+                            {uploadedDocs.length > 0 && (
+                                <div className="pt-4 border-t border-[#E7E0D8]">
+                                    <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#78716C] mb-2">Submitted Credentials & Document Status:</div>
+                                    <div className="flex flex-wrap gap-3">
+                                        {uploadedDocs.map((doc) => (
+                                            <div key={doc.id || doc._id} className="bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl px-4 py-2 flex items-center justify-between gap-4 text-xs shadow-sm">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-[#1C1917]">{doc.documentType}</span>
+                                                    <span className="text-[10px] text-[#78716C]">Last 4: •••• {doc.documentNumberLast4}</span>
+                                                </div>
+                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                                                    doc.verificationStatus === 'APPROVED' ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#16A34A]' :
+                                                    doc.verificationStatus === 'REJECTED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
+                                                    'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'
+                                                }`}>
+                                                    {doc.verificationStatus.replace('_', ' ')}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
-                            {payouts.length > 0 && <div className="pt-3 border-t border-[#E7E0D8] space-y-1">{payouts.slice(0, 5).map((payout) => <div key={payout._id} className="flex justify-between text-xs"><span>₹{(payout.amountPaise / 100).toFixed(2)}</span><span>{payout.status}</span></div>)}</div>}
                         </div>
                     )}
 

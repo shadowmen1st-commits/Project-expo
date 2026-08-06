@@ -26,7 +26,9 @@ try{
  await t('unauthenticated create rejected',async()=>assert.equal((await request(app).post('/api/v1/support').send({})).status,401));
  await t('invalid category rejected',async()=>assert.equal((await request(app).post('/api/v1/support').set(H(ch)).send({category:'ROOT',subject:'x',description:'x'})).status,400));
  await t('script subject rejected',async()=>assert.equal((await request(app).post('/api/v1/support').set(H(ch)).send({category:'PAYMENT',subject:'<script>x</script>',description:'safe'})).status,400));
- const create=await request(app).post('/api/v1/support').set(H(ch)).send({category:'PAYMENT',subject:'Payment missing',description:'Please investigate transaction',priority:'HIGH'});const id=create.body._id;
+ const create=await request(app).post('/api/v1/support').set(H(ch)).send({category:'PAYMENT',subject:'Payment missing',description:'Please investigate transaction',priority:'HIGH'});
+ if(create.status !== 201) console.error("Ticket Create Error:", create.body);
+ const id=create.body._id;
  await t('customer creates ticket',()=>assert.equal(create.status,201));await t('ticket number generated',()=>assert.match(create.body.ticketNumber,/^TKT-/));
  await t('initial state open',()=>assert.equal(create.body.status,'OPEN'));await t('requester server derived',()=>assert.equal(create.body.requesterId,String(customer._id)));
  await t('first response SLA set',()=>assert.ok(create.body.firstResponseDueAt));await t('resolution SLA set',()=>assert.ok(create.body.resolutionDueAt));

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "lucide-react-native": "^1.28.0"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "^57.0.5"
+  }
+}

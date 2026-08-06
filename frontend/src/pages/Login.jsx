@@ -122,6 +122,7 @@ export const Login = () => {
                             </label>
                             <input 
                                 type="email" 
+                                name="email"
                                 value={email} 
                                 onChange={e => setEmail(e.target.value)} 
                                 placeholder="name@example.com" 
@@ -139,6 +140,7 @@ export const Login = () => {
                             <div className="relative">
                                 <input 
                                     type={showPass ? 'text' : 'password'} 
+                                    name="password"
                                     value={password} 
                                     onChange={e => setPassword(e.target.value)} 
                                     placeholder="••••••••" 

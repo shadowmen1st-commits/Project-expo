@@ -1,0 +1,41 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: "**/package-lock.json" }
+      - run: npm ci
+        working-directory: backend
+      - run: npm ci
+        working-directory: frontend
+      - name: Secret scan
+        shell: bash
+        run: |
+          if git grep -n -I -E '(mongodb\+srv://[^[:space:]]+:[^[:space:]]+@|rzp_live_[A-Za-z0-9]{12,}|AKIA[0-9A-Z]{16}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' -- . ':(exclude)**/.env.example'; then
+            echo 'Potential committed secret detected.'
+            exit 1
+          fi
+      - run: npm run test:all
+        working-directory: backend
+      - run: npm run test:readiness
+        working-directory: backend
+      - run: npm run test:backup-restore
+        working-directory: backend
+      - run: npm run test:shutdown
+        working-directory: backend
+      - run: npm run test:socket:smoke
+        working-directory: backend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: npm run test:startup-smoke
+        working-directory: frontend
+      - name: Docker Backend Build
+        run: docker build -t hyperlocal-backend:staging ./backend
+      - name: Docker Frontend Build
+        run: docker build -t hyperlocal-frontend:staging ./frontend

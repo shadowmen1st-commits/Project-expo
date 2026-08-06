@@ -14,6 +14,7 @@ import {
 import PricingService from '../services/PricingService.js';
 import AvailabilityService from '../services/availabilityService.js';
 import BookingStatusTransitionService from '../services/BookingStatusTransitionService.js';
+import WorkerProfile from '../models/WorkerProfile.js';
 import { toSafeBookingDTO } from '../utils/dto.js';
 
 /**
@@ -37,7 +38,7 @@ export const checkAvailability = async (req, res, next) => {
         if (serviceCategoryId) {
             pricePreview = await PricingService.calculatePrice({
                 workerId,
-                categoryId: serviceCategoryId,
+                serviceCategoryId,
                 scheduledStart,
                 scheduledEnd,
                 pricingType: pricingType || 'HOURLY',
@@ -111,6 +112,17 @@ export const createBooking = async (req, res, next) => {
                 statusCode: 400,
                 errorCode: 'WORKER_NOT_AVAILABLE',
                 message: 'Target worker account is not active.',
+            });
+            return;
+        }
+
+        // Validate Worker Verification status
+        const workerProfile = await WorkerProfile.findOne({ userId: workerId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            res.status(400).json({
+                statusCode: 400,
+                errorCode: 'WORKER_NOT_AVAILABLE',
+                message: 'Target worker is not verified or approved to accept bookings.',
             });
             return;
         }
@@ -412,6 +424,14 @@ export const getBookingDetails = async (req, res, next) => {
 export const acceptBooking = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'UNAUTHORIZED',
+                message: 'Your account must be APPROVED to accept bookings.'
+            });
+        }
         const updated = await BookingStatusTransitionService.transition({
             bookingId: id,
             targetStatus: 'ACCEPTED',
@@ -474,6 +494,14 @@ export const markEnRoute = async (req, res, next) => {
 export const startBooking = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'UNAUTHORIZED',
+                message: 'Your account must be APPROVED to start service.'
+            });
+        }
         const updated = await BookingStatusTransitionService.transition({
             bookingId: id,
             targetStatus: 'STARTED',
@@ -494,6 +522,14 @@ export const startBooking = async (req, res, next) => {
 export const requestCompletion = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'UNAUTHORIZED',
+                message: 'Your account must be APPROVED to request completion.'
+            });
+        }
         const updated = await BookingStatusTransitionService.transition({
             bookingId: id,
             targetStatus: 'COMPLETION_REQUESTED',

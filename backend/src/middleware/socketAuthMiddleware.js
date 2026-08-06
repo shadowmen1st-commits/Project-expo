@@ -33,6 +33,7 @@ export const socketAuthMiddleware = async (socket, next) => {
         
         next();
     } catch (error) {
+        console.error('Socket Auth Error:', error);
         const err = new Error('Authentication error');
         err.data = { content: 'Invalid or expired token' };
         next(err);

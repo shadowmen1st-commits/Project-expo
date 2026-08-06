@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
-    ,"test:startup-smoke": "node tests/startupSmoke.js"
+    ,"test:startup-smoke": "node tests/startupSmoke.js",
+    "test:e2e": "npm --prefix ../e2e test"
   },
   "dependencies": {
     "axios": "^1.6.8",

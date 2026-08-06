@@ -14,6 +14,8 @@ import WorkerOnboarding from './pages/WorkerOnboarding';
 import AdminDashboard from './pages/AdminDashboard';
 import OAuthCallback from './pages/OAuthCallback';
 import SupportPortal from './pages/SupportPortal';
+import WorkerVerificationPage from './pages/WorkerVerificationPage';
+import AdminWorkerVerificationsPage from './pages/AdminWorkerVerificationsPage';
 /* ─── Route guard ─── */
 const ProtectedRoute = ({ children, allowedRoles, }) => {
     const { user, loading } = useAuth();
@@ -60,6 +62,7 @@ function AppRoutes() {
       <Route path="/worker" element={<ProtectedRoute allowedRoles={['WORKER']}>
             <WorkerDashboard />
           </ProtectedRoute>}/>
+      <Route path="/worker/verification" element={<ProtectedRoute allowedRoles={['WORKER']}><WorkerVerificationPage /></ProtectedRoute>}/>
       <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['WORKER']}>
             <WorkerOnboarding />
           </ProtectedRoute>}/>
@@ -73,6 +76,7 @@ function AppRoutes() {
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminDashboard />
           </ProtectedRoute>}/>
+      <Route path="/admin/worker-verifications" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><AdminWorkerVerificationsPage /></ProtectedRoute>}/>
 
       {/* ── Catch-all ── */}
       <Route path="*" element={<Navigate to="/" replace/>}/>
@@ -80,7 +84,7 @@ function AppRoutes() {
 }
 export function App() {
     return (<AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>);

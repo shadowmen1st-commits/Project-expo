@@ -8,6 +8,7 @@ import PayoutStateService from '../services/payments/PayoutStateService.js';
 import PayoutReconciliationService from '../services/payments/PayoutReconciliationService.js';
 import AuditLog from '../models/AuditLog.js';
 import Notification from '../models/Notification.js';
+import WorkerProfile from '../models/WorkerProfile.js';
 
 const toSafePayoutDto = (value) => {
     const payout = value?.toObject ? value.toObject() : value;
@@ -18,6 +19,14 @@ const toSafePayoutDto = (value) => {
 
 export const createWorkerPayoutAccount = async (req, res, next) => {
     try {
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'UNAUTHORIZED',
+                message: 'Your account must be APPROVED to register payout accounts.'
+            });
+        }
         const account = await PayoutAccountService.createAccount({ workerId: req.user.userId, ...req.body, requestMeta: { actorId: req.user.userId, requestId: req.requestId } });
         res.status(201).json({ success: true, data: await PayoutAccountService.toSafeDto(account) });
     } catch (error) { next(error); }
@@ -66,6 +75,14 @@ export const disableWorkerPayoutAccount = async (req, res, next) => {
 
 export const createWorkerPayout = async (req, res, next) => {
     try {
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'UNAUTHORIZED',
+                message: 'Your account must be APPROVED to request withdrawals.'
+            });
+        }
         const { providerIdempotencyKey, providerPayoutId, status, ...body } = req.body;
         const payout = await PayoutReservationService.createWithdrawalRequest({ workerId: req.user.userId, ...body, idempotencyKey: req.headers['idempotency-key'], requestMeta: { actorId: req.user.userId, requestId: req.requestId } });
         res.status(201).json({ success: true, data: toSafePayoutDto(payout) });
