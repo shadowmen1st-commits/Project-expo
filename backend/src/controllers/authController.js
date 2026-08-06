@@ -11,8 +11,8 @@ const hashToken = token => crypto.createHash('sha256').update(token).digest('hex
 const cookies = req => Object.fromEntries(String(req.headers.cookie||'').split(';').map(v=>v.trim().split('=').map(decodeURIComponent)).filter(v=>v.length===2));
 const cookieOptions = (maxAge,path='/') => ({httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:process.env.NODE_ENV==='production'?'none':'lax',path,maxAge});
 export const safeUser = user => ({id:user._id,name:user.name,email:user.email,role:user.role,status:user.status,emailVerified:!!user.emailVerified,phoneVerified:!!user.phoneVerified});
-export const setSessionCookies = (res,accessToken,refreshToken) => {res.cookie(ACCESS_COOKIE,accessToken,cookieOptions(15*60*1000));res.cookie(REFRESH_COOKIE,refreshToken,cookieOptions(7*24*60*60*1000,'/api/auth'));};
-export const clearSessionCookies = res => {res.clearCookie(ACCESS_COOKIE,cookieOptions(0));res.clearCookie(REFRESH_COOKIE,cookieOptions(0,'/api/auth'));};
+export const setSessionCookies = (res,accessToken,refreshToken) => {res.cookie(ACCESS_COOKIE,accessToken,cookieOptions(15*60*1000));res.cookie(REFRESH_COOKIE,refreshToken,cookieOptions(7*24*60*60*1000, '/'));};
+export const clearSessionCookies = res => {res.clearCookie(ACCESS_COOKIE,cookieOptions(0));res.clearCookie(REFRESH_COOKIE,cookieOptions(0, '/'));};
 export async function issueSession(user){const base={userId:user._id.toString(),role:user.role,email:user.email};const accessToken=signAccessToken({...base,tokenId:crypto.randomUUID()});const refreshToken=signRefreshToken({...base,tokenId:crypto.randomUUID()});await RefreshToken.create({userId:user._id,tokenHash:hashToken(refreshToken),expiresAt:new Date(Date.now()+7*24*60*60*1000)});return{accessToken,refreshToken};}
 async function audit(user,action,req,after={}){await AuditLog.create({actor:user._id,action,resourceType:'User',resourceId:user._id.toString(),beforeSnapshot:{},afterSnapshot:after,ipAddress:req.ip,userAgent:req.get?.('user-agent'),requestId:req.requestId});}
 
