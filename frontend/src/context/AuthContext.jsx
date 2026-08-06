@@ -7,8 +7,8 @@ export const AuthProvider=({children})=>{
  useEffect(()=>{restoreSession();const expired=()=>setUser(null);window.addEventListener('auth:expired',expired);return()=>window.removeEventListener('auth:expired',expired);},[restoreSession]);
  const login=async(email,password)=>{setLoading(true);try{const response=await api.post('/auth/login',{email:email.trim().toLowerCase(),password});setUser(response.data.user);return response.data.user;}finally{setLoading(false);}};
  const registerUser=async data=>{
-    const url = `${api.defaults.baseURL || ''}/auth/register`;
-    console.log("REGISTER URL:", url);
+    const finalUrl = `${api.defaults.baseURL || ''}/auth/register`;
+    console.log("REGISTER REQUEST URL:", finalUrl);
     return (await api.post('/auth/register',{...data,email:data.email.trim().toLowerCase()})).data.user;
   };
  const logout=async()=>{try{await api.post('/auth/logout');}finally{setUser(null);}};
