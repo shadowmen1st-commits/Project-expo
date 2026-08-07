@@ -1,239 +1,801 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import ServiceCategory from '../models/ServiceCategory.js';
-import CommissionRule from '../models/CommissionRule.js';
-import PlatformPricingConfig from '../models/PlatformPricingConfig.js';
-import Coupon from '../models/Coupon.js';
 import WorkerProfile from '../models/WorkerProfile.js';
-import VerificationDocument from '../models/VerificationDocument.js';
+import Booking from '../models/Booking.js';
+import PaymentTransaction from '../models/PaymentTransaction.js';
+import PaymentOrder from '../models/PaymentOrder.js';
+import WorkerWallet from '../models/WorkerWallet.js';
+import WalletLedger from '../models/WalletLedger.js';
+import WorkerPayout from '../models/WorkerPayout.js';
+import WorkerPayoutAccount from '../models/WorkerPayoutAccount.js';
+import DisputeCase from '../models/DisputeCase.js';
+import Refund from '../models/Refund.js';
+import SupportTicket from '../models/SupportTicket.js';
+import Notification from '../models/Notification.js';
+import Review from '../models/Review.js';
 import VerificationSubmission from '../models/VerificationSubmission.js';
-import { hashPassword } from '../utils/authUtils.js';
+import VerificationDocument from '../models/VerificationDocument.js';
+import LedgerAccount from '../models/LedgerAccount.js';
+import LedgerTransaction from '../models/LedgerTransaction.js';
+import LedgerEntry from '../models/LedgerEntry.js';
 
 const router = Router();
 
+const hashPassword = async (password) => {
+    return await bcrypt.hash(password, 10);
+};
+
 const CATEGORIES_DATA = [
-    { name: 'Driver', slug: 'driver', description: 'Experienced personal and commercial drivers.', icon: 'Car', defaultCommission: 12 },
-    { name: 'Housekeeping', slug: 'housekeeping', description: 'Dusting, laundry, organization and standard house chores.', icon: 'Home', defaultCommission: 10 },
-    { name: 'Senior Care', slug: 'senior-care', description: 'Caring companionship and assistance for elderly adults.', icon: 'Heart', defaultCommission: 15 },
-    { name: 'Patient Care', slug: 'patient-care', description: 'Certified attendants for post-surgery and medical support.', icon: 'Activity', defaultCommission: 15 },
-    { name: 'Babysitting', slug: 'babysitting', description: 'Reliable babysitters and child-care helpers.', icon: 'Baby', defaultCommission: 10 },
-    { name: 'Cooking', slug: 'cooking', description: 'Professional chefs and daily home cooks.', icon: 'Utensils', defaultCommission: 10 },
-    { name: 'Gardening', slug: 'gardening', description: 'Lawn care, weeding, and landscape upkeep.', icon: 'Flower', defaultCommission: 8 },
-    { name: 'Cleaning', slug: 'cleaning', description: 'Deep home and office sanitization.', icon: 'Trash', defaultCommission: 10 },
-    { name: 'Plumbing', slug: 'plumbing', description: 'Fixing leaks, installations and drainage fixes.', icon: 'Wrench', defaultCommission: 12 },
-    { name: 'Electrical Work', slug: 'electrical-work', description: 'Wiring, repairs and home appliance installations.', icon: 'Zap', defaultCommission: 12 },
+    { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Deep cleaning and dusting for homes.', icon: 'Home', defaultCommission: 10 },
+    { name: 'AC Repair', slug: 'ac-repair', description: 'Air conditioner servicing and maintenance.', icon: 'Wind', defaultCommission: 12 },
+    { name: 'Electrician', slug: 'electrician', description: 'Electrical repairs, wiring, and fixing.', icon: 'Zap', defaultCommission: 12 },
+    { name: 'Plumber', slug: 'plumber', description: 'Plumbing services and pipe leak fixes.', icon: 'Wrench', defaultCommission: 10 },
+    { name: 'Gardening', slug: 'gardening', description: 'Lawn care and plant upkeep.', icon: 'Flower', defaultCommission: 8 },
+    { name: 'Senior Care', slug: 'senior-care', description: 'Attendant service for seniors.', icon: 'Heart', defaultCommission: 15 },
+    { name: 'Driver Service', slug: 'driver-service', description: 'Reliable private driver services.', icon: 'Car', defaultCommission: 12 },
 ];
 
 router.post('/seed', async (req, res, next) => {
     try {
-        console.log('Starting DB Seeding via API...');
+        console.log('Starting full DB Seeding via API...');
 
-        // 1. Clear existing documents
+        // 1. Clear existing documents for seeding idempotency
         await User.deleteMany({});
         await ServiceCategory.deleteMany({});
-        await CommissionRule.deleteMany({});
-        await PlatformPricingConfig.deleteMany({});
-        await Coupon.deleteMany({});
         await WorkerProfile.deleteMany({});
-        await VerificationDocument.deleteMany({});
+        await Booking.deleteMany({});
+        await PaymentOrder.deleteMany({});
+        await PaymentTransaction.deleteMany({});
+        await WorkerWallet.deleteMany({});
+        await WalletLedger.deleteMany({});
+        await WorkerPayoutAccount.deleteMany({});
+        await WorkerPayout.deleteMany({});
+        await DisputeCase.deleteMany({});
+        await Refund.deleteMany({});
+        await SupportTicket.deleteMany({});
+        await Notification.deleteMany({});
+        await Review.deleteMany({});
         await VerificationSubmission.deleteMany({});
-        console.log('Cleared existing database tables.');
+        await VerificationDocument.deleteMany({});
+        await LedgerAccount.deleteMany({});
+        await LedgerTransaction.deleteMany({});
+        await LedgerEntry.deleteMany({});
 
-        // 2. Hash default passwords
-        const adminPassHash = await hashPassword('admin123');
-        const customerPassHash = await hashPassword('customer123');
-        const workerPassHash = await hashPassword('worker123');
+        // Hash Passwords
+        const adminPass = await hashPassword('Admin@123');
+        const customerPass = await hashPassword('Customer@123');
+        const workerPass = await hashPassword('Worker@123');
 
-        // 3. Create Primary Admin User
-        const adminUser = new User({
-            name: 'Super Admin',
-            email: 'admin@hyperlocal.com',
-            phone: '9999999999',
-            passwordHash: adminPassHash,
+        // ----------------- USERS -----------------
+        const admin = await User.create({
+            name: 'System Admin',
+            email: 'admin@test.com',
+            phone: '9999999900',
+            passwordHash: adminPass,
             role: 'ADMIN',
             status: 'ACTIVE',
             emailVerified: true,
             phoneVerified: true,
+            authenticationMethods: ['PASSWORD'],
+            primaryAuthenticationMethod: 'PASSWORD',
         });
-        await adminUser.save();
 
-        // 4. Create Test Customers
-        const customersData = [
-            { name: 'John Customer', email: 'customer@hyperlocal.com', phone: '8888888888' },
-            { name: 'Priya Sharma', email: 'priya.customer@hyperlocal.com', phone: '8888888881' },
-            { name: 'Amit Verma', email: 'amit.customer@hyperlocal.com', phone: '8888888882' },
-        ];
+        const customer1 = await User.create({
+            name: 'John Customer',
+            email: 'customer1@test.com',
+            phone: '9999999901',
+            passwordHash: customerPass,
+            role: 'CUSTOMER',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true,
+            authenticationMethods: ['PASSWORD'],
+            primaryAuthenticationMethod: 'PASSWORD',
+        });
 
-        for (const cust of customersData) {
-            const customerUser = new User({
-                name: cust.name,
-                email: cust.email,
-                phone: cust.phone,
-                passwordHash: customerPassHash,
-                role: 'CUSTOMER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true,
-            });
-            await customerUser.save();
-        }
+        const customer2 = await User.create({
+            name: 'Alice Customer',
+            email: 'customer2@test.com',
+            phone: '9999999902',
+            passwordHash: customerPass,
+            role: 'CUSTOMER',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true,
+            authenticationMethods: ['PASSWORD'],
+            primaryAuthenticationMethod: 'PASSWORD',
+        });
 
-        // 5. Create Service Categories
-        const seededCategories = [];
-        for (const item of CATEGORIES_DATA) {
+        const workerUser1 = await User.create({
+            name: 'Rahul Sharma',
+            email: 'worker1@test.com',
+            phone: '9999999903',
+            passwordHash: workerPass,
+            role: 'WORKER',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true,
+            authenticationMethods: ['PASSWORD'],
+            primaryAuthenticationMethod: 'PASSWORD',
+        });
+
+        const workerUser2 = await User.create({
+            name: 'Amit Kumar',
+            email: 'worker2@test.com',
+            phone: '9999999904',
+            passwordHash: workerPass,
+            role: 'WORKER',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true,
+            authenticationMethods: ['PASSWORD'],
+            primaryAuthenticationMethod: 'PASSWORD',
+        });
+
+        // ----------------- SERVICE CATEGORIES -----------------
+        const categories = {};
+        for (const data of CATEGORIES_DATA) {
             const cat = await ServiceCategory.create({
-                ...item,
+                ...data,
                 requiredDocuments: ['AADHAAR', 'PAN'],
-                minimumExperience: 1,
-                minimumBookingDuration: 2,
-                sortOrder: seededCategories.length,
-                isActive: true,
             });
-            seededCategories.push(cat);
+            categories[data.slug] = cat;
         }
 
-        const categoryMap = {};
-        seededCategories.forEach(c => { categoryMap[c.slug] = c._id; });
-
-        // 6. Create Test Workers & Profiles
-        const workersData = [
-            {
-                name: 'Alice Worker',
-                email: 'worker@hyperlocal.com',
-                phone: '7777777777',
-                bio: 'Professional senior care specialist and house manager with over 5 years of experience.',
-                skills: ['Elderly Care', 'Laundry', 'Cooking'],
-                categories: [categoryMap['senior-care'], categoryMap['housekeeping']],
-                hourlyRate: 35000,
-                dailyRate: 250000,
-                verificationStatus: 'INCOMPLETE_PROFILE',
-                verificationBadge: false,
-                isPubliclyVisible: false
-            },
-            {
-                name: 'Rajesh Kumar',
-                email: 'rajesh.worker@hyperlocal.com',
-                phone: '7777777771',
-                bio: 'Certified electrician and plumber with 8+ years experience in domestic wiring & repairs.',
-                skills: ['Wiring', 'Switchboard Repair', 'Pipe Fitting', 'Sanitaryware'],
-                categories: [categoryMap['electrical-work'], categoryMap['plumbing']],
-                hourlyRate: 40000,
-                dailyRate: 280000,
-                verificationStatus: 'APPROVED',
-                verificationBadge: true,
-                isPubliclyVisible: true
-            },
-            {
-                name: 'Sunita Sharma',
-                email: 'sunita.worker@hyperlocal.com',
-                phone: '7777777772',
-                bio: 'Expert North/South Indian chef and experienced babysitter for toddlers.',
-                skills: ['North Indian Food', 'South Indian Cooking', 'Baby Care', 'Meal Prep'],
-                categories: [categoryMap['cooking'], categoryMap['babysitting']],
-                hourlyRate: 30000,
-                dailyRate: 220000,
-                verificationStatus: 'PENDING_APPROVAL',
-                verificationBadge: false,
-                isPubliclyVisible: false
-            },
-            {
-                name: 'Vikram Singh',
-                email: 'vikram.worker@hyperlocal.com',
-                phone: '7777777773',
-                bio: 'Licensed commercial & private driver with deep knowledge of local routes and highway safety.',
-                skills: ['Automatic & Manual Cars', 'Outstation Drives', 'Deep Cleaning'],
-                categories: [categoryMap['driver'], categoryMap['cleaning']],
-                hourlyRate: 45000,
-                dailyRate: 300000,
-                verificationStatus: 'CHANGES_REQUIRED',
-                verificationBadge: false,
-                isPubliclyVisible: false
-            },
-        ];
-
-        for (const wData of workersData) {
-            const workerUser = new User({
-                name: wData.name,
-                email: wData.email,
-                phone: wData.phone,
-                passwordHash: workerPassHash,
-                role: 'WORKER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true,
-            });
-            await workerUser.save();
-
-            const profile = new WorkerProfile({
-                userId: workerUser._id,
-                fullName: wData.name,
-                phone: wData.phone,
-                primaryServiceCategoryId: wData.categories[0],
-                serviceCategoryIds: wData.categories.filter(Boolean),
-                verificationStatus: wData.verificationStatus,
-                verificationBadge: wData.verificationBadge,
-                isOnline: true,
-                isPubliclyVisible: wData.isPubliclyVisible,
-                experienceYears: 5,
-                bio: wData.bio,
-                skills: wData.skills,
-                languages: ['English', 'Hindi'],
-                hourlyRate: wData.hourlyRate,
-                dailyRate: wData.dailyRate,
-                minimumBookingDuration: 2,
-                serviceRadiusKm: 15,
-                averageRating: wData.verificationStatus === 'APPROVED' ? 4.8 : null,
-                ratingCount: wData.verificationStatus === 'APPROVED' ? 12 : 0,
-            });
-            await profile.save();
-        }
-
-        // 7. Seed Platform Pricing Config
-        const pConfig = new PlatformPricingConfig({
-            currency: 'INR',
-            customerPlatformFeeType: 'FIXED',
-            customerPlatformFeeFixedPaise: 5000, // ₹50.00
-            taxEnabled: true,
-            taxRateBps: 1800, // 18% GST
-            taxApplicationMode: 'EXCLUSIVE',
-            quoteValiditySeconds: 900,
+        // ----------------- WORKER PROFILES -----------------
+        await WorkerProfile.create({
+            userId: workerUser1._id,
+            fullName: 'Rahul Sharma',
+            phone: '9999999903',
+            primaryServiceCategoryId: categories['home-cleaning']._id,
+            serviceCategoryIds: [categories['home-cleaning']._id, categories['ac-repair']._id],
+            skills: ['Cleaning', 'AC Repair'],
+            languages: ['English', 'Hindi'],
+            hourlyRate: 35000,
+            dailyRate: 250000,
+            yearsOfExperience: 5,
+            averageRating: 4.8,
+            ratingCount: 15,
+            verificationStatus: 'APPROVED',
+            verificationBadge: true,
+            isOnline: true,
+            isPubliclyVisible: true,
         });
-        await pConfig.save();
 
-        // 8. Seed Global Commission Rule
-        const globalRule = new CommissionRule({
-            name: 'Global Default 10% Commission',
-            scope: 'GLOBAL',
-            calculationType: 'PERCENTAGE',
-            percentageBps: 1000, // 10%
-            fixedAmountPaise: 0,
-            minimumCommissionPaise: 0,
-            priority: 3,
-            effectiveFrom: new Date(),
-            isActive: true,
+        await WorkerProfile.create({
+            userId: workerUser2._id,
+            fullName: 'Amit Kumar',
+            phone: '9999999904',
+            primaryServiceCategoryId: categories['electrician']._id,
+            serviceCategoryIds: [categories['electrician']._id, categories['plumber']._id],
+            skills: ['Electrician', 'Plumbing'],
+            languages: ['Hindi'],
+            hourlyRate: 30000,
+            dailyRate: 220000,
+            yearsOfExperience: 3,
+            averageRating: 4.5,
+            ratingCount: 8,
+            verificationStatus: 'APPROVED',
+            verificationBadge: true,
+            isOnline: true,
+            isPubliclyVisible: true,
+        });
+
+        // ----------------- BOOKINGS -----------------
+        const now = new Date();
+        
+        const bookingCompleted = await Booking.create({
+            bookingNumber: 'BK-1001',
+            customerId: customer1._id,
+            workerId: workerUser1._id,
+            serviceCategoryId: categories['home-cleaning']._id,
+            serviceAddress: '123 Test Lane, Delhi',
+            scheduledStart: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+            scheduledEnd: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000),
+            durationMinutes: 120,
+            pricingType: 'HOURLY',
+            baseAmount: 70000,
+            platformFee: 5000,
+            taxAmount: 12600,
+            totalAmount: 87600,
+            commissionPercentage: 10,
+            commissionAmount: 7000,
+            workerEarning: 63000,
+            bookingStatus: 'COMPLETED',
+            paymentStatus: 'PAID',
+            escrowStatus: 'RELEASED',
+        });
+
+        const bookingConfirmed = await Booking.create({
+            bookingNumber: 'BK-1002',
+            customerId: customer1._id,
+            workerId: workerUser1._id,
+            serviceCategoryId: categories['home-cleaning']._id,
+            serviceAddress: '123 Test Lane, Delhi',
+            scheduledStart: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000),
+            scheduledEnd: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000),
+            durationMinutes: 120,
+            pricingType: 'HOURLY',
+            baseAmount: 70000,
+            platformFee: 5000,
+            taxAmount: 12600,
+            totalAmount: 87600,
+            commissionPercentage: 10,
+            commissionAmount: 7000,
+            workerEarning: 63000,
+            bookingStatus: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            escrowStatus: 'FUNDED',
+        });
+
+        const bookingPending = await Booking.create({
+            bookingNumber: 'BK-1003',
+            customerId: customer2._id,
+            workerId: workerUser2._id,
+            serviceCategoryId: categories['electrician']._id,
+            serviceAddress: '456 Sample Street, Noida',
+            scheduledStart: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+            scheduledEnd: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+            durationMinutes: 60,
+            pricingType: 'HOURLY',
+            baseAmount: 30000,
+            platformFee: 5000,
+            taxAmount: 5400,
+            totalAmount: 40400,
+            commissionPercentage: 12,
+            commissionAmount: 3600,
+            workerEarning: 26400,
+            bookingStatus: 'PAYMENT_PENDING',
+            paymentStatus: 'PENDING',
+            escrowStatus: 'NOT_FUNDED',
+        });
+
+        const bookingCancelled = await Booking.create({
+            bookingNumber: 'BK-1004',
+            customerId: customer1._id,
+            workerId: workerUser2._id,
+            serviceCategoryId: categories['plumber']._id,
+            serviceAddress: '789 Ring Road, Gurgaon',
+            scheduledStart: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+            scheduledEnd: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+            durationMinutes: 60,
+            pricingType: 'HOURLY',
+            baseAmount: 30000,
+            platformFee: 5000,
+            taxAmount: 5400,
+            totalAmount: 40400,
+            commissionPercentage: 10,
+            commissionAmount: 3000,
+            workerEarning: 27000,
+            bookingStatus: 'CANCELLED',
+            paymentStatus: 'FAILED',
+            escrowStatus: 'NOT_FUNDED',
+            customerNotes: 'Customer cancelled',
+        });
+
+        const bookingRefund = await Booking.create({
+            bookingNumber: 'BK-1005',
+            customerId: customer2._id,
+            workerId: workerUser1._id,
+            serviceCategoryId: categories['home-cleaning']._id,
+            serviceAddress: '456 Sample Street, Noida',
+            scheduledStart: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+            scheduledEnd: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000),
+            durationMinutes: 120,
+            pricingType: 'HOURLY',
+            baseAmount: 70000,
+            platformFee: 5000,
+            taxAmount: 12600,
+            totalAmount: 87600,
+            commissionPercentage: 10,
+            commissionAmount: 7000,
+            workerEarning: 63000,
+            bookingStatus: 'CANCELLED',
+            paymentStatus: 'PAID',
+            escrowStatus: 'REFUND_PENDING',
+        });
+
+        // ----------------- PAYMENTS -----------------
+        const poCompleted = await PaymentOrder.create({
+            bookingId: bookingCompleted._id,
+            customerId: customer1._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_completed_dummy',
+            providerReceipt: 'receipt_completed_dummy',
+            status: 'PAID',
+            amountPaise: bookingCompleted.totalAmount,
+            bookingAmountSnapshot: { totalAmount: bookingCompleted.totalAmount },
+            idempotencyKey: 'idem_po_completed',
+            expiresAt: new Date(now.getTime() + 15 * 60000),
+        });
+        const ptCompleted = await PaymentTransaction.create({
+            bookingId: bookingCompleted._id,
+            paymentOrderId: poCompleted._id,
+            customerId: customer1._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_completed_dummy',
+            providerPaymentId: 'pay_completed_dummy',
+            amountPaise: 50000,
+            status: 'CAPTURED',
+            captured: true,
+            idempotencyKey: 'idem_pt_completed',
+        });
+
+        const poPending = await PaymentOrder.create({
+            bookingId: bookingPending._id,
+            customerId: customer2._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_pending_dummy',
+            providerReceipt: 'receipt_pending_dummy',
+            status: 'PROVIDER_ORDER_CREATED',
+            amountPaise: bookingPending.totalAmount,
+            bookingAmountSnapshot: { totalAmount: bookingPending.totalAmount },
+            idempotencyKey: 'idem_po_pending',
+            expiresAt: new Date(now.getTime() + 15 * 60000),
+        });
+        const ptPending = await PaymentTransaction.create({
+            bookingId: bookingPending._id,
+            paymentOrderId: poPending._id,
+            customerId: customer2._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_pending_dummy',
+            providerPaymentId: 'pay_pending_dummy',
+            amountPaise: 80000,
+            status: 'INITIATED',
+            captured: false,
+            idempotencyKey: 'idem_pt_pending',
+        });
+
+        const poFailed = await PaymentOrder.create({
+            bookingId: bookingCancelled._id,
+            customerId: customer1._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_failed_dummy',
+            providerReceipt: 'receipt_failed_dummy',
+            status: 'FAILED',
+            amountPaise: bookingCancelled.totalAmount,
+            bookingAmountSnapshot: { totalAmount: bookingCancelled.totalAmount },
+            idempotencyKey: 'idem_po_failed',
+            expiresAt: new Date(now.getTime() + 15 * 60000),
+        });
+        const ptFailed = await PaymentTransaction.create({
+            bookingId: bookingCancelled._id,
+            paymentOrderId: poFailed._id,
+            customerId: customer1._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_failed_dummy',
+            providerPaymentId: 'pay_failed_dummy',
+            amountPaise: 100000,
+            status: 'FAILED',
+            captured: false,
+            idempotencyKey: 'idem_pt_failed',
+        });
+
+        const poRefund = await PaymentOrder.create({
+            bookingId: bookingRefund._id,
+            customerId: customer2._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_refund_dummy',
+            providerReceipt: 'receipt_refund_dummy',
+            status: 'PAID',
+            amountPaise: bookingRefund.totalAmount,
+            bookingAmountSnapshot: { totalAmount: bookingRefund.totalAmount },
+            idempotencyKey: 'idem_po_refund',
+            expiresAt: new Date(now.getTime() + 15 * 60000),
+        });
+        const ptRefund = await PaymentTransaction.create({
+            bookingId: bookingRefund._id,
+            paymentOrderId: poRefund._id,
+            customerId: customer2._id,
+            provider: 'razorpay',
+            providerOrderId: 'order_refund_dummy',
+            providerPaymentId: 'pay_refund_dummy',
+            amountPaise: 50000,
+            status: 'CAPTURED',
+            captured: true,
+            idempotencyKey: 'idem_pt_refund',
+        });
+
+        // ----------------- WALLETS & TRANSACTIONS -----------------
+        await WorkerWallet.create({
+            workerId: customer1._id,
+            currency: 'INR',
+            availableBalancePaise: 500000,
+        });
+
+        await WorkerWallet.create({
+            workerId: workerUser1._id,
+            currency: 'INR',
+            availableBalancePaise: 350000,
+        });
+
+        await WalletLedger.create({
+            reference: 'TXN-001',
+            userId: customer1._id,
+            debitAccount: 'BANK',
+            creditAccount: 'CUSTOMER_WALLET',
+            amount: 500000,
+            transactionType: 'DEPOSIT',
+            status: 'COMPLETED',
+            idempotencyKey: 'DEPOSIT-C1',
+        });
+
+        await WalletLedger.create({
+            reference: 'TXN-002',
+            userId: workerUser1._id,
+            debitAccount: 'CUSTOMER_WALLET',
+            creditAccount: 'WORKER_WALLET',
+            amount: 350000,
+            transactionType: 'EARNING',
+            status: 'COMPLETED',
+            idempotencyKey: 'EARNING-W1',
+        });
+
+        await WalletLedger.create({
+            reference: 'TXN-003',
+            userId: customer1._id,
+            debitAccount: 'CUSTOMER_WALLET',
+            creditAccount: 'ESCROW',
+            bookingId: bookingCompleted._id,
+            amount: 87600,
+            transactionType: 'HOLD',
+            status: 'COMPLETED',
+            idempotencyKey: 'BOOKING_PAYMENT-C1',
+        });
+
+        await WalletLedger.create({
+            reference: 'TXN-004',
+            userId: workerUser1._id,
+            debitAccount: 'ESCROW',
+            creditAccount: 'PLATFORM_REVENUE',
+            bookingId: bookingCompleted._id,
+            amount: 7000,
+            transactionType: 'COMMISSION',
+            status: 'COMPLETED',
+            idempotencyKey: 'COMMISSION-W1',
+        });
+
+        // ----------------- WITHDRAWALS -----------------
+        const payoutAccount1 = await WorkerPayoutAccount.create({
+            workerId: workerUser1._id,
+            accountType: 'BANK_ACCOUNT',
+            displayName: 'Rahul Savings',
+            beneficiaryName: 'Rahul Sharma',
+            accountNumberLast4: '1234',
+            bankName: 'HDFC Bank',
+            fingerprint: 'fp-rahul-1234',
+            verificationStatus: 'VERIFIED',
+        });
+
+        const payoutAccount2 = await WorkerPayoutAccount.create({
+            workerId: workerUser2._id,
+            accountType: 'BANK_ACCOUNT',
+            displayName: 'Amit Savings',
+            beneficiaryName: 'Amit Kumar',
+            accountNumberLast4: '5678',
+            bankName: 'ICICI Bank',
+            fingerprint: 'fp-amit-5678',
+            verificationStatus: 'VERIFIED',
+        });
+
+        await WorkerPayout.create({
+            payoutNumber: 'PW-2001',
+            workerId: workerUser1._id,
+            payoutAccountId: payoutAccount1._id,
+            amountPaise: 200000,
+            status: 'PENDING',
+            mode: 'IMPS',
+            idempotencyKey: 'PW-2001-IDEM',
+            requestFingerprint: 'req-fp-pw-2001',
+            availableBalanceSnapshotPaise: 350000,
+        });
+
+        await WorkerPayout.create({
+            payoutNumber: 'PW-2002',
+            workerId: workerUser2._id,
+            payoutAccountId: payoutAccount2._id,
+            amountPaise: 150000,
+            status: 'APPROVED',
+            mode: 'IMPS',
+            idempotencyKey: 'PW-2002-IDEM',
+            requestFingerprint: 'req-fp-pw-2002',
+            availableBalanceSnapshotPaise: 200000,
+        });
+
+        await WorkerPayout.create({
+            payoutNumber: 'PW-2003',
+            workerId: workerUser1._id,
+            payoutAccountId: payoutAccount1._id,
+            amountPaise: 100000,
+            status: 'REJECTED',
+            mode: 'IMPS',
+            idempotencyKey: 'PW-2003-IDEM',
+            requestFingerprint: 'req-fp-pw-2003',
+            availableBalanceSnapshotPaise: 150000,
+        });
+
+        // ----------------- ADMIN PANEL DATA & VERIFICATIONS -----------------
+        const docPending = await VerificationDocument.create({
+            workerId: workerUser2._id,
+            documentType: 'AADHAAR',
+            documentNumberEncrypted: 'encrypted_aadhaar_2',
+            documentNumberLast4: '9902',
+            frontFile: 'https://mock-s3.com/aadhaar-front.jpg',
+            fileMimeType: 'image/jpeg',
+            fileSize: 102400,
+            verificationStatus: 'PENDING_REVIEW',
+        });
+        await VerificationSubmission.create({
+            workerId: workerUser2._id,
+            submissionNumber: 1,
+            profileSnapshot: {},
+            serviceSnapshot: {},
+            documentIds: [docPending._id],
+            declarationAccepted: true,
+            consentAccepted: true,
+            status: 'PENDING_APPROVAL',
+            version: 1,
+        });
+
+        const docApproved = await VerificationDocument.create({
+            workerId: workerUser1._id,
+            documentType: 'AADHAAR',
+            documentNumberEncrypted: 'encrypted_aadhaar_1',
+            documentNumberLast4: '9901',
+            frontFile: 'https://mock-s3.com/aadhaar-front1.jpg',
+            fileMimeType: 'image/jpeg',
+            fileSize: 102400,
+            verificationStatus: 'APPROVED',
+        });
+        await VerificationSubmission.create({
+            workerId: workerUser1._id,
+            submissionNumber: 1,
+            profileSnapshot: {},
+            serviceSnapshot: {},
+            documentIds: [docApproved._id],
+            declarationAccepted: true,
+            consentAccepted: true,
+            status: 'APPROVED',
+            version: 1,
+        });
+
+        const workerUser3 = await User.create({
+            name: 'Failed Worker',
+            email: 'failedworker@test.com',
+            phone: '9999999905',
+            passwordHash: workerPass,
+            role: 'WORKER',
             status: 'ACTIVE',
         });
-        await globalRule.save();
-
-        // 9. Seed Test Coupon WELCOME10
-        const testCoupon = new Coupon({
-            code: 'WELCOME10',
-            description: '10% Off Welcome Discount',
-            discountType: 'PERCENTAGE',
-            percentageBps: 1000, // 10%
-            maximumDiscountPaise: 10000, // ₹100 max
-            minimumOrderAmountPaise: 50000, // ₹500 min order
-            validFrom: new Date(),
-            isActive: true,
+        const docRejected = await VerificationDocument.create({
+            workerId: workerUser3._id,
+            documentType: 'PAN',
+            documentNumberEncrypted: 'encrypted_pan_3',
+            documentNumberLast4: '5566',
+            frontFile: 'https://mock-s3.com/pan-front3.jpg',
+            fileMimeType: 'image/jpeg',
+            fileSize: 102400,
+            verificationStatus: 'REJECTED',
+            reviewComment: 'Illegible document copy.',
         });
-        await testCoupon.save();
+        await VerificationSubmission.create({
+            workerId: workerUser3._id,
+            submissionNumber: 1,
+            profileSnapshot: {},
+            serviceSnapshot: {},
+            documentIds: [docRejected._id],
+            declarationAccepted: true,
+            consentAccepted: true,
+            status: 'REJECTED',
+            finalComment: 'PAN verification failed',
+            version: 1,
+        });
+
+        const dispute = await DisputeCase.create({
+            disputeNumber: 'DS-3001',
+            bookingId: bookingRefund._id,
+            customerId: customer2._id,
+            workerId: workerUser1._id,
+            openedByType: 'CUSTOMER',
+            openedById: customer2._id,
+            disputeType: 'SERVICE_NOT_PROVIDED',
+            reasonCode: 'WORKER_NO_SHOW',
+            title: 'Worker did not show up',
+            description: 'The worker did not arrive at the scheduled start time.',
+            claimedAmountPaise: 87600,
+            status: 'OPEN',
+            priority: 'HIGH',
+        });
+
+        await Refund.create({
+            refundNumber: 'RF-4001',
+            bookingId: bookingRefund._id,
+            customerId: customer2._id,
+            workerId: workerUser1._id,
+            disputeId: dispute._id,
+            paymentOrderId: poRefund._id,
+            paymentTransactionId: ptRefund._id,
+            providerPaymentId: 'pay_refund_dummy',
+            refundType: 'FULL',
+            refundReason: 'Worker No Show Dispute Resolution',
+            requestedAmountPaise: 87600,
+            approvedAmountPaise: 87600,
+            status: 'APPROVED',
+            source: 'ADMIN_DISPUTE_RESOLUTION',
+            idempotencyKey: 'RF-4001-IDEM',
+            requestedByType: 'ADMIN',
+            requestedById: admin._id,
+        });
+
+        await SupportTicket.create({
+            ticketNumber: 'ST-5001',
+            requesterId: customer1._id,
+            requesterRole: 'CUSTOMER',
+            category: 'PAYMENT',
+            subjectSafe: 'Double debited during BK-1004 booking',
+            descriptionSafe: 'The money was cut twice from my account for BK-1004.',
+            priority: 'NORMAL',
+            status: 'OPEN',
+        });
+
+        // ----------------- REVIEWS -----------------
+        await Review.create({
+            bookingId: bookingCompleted._id,
+            serviceCategoryId: categories['home-cleaning']._id,
+            reviewerId: customer1._id,
+            revieweeId: workerUser1._id,
+            workerId: workerUser1._id,
+            customerId: customer1._id,
+            direction: 'CUSTOMER_TO_WORKER',
+            rating: 5,
+            comment: 'Excellent service',
+            bookingCompletedAt: now,
+            idempotencyKey: 'REV-001',
+            requestFingerprint: 'fingerprint-rev-001',
+            editWindowExpiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+            publishedAt: now,
+            eligibilitySnapshot: {
+                bookingId: bookingCompleted._id,
+                bookingNumber: bookingCompleted.bookingNumber,
+                customerId: customer1._id,
+                workerId: workerUser1._id,
+                serviceCategoryId: categories['home-cleaning']._id,
+                bookingStatus: 'COMPLETED',
+                paymentStatus: 'PAID',
+                completedAt: now,
+                reviewerRole: 'CUSTOMER',
+                reviewDirection: 'CUSTOMER_TO_WORKER',
+                eligibilityCalculatedAt: now,
+            },
+            policySnapshot: {},
+        });
+
+        const bookingCompleted2 = await Booking.create({
+            bookingNumber: 'BK-1006',
+            customerId: customer2._id,
+            workerId: workerUser2._id,
+            serviceCategoryId: categories['electrician']._id,
+            serviceAddress: '123 Main St',
+            scheduledStart: now,
+            scheduledEnd: now,
+            durationMinutes: 60,
+            pricingType: 'HOURLY',
+            baseAmount: 30000,
+            platformFee: 5000,
+            taxAmount: 5400,
+            totalAmount: 40400,
+            commissionPercentage: 10,
+            commissionAmount: 3000,
+            workerEarning: 27000,
+            bookingStatus: 'COMPLETED',
+            paymentStatus: 'PAID',
+            escrowStatus: 'RELEASED',
+        });
+
+        await Review.create({
+            bookingId: bookingCompleted2._id,
+            serviceCategoryId: categories['electrician']._id,
+            reviewerId: customer2._id,
+            revieweeId: workerUser2._id,
+            workerId: workerUser2._id,
+            customerId: customer2._id,
+            direction: 'CUSTOMER_TO_WORKER',
+            rating: 4,
+            comment: 'Good experience',
+            bookingCompletedAt: now,
+            idempotencyKey: 'REV-002',
+            requestFingerprint: 'fingerprint-rev-002',
+            editWindowExpiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+            publishedAt: now,
+            eligibilitySnapshot: {
+                bookingId: bookingCompleted2._id,
+                bookingNumber: bookingCompleted2.bookingNumber,
+                customerId: customer2._id,
+                workerId: workerUser2._id,
+                serviceCategoryId: categories['electrician']._id,
+                bookingStatus: 'COMPLETED',
+                paymentStatus: 'PAID',
+                completedAt: now,
+                reviewerRole: 'CUSTOMER',
+                reviewDirection: 'CUSTOMER_TO_WORKER',
+                eligibilityCalculatedAt: now,
+            },
+            policySnapshot: {},
+        });
+
+        // ----------------- NOTIFICATIONS -----------------
+        await Notification.create({
+            recipientId: customer1._id,
+            type: 'BOOKING_CONFIRMED',
+            category: 'BOOKING',
+            title: 'Booking Confirmed',
+            messageSafe: 'Your booking has been confirmed by the worker.',
+            dedupeKey: 'c1-bk-confirmed',
+        });
+        await Notification.create({
+            recipientId: customer1._id,
+            type: 'PAYMENT_SUCCESSFUL',
+            category: 'PAYMENT',
+            title: 'Payment Successful',
+            messageSafe: 'Your payment of ₹876 has been processed successfully.',
+            dedupeKey: 'c1-pm-success',
+        });
+        await Notification.create({
+            recipientId: customer2._id,
+            type: 'REFUND_PROCESSED',
+            category: 'REFUND',
+            title: 'Refund Processed',
+            messageSafe: 'Your refund of ₹876 has been processed.',
+            dedupeKey: 'c2-rf-processed',
+        });
+
+        await Notification.create({
+            recipientId: workerUser1._id,
+            type: 'NEW_BOOKING_RECEIVED',
+            category: 'BOOKING',
+            title: 'New Booking Received',
+            messageSafe: 'You have received a new booking request.',
+            dedupeKey: 'w1-bk-new',
+        });
+        await Notification.create({
+            recipientId: workerUser1._id,
+            type: 'PAYMENT_CREDITED',
+            category: 'PAYMENT',
+            title: 'Payment Credited',
+            messageSafe: 'Earning of ₹630 has been credited to your wallet.',
+            dedupeKey: 'w1-pay-credit',
+        });
+        await Notification.create({
+            recipientId: workerUser2._id,
+            type: 'WITHDRAWAL_APPROVED',
+            category: 'PAYOUT',
+            title: 'Withdrawal Approved',
+            messageSafe: 'Your payout request of ₹1500 has been approved.',
+            dedupeKey: 'w2-wd-approved',
+        });
+
+        await Notification.create({
+            recipientId: admin._id,
+            type: 'NEW_WORKER_APPROVAL_REQUEST',
+            category: 'ACCOUNT',
+            title: 'New Worker Approval Request',
+            messageSafe: 'A new worker profile is pending verification.',
+            dedupeKey: 'adm-wk-pending',
+        });
+        await Notification.create({
+            recipientId: admin._id,
+            type: 'NEW_DISPUTE_CREATED',
+            category: 'DISPUTE',
+            title: 'New Dispute Created',
+            messageSafe: 'A new dispute case DS-3001 has been registered.',
+            dedupeKey: 'adm-ds-created',
+        });
 
         res.status(200).json({
             success: true,
-            message: 'Database seeded successfully via dev endpoint!',
-            admin: { email: 'admin@hyperlocal.com', password: 'admin123' },
-            customer: { email: 'customer@hyperlocal.com', password: 'customer123' },
-            worker: { email: 'worker@hyperlocal.com', password: 'worker123' },
+            message: 'Database seeded successfully with full test suite!',
         });
     } catch (err) {
         next(err);
