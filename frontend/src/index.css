@@ -1,29 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background-primary: #FAF6F0;
-  --background-secondary: #F4EFE6;
-  --background-tertiary: #EFE9DF;
+  --background-primary: #FFFBEB;
+  --background-secondary: #FEF3C7;
+  --background-tertiary: #FDE68A;
 
   --surface-primary: #FFFFFF;
-  --surface-secondary: #FFFBF7;
-  --surface-tertiary: #FEFCE8;
-  --surface-hover: #FEFCE8;
+  --surface-secondary: #FFFDF5;
+  --surface-tertiary: #FEF9C3;
+  --surface-hover: #FEF08A;
 
-  --border-default: #E7E0D8;
-  --border-hover: #DCD4C8;
-  --border-strong: #EAB308;
+  --border-default: #FEF3C7;
+  --border-hover: #FCD34D;
+  --border-strong: #F97316;
 
-  --text-primary: #1C1917;
-  --text-secondary: #44403C;
-  --text-muted: #78716C;
-  --text-subtle: #A8A29E;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #4B5563;
+  --text-subtle: #9CA3AF;
 
-  --brand-primary: #EAB308;
-  --brand-secondary: #FACC15;
-  --brand-orange: #FACC15;
-  --brand-orange-light: #FEF08A;
-  --brand-orange-tint: #FEFCE8;
+  --brand-primary: #FACC15;
+  --brand-secondary: #F97316;
+  --brand-orange: #F97316;
+  --brand-orange-light: #FED7AA;
+  --brand-orange-tint: #FFEDD5;
 
   --success: #16A34A;
   --warning: #D97706;
@@ -47,23 +47,25 @@ body {
 
 /* ─── Brand Gradient Utilities ─── */
 .btn-primary-gradient {
-  background: linear-gradient(90deg, #EAB308 0%, #FACC15 50%, #FACC15 100%);
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(232, 122, 30, 0.25);
-  transition: all 0.2s ease-in-out;
+  background: linear-gradient(90deg, #FACC15 0%, #F97316 100%);
+  color: #111827;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-gradient:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 6px 20px rgba(232, 122, 30, 0.35);
+  background: linear-gradient(90deg, #F97316 0%, #FACC15 100%);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
 }
 
 .logo-gradient {
-  background: linear-gradient(135deg, #EAB308 0%, #FACC15 60%, #FACC15 100%);
+  background: linear-gradient(135deg, #FACC15 0%, #F97316 100%);
 }
 
 .text-highlight-gradient {
-  background: linear-gradient(90deg, #EAB308 0%, #D97706 100%);
+  background: linear-gradient(90deg, #F97316 0%, #EA580C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -71,33 +73,33 @@ body {
 .auth-panel-bg {
   background: radial-gradient(
     circle at 50% 45%,
-    rgba(232, 122, 30, 0.12) 0%,
-    rgba(242, 140, 40, 0.05) 30%,
-    rgba(250, 246, 240, 0) 60%
+    rgba(249, 115, 22, 0.12) 0%,
+    rgba(250, 204, 21, 0.05) 30%,
+    rgba(255, 251, 235, 0) 60%
   ),
   linear-gradient(
     135deg,
-    #FFFBF7 0%,
-    #FEFCE8 50%,
-    #FAF6F0 100%
+    #FFFFFF 0%,
+    #FFFDF5 50%,
+    #FFFBEB 100%
   );
 }
 
 .input-field-style {
   background-color: #FFFFFF;
-  border: 1px solid #E7E0D8;
-  color: #1C1917;
+  border: 1px solid #FEF3C7;
+  color: #111827;
   transition: all 0.2s ease;
 }
 
 .input-field-style:hover {
-  border-color: #DCD4C8;
+  border-color: #FCD34D;
 }
 
 .input-field-style:focus {
-  border-color: #EAB308;
+  border-color: #F97316;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(232, 122, 30, 0.15);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25);
 }
 
 /* ─── Keyframes ─── */
