@@ -13,6 +13,7 @@
     "seed:full": "node src/seed/fullMarketplaceSeed.js",
     "seed:admin": "node src/seed/adminPanelSeed.js",
     "seed:admin-data": "node src/seed/adminTestingData.js",
+    "seed:admin-demo": "node src/seed/fullAdminDemoData.js",
     "migrate:verification-status": "node src/utils/migrateWorkerVerificationStatus.js",
     "migrate:verification-document-indexes": "node src/utils/migrateVerificationDocumentIndexes.js",
     "settlement:release": "node src/utils/settlementReleaseSweep.js",
