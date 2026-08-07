@@ -27,6 +27,7 @@ import browserOriginGuard from './middleware/browserOriginGuard.js';
 import mongoose from 'mongoose';
 import NotificationOutbox from './models/NotificationOutbox.js';
 import verificationRoutes from './routes/verificationRoutes.js';
+import devRoutes from './routes/devRoutes.js';
 
 export const createApp = () => {
     const app = express();
@@ -65,6 +66,7 @@ export const createApp = () => {
     app.use(express.urlencoded({ extended: false, limit: '2mb' }));
     app.use('/api/', rateLimit({ windowMs: 60000, max: process.env.NODE_ENV === 'test' ? 100000 : 10000, standardHeaders: true, legacyHeaders: false, message: { statusCode: 429, errorCode: 'TOO_MANY_REQUESTS', message: 'Too many requests. Please slow down.' } }));
     app.use('/api/auth', authRoutes);
+    app.use('/api/v1/dev', devRoutes);
     app.use('/api/workers', workerRoutes);
     app.use('/api/bookings', bookingRoutes);
     app.use('/api/v1/bookings', bookingRoutes);
