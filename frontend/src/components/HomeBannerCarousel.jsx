@@ -97,7 +97,7 @@ export const HomeBannerCarousel = ({ onActionClick }) => {
 
     return (
         <div 
-            className="relative w-full rounded-3xl overflow-hidden border border-[#E7E0D8] bg-[#FFFFFF] h-[280px] md:h-[320px] transition-all duration-500 shadow-md group/carousel hover:border-[#E87A1E]/40" 
+            className="relative w-full rounded-3xl overflow-hidden border border-[#E7E0D8] bg-[#FFFFFF] h-[280px] md:h-[320px] transition-all duration-500 shadow-md group/carousel hover:border-[#EAB308]/40" 
             onMouseEnter={() => setIsHovered(true)} 
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -120,7 +120,7 @@ export const HomeBannerCarousel = ({ onActionClick }) => {
                         <div className="relative z-20 w-full md:w-3/5 pl-6 pr-4 md:pl-12 py-6 flex flex-col justify-center h-full select-none">
                             {/* Category Pill Tag */}
                             <div className="flex items-center mb-3">
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border bg-[#FFF5EA] text-[#E87A1E] border-[#FDBA74]">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border bg-[#FEFCE8] text-[#EAB308] border-[#FEF08A]">
                                     {banner.tag}
                                 </span>
                             </div>
@@ -148,14 +148,14 @@ export const HomeBannerCarousel = ({ onActionClick }) => {
                                 {/* Promo Code Box */}
                                 <div 
                                     onClick={(e) => handleCopyCode(banner.code, e)} 
-                                    className="flex items-center gap-2 bg-[#FFFBF7] border border-[#E7E0D8] hover:border-[#E87A1E]/40 transition-all rounded-xl px-3 py-2 cursor-pointer group/code" 
+                                    className="flex items-center gap-2 bg-[#FFFBF7] border border-[#E7E0D8] hover:border-[#EAB308]/40 transition-all rounded-xl px-3 py-2 cursor-pointer group/code" 
                                     title="Click to copy coupon code"
                                 >
                                     <span className="text-[10px] md:text-xs text-[#78716C] uppercase tracking-wide">Code:</span>
-                                    <span className="text-[11px] md:text-xs font-mono font-bold text-[#E87A1E] tracking-wider bg-[#FFF5EA] px-1.5 py-0.5 rounded border border-[#FDBA74]">
+                                    <span className="text-[11px] md:text-xs font-mono font-bold text-[#EAB308] tracking-wider bg-[#FEFCE8] px-1.5 py-0.5 rounded border border-[#FEF08A]">
                                         {banner.code}
                                     </span>
-                                    <span className="text-[9px] md:text-[10px] text-[#E87A1E] font-semibold uppercase tracking-wider ml-1">
+                                    <span className="text-[9px] md:text-[10px] text-[#EAB308] font-semibold uppercase tracking-wider ml-1">
                                         {copiedCode === banner.code ? 'Copied!' : 'Copy'}
                                     </span>
                                 </div>
@@ -191,7 +191,7 @@ export const HomeBannerCarousel = ({ onActionClick }) => {
                     <button 
                         key={index} 
                         onClick={(e) => handleDotClick(index, e)} 
-                        className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentIndex ? 'w-6 bg-[#E87A1E]' : 'w-2 bg-[#E7E0D8] hover:bg-[#A8A29E]'}`} 
+                        className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentIndex ? 'w-6 bg-[#EAB308]' : 'w-2 bg-[#E7E0D8] hover:bg-[#A8A29E]'}`} 
                         aria-label={`Go to slide ${index + 1}`}
                     />
                 ))}

@@ -366,7 +366,7 @@ export const WorkerOnboarding = () => {
         return (
             <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-10 h-10 text-[#E87A1E] animate-spin"/>
+                    <Loader2 className="w-10 h-10 text-[#EAB308] animate-spin"/>
                     <span className="text-sm font-semibold text-[#57534E]">Loading profile workspace...</span>
                 </div>
             </div>
@@ -378,7 +378,7 @@ export const WorkerOnboarding = () => {
         return (
             <div className="min-h-screen bg-[#FAF6F0] text-[#1C1917] p-8 lg:p-16 flex items-center justify-center font-sans">
                 <div className="max-w-xl w-full bg-white border border-[#E7E0D8] rounded-3xl p-8 shadow-sm space-y-6 text-center">
-                    <div className="w-16 h-16 bg-[#FFF5EA] text-[#E87A1E] rounded-full flex items-center justify-center mx-auto animate-pulse">
+                    <div className="w-16 h-16 bg-[#FEFCE8] text-[#EAB308] rounded-full flex items-center justify-center mx-auto animate-pulse">
                         <Clock className="w-8 h-8"/>
                     </div>
                     <div>
@@ -408,7 +408,7 @@ export const WorkerOnboarding = () => {
                         Expected review status updates will appear here. No lockouts on your existing bookings.
                     </p>
 
-                    <button onClick={() => navigate('/worker')} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FFF5EA] text-[#44403C] font-semibold py-3 rounded-xl transition-colors cursor-pointer">
+                    <button onClick={() => navigate('/worker')} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FEFCE8] text-[#44403C] font-semibold py-3 rounded-xl transition-colors cursor-pointer">
                         Back to Dashboard
                     </button>
                 </div>
@@ -424,12 +424,12 @@ export const WorkerOnboarding = () => {
                     <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base">
                         H
                     </div>
-                    <span className="font-extrabold text-[#1C1917] text-xl">HyperLocal<span className="text-[#E87A1E]">.</span></span>
-                    <span className="bg-[#FFF5EA] text-[#E87A1E] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FED7AA]">
+                    <span className="font-extrabold text-[#1C1917] text-xl">HyperLocal<span className="text-[#EAB308]">.</span></span>
+                    <span className="bg-[#FEFCE8] text-[#EAB308] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FEF08A]">
                         Verification Wizard
                     </span>
                 </div>
-                <button onClick={() => navigate('/worker')} className="bg-white border border-[#E7E0D8] hover:bg-[#FFF5EA] text-[#44403C] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer">
+                <button onClick={() => navigate('/worker')} className="bg-white border border-[#E7E0D8] hover:bg-[#FEFCE8] text-[#44403C] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer">
                     Dashboard
                 </button>
             </nav>
@@ -466,7 +466,7 @@ export const WorkerOnboarding = () => {
                         <h2 className="text-xl font-extrabold text-[#1c1917] mt-1">{onboardingPercent}% Complete</h2>
                     </div>
                     <div className="w-32 bg-[#E7E0D8] h-2.5 rounded-full overflow-hidden">
-                        <div className="bg-[#E87A1E] h-full transition-all duration-500" style={{ width: `${onboardingPercent}%` }}/>
+                        <div className="bg-[#EAB308] h-full transition-all duration-500" style={{ width: `${onboardingPercent}%` }}/>
                     </div>
                 </div>
 
@@ -477,7 +477,7 @@ export const WorkerOnboarding = () => {
                         {['Personal', 'Profession', 'Services', 'KYC Docs', 'Consent', 'Status'].map((n, idx) => (
                             <div 
                                 key={n} 
-                                className={`pb-2 border-b-2 transition-all ${step === idx + 1 ? 'border-[#E87A1E] text-[#E87A1E]' : 'border-[#E7E0D8] text-[#A8A29E]'}`}
+                                className={`pb-2 border-b-2 transition-all ${step === idx + 1 ? 'border-[#EAB308] text-[#EAB308]' : 'border-[#E7E0D8] text-[#A8A29E]'}`}
                             >
                                 {n}
                             </div>
@@ -489,7 +489,7 @@ export const WorkerOnboarding = () => {
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-[#1C1917] flex items-center gap-2">
-                                    <User className="w-5 h-5 text-[#E87A1E]"/> Personal Identification
+                                    <User className="w-5 h-5 text-[#EAB308]"/> Personal Identification
                                 </h3>
                                 <p className="text-xs text-[#78716C] mt-1">Please enter your exact legal details as shown on your government documents.</p>
                             </div>
@@ -598,7 +598,7 @@ export const WorkerOnboarding = () => {
                                             type="file" 
                                             accept="image/jpeg,image/png"
                                             onChange={handleProfilePhotoChange}
-                                            className="w-full text-xs text-[#57534E] file:mr-4 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FFF5EA] file:text-[#E87A1E] file:hover:bg-[#FFEDD5] cursor-pointer"
+                                            className="w-full text-xs text-[#57534E] file:mr-4 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FEFCE8] file:text-[#EAB308] file:hover:bg-[#FEF9C3] cursor-pointer"
                                             disabled={verificationStatus === 'PENDING_APPROVAL'}
                                         />
                                         <p className="text-[10px] text-[#78716C]">Upload a formal headshot. Max 5MB (JPEG or PNG only).</p>
@@ -613,7 +613,7 @@ export const WorkerOnboarding = () => {
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-[#1C1917] flex items-center gap-2">
-                                    <Briefcase className="w-5 h-5 text-[#E87A1E]"/> Professional Profile
+                                    <Briefcase className="w-5 h-5 text-[#EAB308]"/> Professional Profile
                                 </h3>
                                 <p className="text-xs text-[#78716C] mt-1">Specify your working experience, bio and base rates.</p>
                             </div>
@@ -689,7 +689,7 @@ export const WorkerOnboarding = () => {
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-[#1C1917] flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-[#E87A1E]"/> Service Category Setup
+                                    <ShieldCheck className="w-5 h-5 text-[#EAB308]"/> Service Category Setup
                                 </h3>
                                 <p className="text-xs text-[#78716C] mt-1">Select your primary category. Requirements will adapt dynamically.</p>
                             </div>
@@ -704,7 +704,7 @@ export const WorkerOnboarding = () => {
                                             onClick={() => setPrimaryServiceCategoryId(cat._id)}
                                             className={`p-4 border rounded-2xl text-left transition-all flex flex-col justify-between cursor-pointer ${
                                                 primaryServiceCategoryId === cat._id 
-                                                    ? 'border-[#E87A1E] bg-[#FFF5EA] text-[#E87A1E]' 
+                                                    ? 'border-[#EAB308] bg-[#FEFCE8] text-[#EAB308]' 
                                                     : 'border-[#E7E0D8] bg-white hover:border-[#DCD4C8]'
                                             }`}
                                         >
@@ -733,7 +733,7 @@ export const WorkerOnboarding = () => {
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-[#1C1917] flex items-center gap-2">
-                                    <FileCheck className="w-5 h-5 text-[#E87A1E]"/> Conditional KYC Document Upload
+                                    <FileCheck className="w-5 h-5 text-[#EAB308]"/> Conditional KYC Document Upload
                                 </h3>
                                 <p className="text-xs text-[#78716C] mt-1">Upload files securely. Uploads are stored in private cloud repositories.</p>
                             </div>
@@ -746,7 +746,7 @@ export const WorkerOnboarding = () => {
                                         {uploadedDocs.map((doc) => (
                                             <div key={doc.id} className="bg-white p-3 rounded-xl border border-[#E7E0D8] flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <FileText className="w-4 h-4 text-[#E87A1E]"/>
+                                                    <FileText className="w-4 h-4 text-[#EAB308]"/>
                                                     <div>
                                                         <div className="font-bold text-xs">{doc.documentType}</div>
                                                         <div className="text-[10px] text-[#78716C]">Number: •••• {doc.documentNumberLast4}</div>
@@ -803,7 +803,7 @@ export const WorkerOnboarding = () => {
                                                         key={`${type}-${currentDocument?.id || 'new'}`}
                                                         type="file" 
                                                         onChange={e => handleFileUpload(e, type)}
-                                                        className="w-full text-xs text-[#57534E] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#FFF5EA] file:text-[#E87A1E] file:hover:bg-[#FFEDD5] cursor-pointer"
+                                                        className="w-full text-xs text-[#57534E] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#FEFCE8] file:text-[#EAB308] file:hover:bg-[#FEF9C3] cursor-pointer"
                                                     />
                                                 </div>
                                             </div>
@@ -838,7 +838,7 @@ export const WorkerOnboarding = () => {
                                                     type="button"
                                                     disabled={loading}
                                                     onClick={() => handleDocumentUploadSubmit(type)}
-                                                    className="bg-[#E87A1E] text-white hover:bg-[#D96B10] px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                                                    className="bg-[#EAB308] text-white hover:bg-[#CA8A04] px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                                                 >
                                                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Upload className="w-3.5 h-3.5"/>}
                                                     {currentDocument ? 'Replace Document' : 'Upload Document'}
@@ -856,7 +856,7 @@ export const WorkerOnboarding = () => {
                         <div className="space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-[#1C1917] flex items-center gap-2">
-                                    <ShieldCheck className="w-5 h-5 text-[#E87A1E]"/> Final Review & Declaration
+                                    <ShieldCheck className="w-5 h-5 text-[#EAB308]"/> Final Review & Declaration
                                 </h3>
                                 <p className="text-xs text-[#78716C] mt-1">Review your details carefully. Submissions create an audit snapshot.</p>
                             </div>
@@ -879,7 +879,7 @@ export const WorkerOnboarding = () => {
                                             type="checkbox" 
                                             checked={declarationAccepted}
                                             onChange={e => setDeclarationAccepted(e.target.checked)}
-                                            className="mt-0.5 rounded border-[#E7E0D8] text-[#E87A1E] focus:ring-[#E87A1E]"
+                                            className="mt-0.5 rounded border-[#E7E0D8] text-[#EAB308] focus:ring-[#EAB308]"
                                         />
                                         <span className="text-[#57534E]">
                                             I declare that all details, rates, certifications, and documentation uploaded are correct and belong to me.
@@ -890,7 +890,7 @@ export const WorkerOnboarding = () => {
                                             type="checkbox" 
                                             checked={consentAccepted}
                                             onChange={e => setConsentAccepted(e.target.checked)}
-                                            className="mt-0.5 rounded border-[#E7E0D8] text-[#E87A1E] focus:ring-[#E87A1E]"
+                                            className="mt-0.5 rounded border-[#E7E0D8] text-[#EAB308] focus:ring-[#EAB308]"
                                         />
                                         <span className="text-[#57534E]">
                                             I consent to background verification audits and identity validation performed securely by the marketplace system.
@@ -904,7 +904,7 @@ export const WorkerOnboarding = () => {
                     {/* Step 6: Confirmation */}
                     {step === 6 && (
                         <div className="text-center py-8 space-y-6">
-                            <div className="w-16 h-16 bg-[#FFF5EA] text-[#E87A1E] rounded-full flex items-center justify-center mx-auto">
+                            <div className="w-16 h-16 bg-[#FEFCE8] text-[#EAB308] rounded-full flex items-center justify-center mx-auto">
                                 <CheckCircle2 className="w-8 h-8"/>
                             </div>
                             <div>
@@ -915,7 +915,7 @@ export const WorkerOnboarding = () => {
                             </div>
                             <button 
                                 onClick={() => navigate('/worker')}
-                                className="bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FFF5EA] px-6 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
+                                className="bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FEFCE8] px-6 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
                             >
                                 Go to Worker Dashboard
                             </button>
@@ -948,7 +948,7 @@ export const WorkerOnboarding = () => {
                                     <button
                                         type="button"
                                         onClick={() => setStep(step + 1)}
-                                        className="flex items-center gap-1.5 bg-[#E87A1E] text-white hover:bg-[#D96B10] px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                        className="flex items-center gap-1.5 bg-[#EAB308] text-white hover:bg-[#CA8A04] px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                                     >
                                         Next <ArrowRight className="w-3.5 h-3.5"/>
                                     </button>

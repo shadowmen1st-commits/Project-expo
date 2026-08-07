@@ -338,8 +338,8 @@ export const CustomerHome = () => {
                     <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
                         H
                     </div>
-                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#E87A1E]">.</span></span>
-                    <span className="bg-[#FFF5EA] text-[#E87A1E] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FDBA74]">
+                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
+                    <span className="bg-[#FEFCE8] text-[#EAB308] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FEF08A]">
                         Customer
                     </span>
                 </div>
@@ -347,13 +347,13 @@ export const CustomerHome = () => {
                 <div className="flex items-center gap-6">
                     <div className="text-right">
                         <div className="text-[10px] text-[#78716C] font-semibold uppercase">Wallet Balance</div>
-                        <div className="text-sm font-bold text-[#E87A1E]">₹{(walletBalance / 100).toFixed(2)}</div>
+                        <div className="text-sm font-bold text-[#EAB308]">₹{(walletBalance / 100).toFixed(2)}</div>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-[#1C1917]">{user?.name}</span>
                         <button
                             onClick={logout}
-                            className="bg-white hover:bg-[#FFF5EA] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                            className="bg-white hover:bg-[#FEFCE8] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
                         >
                             Sign Out
                         </button>
@@ -408,7 +408,7 @@ export const CustomerHome = () => {
                             >
                                 <button
                                     onClick={() => guardClick(() => setSelectedCategory(''))}
-                                    className={`flex-shrink-0 flex items-center gap-1.5 py-2 px-4 rounded-full text-xs font-semibold border cursor-pointer transition-all ${!selectedCategory ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
+                                    className={`flex-shrink-0 flex items-center gap-1.5 py-2 px-4 rounded-full text-xs font-semibold border cursor-pointer transition-all ${!selectedCategory ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
                                 >
                                     All Services
                                 </button>
@@ -419,7 +419,7 @@ export const CustomerHome = () => {
                                         <button
                                             key={cat._id}
                                             onClick={() => guardClick(() => setSelectedCategory(cat._id))}
-                                            className={`flex-shrink-0 flex items-center gap-2 py-2 px-4 rounded-full text-xs font-semibold border cursor-pointer transition-all ${isActive ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
+                                            className={`flex-shrink-0 flex items-center gap-2 py-2 px-4 rounded-full text-xs font-semibold border cursor-pointer transition-all ${isActive ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
                                         >
                                             <IconComponent className="w-3.5 h-3.5"/>
                                             {cat.name}
@@ -435,8 +435,8 @@ export const CustomerHome = () => {
                         <div>
                             <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-2">Distance Radius</label>
                             <div className="flex items-center gap-2">
-                                <input type="range" min={1} max={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#E87A1E]"/>
-                                <span className="text-xs font-bold text-[#E87A1E] flex-shrink-0">{maxDistance} km</span>
+                                <input type="range" min={1} max={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#EAB308]"/>
+                                <span className="text-xs font-bold text-[#EAB308] flex-shrink-0">{maxDistance} km</span>
                             </div>
                         </div>
 
@@ -444,13 +444,13 @@ export const CustomerHome = () => {
                             <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-2">Search Skill</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A8A29E]"/>
-                                <input type="text" placeholder="e.g. Laundry" value={searchSkill} onChange={(e) => setSearchSkill(e.target.value)} onBlur={searchWorkersList} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2 pl-9 pr-3 text-[#1C1917] text-xs outline-none"/>
+                                <input type="text" placeholder="e.g. Laundry" value={searchSkill} onChange={(e) => setSearchSkill(e.target.value)} onBlur={searchWorkersList} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#EAB308] rounded-xl py-2 pl-9 pr-3 text-[#1C1917] text-xs outline-none"/>
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-2">Max Rate (₹/hr)</label>
-                            <input type="number" placeholder="500" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
+                            <input type="number" placeholder="500" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#EAB308] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
                         </div>
                     </div>
 
@@ -470,11 +470,11 @@ export const CustomerHome = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {workers.map((worker) => (
-                                    <div key={worker.workerId} className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E]/50 rounded-2xl p-5 flex flex-col justify-between transition-all shadow-sm">
+                                    <div key={worker.workerId} className="bg-white border border-[#E7E0D8] hover:border-[#EAB308]/50 rounded-2xl p-5 flex flex-col justify-between transition-all shadow-sm">
                                         <div>
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-[#FFF5EA] border border-[#FDBA74] flex items-center justify-center font-bold text-[#E87A1E] text-sm">
+                                                    <div className="w-10 h-10 rounded-xl bg-[#FEFCE8] border border-[#FEF08A] flex items-center justify-center font-bold text-[#EAB308] text-sm">
                                                         {worker.name ? worker.name[0] : 'W'}
                                                     </div>
                                                     <div>
@@ -489,7 +489,7 @@ export const CustomerHome = () => {
                                                         <span className="text-[10px] text-[#78716C]">Exp: {worker.experienceYears} Yrs</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-[#D97706] text-xs font-bold bg-[#FFF5EA] px-2 py-0.5 rounded-full border border-[#FDBA74]">
+                                                <div className="flex items-center gap-1 text-[#D97706] text-xs font-bold bg-[#FEFCE8] px-2 py-0.5 rounded-full border border-[#FEF08A]">
                                                     <Star className="w-3.5 h-3.5 fill-current"/>
                                                     {worker.averageRating > 0 ? worker.averageRating.toFixed(1) : 'N/A'}
                                                 </div>
@@ -500,7 +500,7 @@ export const CustomerHome = () => {
                                         <div className="pt-3 border-t border-[#E7E0D8] flex items-center justify-between mt-auto">
                                             <div>
                                                 <span className="block text-[9px] text-[#A8A29E] font-semibold uppercase">Hourly Rate</span>
-                                                <span className="text-sm font-extrabold text-[#E87A1E]">₹{(worker.hourlyRate / 100).toFixed(0)} <span className="text-[10px] font-normal text-[#78716C]">/hr</span></span>
+                                                <span className="text-sm font-extrabold text-[#EAB308]">₹{(worker.hourlyRate / 100).toFixed(0)} <span className="text-[10px] font-normal text-[#78716C]">/hr</span></span>
                                             </div>
                                             <button onClick={() => handleBookingPrepare(worker)} className="btn-primary-gradient font-bold text-xs py-2 px-4 rounded-xl cursor-pointer">
                                                 Book Worker
@@ -519,10 +519,10 @@ export const CustomerHome = () => {
                     <div className="bg-white border border-[#E7E0D8] rounded-3xl p-6 space-y-4 shadow-sm">
                         <div className="flex items-center justify-between border-b border-[#E7E0D8] pb-3">
                             <h2 className="text-base font-bold text-[#1C1917] flex items-center gap-2">
-                                <ShoppingBag className="w-4 h-4 text-[#E87A1E]"/>
+                                <ShoppingBag className="w-4 h-4 text-[#EAB308]"/>
                                 My Bookings
                             </h2>
-                            <span className="bg-[#FFF5EA] text-[#E87A1E] text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-[#FDBA74]">
+                            <span className="bg-[#FEFCE8] text-[#EAB308] text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-[#FEF08A]">
                                 {bookings.length} Total
                             </span>
                         </div>
@@ -533,7 +533,7 @@ export const CustomerHome = () => {
                                 <button
                                     key={tab}
                                     onClick={() => setBookingTab(tab)}
-                                    className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${bookingTab === tab ? 'bg-[#E87A1E] text-white' : 'text-[#78716C] hover:bg-[#FAF6F0]'}`}
+                                    className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${bookingTab === tab ? 'bg-[#EAB308] text-white' : 'text-[#78716C] hover:bg-[#FAF6F0]'}`}
                                 >
                                     {tab.replace('_', ' ')}
                                 </button>
@@ -550,7 +550,7 @@ export const CustomerHome = () => {
                                     <div key={b.id} className="bg-[#FAF6F0] border border-[#E7E0D8] rounded-2xl p-4 space-y-3">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="font-mono text-[#78716C] font-semibold">{b.bookingNumber}</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${b.bookingStatus === 'COMPLETED' ? 'bg-[#16A34A]/10 border-[#16A34A]/20 text-[#16A34A]' : b.bookingStatus === 'CANCELLED' || b.bookingStatus === 'REJECTED' ? 'bg-[#DC2626]/10 border-[#DC2626]/20 text-[#DC2626]' : 'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'}`}>
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${b.bookingStatus === 'COMPLETED' ? 'bg-[#16A34A]/10 border-[#16A34A]/20 text-[#16A34A]' : b.bookingStatus === 'CANCELLED' || b.bookingStatus === 'REJECTED' ? 'bg-[#DC2626]/10 border-[#DC2626]/20 text-[#DC2626]' : 'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]'}`}>
                                                 {b.bookingStatus}
                                             </span>
                                         </div>
@@ -559,12 +559,12 @@ export const CustomerHome = () => {
                                             <div className="font-bold text-[#1C1917]">Worker: {b.worker?.name || 'Assigned Professional'}</div>
                                             <div className="text-[#78716C] text-[10px]">{b.category?.name || 'Service'}</div>
                                             <div className="text-[#A8A29E] text-[10px]">Start: {new Date(b.scheduledStart).toLocaleString()}</div>
-                                            <div className="text-[#E87A1E] font-bold text-[11px] pt-1">Total: ₹{(b.totalAmount / 100).toFixed(2)}</div>
+                                            <div className="text-[#EAB308] font-bold text-[11px] pt-1">Total: ₹{(b.totalAmount / 100).toFixed(2)}</div>
                                         </div>
 
                                         {b.bookingStatus === 'PAYMENT_PENDING' && (
                                             <div className="space-y-2">
-                                                <div className="bg-[#FFF5EA] border border-[#FDBA74] p-2 rounded-xl text-[10px] text-[#E87A1E] flex items-center gap-1.5">
+                                                <div className="bg-[#FEFCE8] border border-[#FEF08A] p-2 rounded-xl text-[10px] text-[#EAB308] flex items-center gap-1.5">
                                                     <Clock className="w-3.5 h-3.5 flex-shrink-0"/>
                                                     <span>Booking created. Secure payment setup is pending.</span>
                                                 </div>
@@ -628,7 +628,7 @@ export const CustomerHome = () => {
                                                                         setError('Payment checkout cancelled.');
                                                                     }
                                                                 },
-                                                                theme: { color: '#E87A1E' }
+                                                                theme: { color: '#EAB308' }
                                                             };
                                                             const rzp = new window.Razorpay(options);
                                                             rzp.open();
@@ -652,7 +652,7 @@ export const CustomerHome = () => {
                                         )}
 
                                         <div className="flex gap-2 pt-1 border-t border-[#E7E0D8]">
-                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(b.bookingStatus)&&<button onClick={()=>setChatBooking(b)} className="w-full bg-white border border-[#E87A1E] text-[#E87A1E] font-bold text-[10px] py-1.5 rounded-lg">Chat</button>}
+                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(b.bookingStatus)&&<button onClick={()=>setChatBooking(b)} className="w-full bg-white border border-[#EAB308] text-[#EAB308] font-bold text-[10px] py-1.5 rounded-lg">Chat</button>}
                                             {['PAYMENT_PENDING', 'REQUESTED', 'PAID', 'ACCEPTED', 'CONFIRMED'].includes(b.bookingStatus) && (
                                                 <button onClick={() => handleCancelBooking(b.id)} className="w-full bg-[#DC2626]/10 hover:bg-[#DC2626]/20 text-[#DC2626] border border-[#DC2626]/30 font-bold text-[10px] py-1.5 rounded-lg cursor-pointer">
                                                     Cancel Booking
@@ -717,7 +717,7 @@ export const CustomerHome = () => {
                                                     setSlotAvailable(null);
                                                     setActiveQuote(null);
                                                 }}
-                                                className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none cursor-pointer"
+                                                className="w-full bg-[#FAF6F0] border border-[#E7E0D8] focus:border-[#EAB308] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none cursor-pointer"
                                             >
                                                 <option value="">-- Select Service --</option>
 
@@ -763,7 +763,7 @@ export const CustomerHome = () => {
                                                 <CheckCircle2 className="w-4 h-4"/>
                                                 <span>Time Slot Available</span>
                                             </div>
-                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${quoteTimeLeft > 60 ? 'bg-[#FFF5EA] text-[#E87A1E] border-[#FDBA74]' : 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/30'}`}>
+                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${quoteTimeLeft > 60 ? 'bg-[#FEFCE8] text-[#EAB308] border-[#FEF08A]' : 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/30'}`}>
                                                 <Clock className="w-3 h-3"/>
                                                 <span>Quote expires in {Math.floor(quoteTimeLeft / 60)}m {quoteTimeLeft % 60}s</span>
                                             </div>
@@ -789,7 +789,7 @@ export const CustomerHome = () => {
                                                     <span>-₹{activeQuote.breakdown.discountAmountRupees.toFixed(2)}</span>
                                                 </div>
                                             )}
-                                            <div className="flex justify-between font-extrabold text-[#E87A1E] text-xs pt-1 border-t border-[#E7E0D8]">
+                                            <div className="flex justify-between font-extrabold text-[#EAB308] text-xs pt-1 border-t border-[#E7E0D8]">
                                                 <span>Total Payable:</span>
                                                 <span>₹{activeQuote.breakdown.totalAmountRupees.toFixed(2)}</span>
                                             </div>
@@ -798,18 +798,18 @@ export const CustomerHome = () => {
                                 )}
 
                                 {createdBooking ? (
-                                    <div className="bg-[#FFF5EA] border border-[#FDBA74] p-4 rounded-2xl text-center space-y-2">
-                                        <Clock className="w-6 h-6 text-[#E87A1E] mx-auto"/>
+                                    <div className="bg-[#FEFCE8] border border-[#FEF08A] p-4 rounded-2xl text-center space-y-2">
+                                        <Clock className="w-6 h-6 text-[#EAB308] mx-auto"/>
                                         <h4 className="font-bold text-xs text-[#1C1917]">Booking Created!</h4>
-                                        <p className="text-[10px] text-[#78716C]">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> generated in <span className="font-bold text-[#E87A1E]">PAYMENT_PENDING</span> state.</p>
-                                        <div className="text-[10px] font-semibold text-[#E87A1E] pt-1">Secure payment setup is pending.</div>
+                                        <p className="text-[10px] text-[#78716C]">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> generated in <span className="font-bold text-[#EAB308]">PAYMENT_PENDING</span> state.</p>
+                                        <div className="text-[10px] font-semibold text-[#EAB308] pt-1">Secure payment setup is pending.</div>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         <button
                                             onClick={handleCheckAvailability}
                                             disabled={isCheckingSlot}
-                                            className="w-full bg-white border border-[#E87A1E] hover:bg-[#FFF5EA] text-[#E87A1E] font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                            className="w-full bg-white border border-[#EAB308] hover:bg-[#FEFCE8] text-[#EAB308] font-bold text-xs py-2.5 rounded-xl cursor-pointer"
                                         >
                                             {isCheckingSlot ? 'Checking Slot Availability...' : 'Check Availability & Price Preview'}
                                         </button>

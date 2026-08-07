@@ -117,7 +117,7 @@ export default function SocialAuthButtons({ mode = 'login', role = 'CUSTOMER', o
                             w-full flex items-center justify-center gap-2 border rounded-xl py-3 text-sm font-semibold
                             transition-all duration-200 relative
                             ${googleEnabled
-                                ? 'border-[#DCD4C8] bg-white hover:bg-[#FAF6F0] hover:border-[#E87A1E] text-[#1C1917] shadow-sm hover:shadow-md'
+                                ? 'border-[#DCD4C8] bg-white hover:bg-[#FAF6F0] hover:border-[#EAB308] text-[#1C1917] shadow-sm hover:shadow-md'
                                 : 'border-[#E7E0D8] bg-[#FAFAFA] text-[#A8A29E] cursor-not-allowed'
                             }
                             ${isRedirecting === 'google' ? 'opacity-70 cursor-wait' : ''}
@@ -133,8 +133,8 @@ export default function SocialAuthButtons({ mode = 'login', role = 'CUSTOMER', o
                     {tooltip === 'google' && !googleEnabled && (
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-[#1C1917] text-white text-[10px] leading-relaxed rounded-xl p-3 shadow-xl">
                             <p className="font-bold mb-1">🔐 Google OAuth — Not Configured</p>
-                            <p className="text-[#DCD4C8]">To enable Google login, set these in <code className="text-[#FDBA74]">backend/.env</code>:</p>
-                            <ul className="mt-1.5 space-y-0.5 text-[#FDBA74] font-mono">
+                            <p className="text-[#DCD4C8]">To enable Google login, set these in <code className="text-[#FEF08A]">backend/.env</code>:</p>
+                            <ul className="mt-1.5 space-y-0.5 text-[#FEF08A] font-mono">
                                 <li>GOOGLE_OAUTH_ENABLED=true</li>
                                 <li>GOOGLE_CLIENT_ID=…</li>
                                 <li>GOOGLE_CLIENT_SECRET=…</li>
@@ -173,8 +173,8 @@ export default function SocialAuthButtons({ mode = 'login', role = 'CUSTOMER', o
                     {tooltip === 'apple' && !appleEnabled && (
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-[#1C1917] text-white text-[10px] leading-relaxed rounded-xl p-3 shadow-xl">
                             <p className="font-bold mb-1">🍎 Apple OAuth — Not Configured</p>
-                            <p className="text-[#DCD4C8]">To enable Apple login, set these in <code className="text-[#FDBA74]">backend/.env</code>:</p>
-                            <ul className="mt-1.5 space-y-0.5 text-[#FDBA74] font-mono">
+                            <p className="text-[#DCD4C8]">To enable Apple login, set these in <code className="text-[#FEF08A]">backend/.env</code>:</p>
+                            <ul className="mt-1.5 space-y-0.5 text-[#FEF08A] font-mono">
                                 <li>APPLE_OAUTH_ENABLED=true</li>
                                 <li>APPLE_CLIENT_ID=…</li>
                                 <li>APPLE_TEAM_ID=…</li>

@@ -7,9 +7,9 @@ export const UserCategoryBanner = () => {
 
     const roleStyles = {
         CUSTOMER: {
-            bg: 'bg-[#FFF5EA]',
-            text: 'text-[#E87A1E]',
-            border: 'border-[#FDBA74]',
+            bg: 'bg-[#FEFCE8]',
+            text: 'text-[#EAB308]',
+            border: 'border-[#FEF08A]',
             label: 'Customer Mode',
             message: 'You are viewing the app as a Customer. Book local services easily.',
         },

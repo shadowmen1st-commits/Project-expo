@@ -171,7 +171,7 @@ export const Chat = ({ bookingId, participantName, onClose }) => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#FAF6F0]">
                 {loading ? (
                     <div className="h-full flex items-center justify-center">
-                        <Loader className="animate-spin text-[#E87A1E]" size={24} />
+                        <Loader className="animate-spin text-[#EAB308]" size={24} />
                     </div>
                 ) : error ? (
                     <div className="h-full flex items-center justify-center p-6 text-center text-[#DC2626]">
@@ -191,7 +191,7 @@ export const Chat = ({ bookingId, participantName, onClose }) => {
                                     <div 
                                         className={`max-w-[75%] px-4 py-2 rounded-2xl ${
                                             isMe 
-                                                ? 'bg-[#E87A1E] text-white rounded-tr-sm' 
+                                                ? 'bg-[#EAB308] text-white rounded-tr-sm' 
                                                 : 'bg-white border border-[#E7E0D8] text-[#1C1917] rounded-tl-sm'
                                         } ${msg.isTemp ? 'opacity-70' : 'opacity-100'}`}
                                     >
@@ -222,7 +222,7 @@ export const Chat = ({ bookingId, participantName, onClose }) => {
             {/* Input Area */}
             <div className="p-3 border-t border-[#E7E0D8] bg-white">
                 <form onSubmit={handleSend} className="flex items-center gap-2">
-                    <label className="p-2 text-[#78716C] hover:text-[#E87A1E] cursor-pointer" title="Attach JPEG, PNG, WebP or PDF"><Paperclip size={20}/><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={attach}/></label>
+                    <label className="p-2 text-[#78716C] hover:text-[#EAB308] cursor-pointer" title="Attach JPEG, PNG, WebP or PDF"><Paperclip size={20}/><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={attach}/></label>
                     <input
                         type="text"
                         value={newMessage}
@@ -234,7 +234,7 @@ export const Chat = ({ bookingId, participantName, onClose }) => {
                     <button 
                         type="submit" 
                         disabled={!newMessage.trim() || !!error || loading}
-                        className="p-2 rounded-full bg-[#E87A1E] text-white hover:bg-[#D97706] disabled:opacity-50 disabled:hover:bg-[#E87A1E] transition-colors"
+                        className="p-2 rounded-full bg-[#EAB308] text-white hover:bg-[#D97706] disabled:opacity-50 disabled:hover:bg-[#EAB308] transition-colors"
                     >
                         <Send size={18} className="ml-0.5" />
                     </button>

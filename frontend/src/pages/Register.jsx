@@ -85,7 +85,7 @@ export const Register = () => {
                             <span className="text-white text-xl font-black">H</span>
                         </div>
                         <span className="text-2xl font-bold tracking-tight text-[#1C1917]">
-                            HyperLocal<span className="text-[#E87A1E]">.</span>
+                            HyperLocal<span className="text-[#EAB308]">.</span>
                         </span>
                     </div>
 
@@ -99,14 +99,14 @@ export const Register = () => {
 
                         <div className="space-y-4">
                             <div className="flex items-start gap-3.5">
-                                <ShieldCheck className="w-5 h-5 text-[#E87A1E] flex-shrink-0 mt-0.5" />
+                                <ShieldCheck className="w-5 h-5 text-[#EAB308] flex-shrink-0 mt-0.5" />
                                 <div>
                                     <h3 className="text-sm font-semibold text-[#1C1917]">For Customers</h3>
                                     <p className="text-xs text-[#78716C]">Instant access to 80+ home service categories with escrow payment protection.</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3.5">
-                                <Wrench className="w-5 h-5 text-[#E87A1E] flex-shrink-0 mt-0.5" />
+                                <Wrench className="w-5 h-5 text-[#EAB308] flex-shrink-0 mt-0.5" />
                                 <div>
                                     <h3 className="text-sm font-semibold text-[#1C1917]">For Professionals</h3>
                                     <p className="text-xs text-[#78716C]">Set your custom rates, manage bookings, and withdraw earnings directly to your bank.</p>
@@ -152,17 +152,17 @@ export const Register = () => {
                                 <button 
                                     type="button" 
                                     onClick={() => setRole('CUSTOMER')} 
-                                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'CUSTOMER' ? 'bg-[#FFF5EA] border-[#E87A1E] text-[#E87A1E] font-bold' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
+                                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'CUSTOMER' ? 'bg-[#FEFCE8] border-[#EAB308] text-[#EAB308] font-bold' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
                                 >
-                                    <User className="w-4 h-4 text-[#E87A1E]" />
+                                    <User className="w-4 h-4 text-[#EAB308]" />
                                     <span className="text-xs">Customer</span>
                                 </button>
                                 <button 
                                     type="button" 
                                     onClick={() => setRole('WORKER')} 
-                                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'WORKER' ? 'bg-[#FFF5EA] border-[#E87A1E] text-[#E87A1E] font-bold' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
+                                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'WORKER' ? 'bg-[#FEFCE8] border-[#EAB308] text-[#EAB308] font-bold' : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#DCD4C8]'}`}
                                 >
-                                    <Wrench className="w-4 h-4 text-[#E87A1E]" />
+                                    <Wrench className="w-4 h-4 text-[#EAB308]" />
                                     <span className="text-xs">Professional Worker</span>
                                 </button>
                             </div>
@@ -308,7 +308,7 @@ export const Register = () => {
 
                     <div className="text-center text-xs text-[#78716C]">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-[#E87A1E] font-semibold hover:underline">
+                        <Link to="/login" className="text-[#EAB308] font-semibold hover:underline">
                             Sign In
                         </Link>
                     </div>

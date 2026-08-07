@@ -92,11 +92,11 @@ export const ServicesPage = () => {
 
             {/* Hero Header */}
             <section className="relative pt-32 pb-12 px-6 overflow-hidden">
-                <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#E87A1E]/10 blur-[120px] rounded-full pointer-events-none"/>
+                <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#EAB308]/10 blur-[120px] rounded-full pointer-events-none"/>
 
                 <div className="relative max-w-5xl mx-auto text-center z-10">
-                    <div className="inline-flex items-center gap-2 bg-[#FFF5EA] border border-[#FDBA74] rounded-full px-4 py-1.5 text-xs font-semibold text-[#E87A1E] mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#E87A1E] animate-ping"/>
+                    <div className="inline-flex items-center gap-2 bg-[#FEFCE8] border border-[#FEF08A] rounded-full px-4 py-1.5 text-xs font-semibold text-[#EAB308] mb-6">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#EAB308] animate-ping"/>
                         Discover 80+ Local Services
                     </div>
 
@@ -132,8 +132,8 @@ export const ServicesPage = () => {
                         <button 
                             onClick={() => setSelectedCat('all')} 
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${selectedCat === 'all'
-                                ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm'
-                                : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#E87A1E] hover:text-[#1C1917]'}`}
+                                ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm'
+                                : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#EAB308] hover:text-[#1C1917]'}`}
                         >
                             All Categories
                         </button>
@@ -144,8 +144,8 @@ export const ServicesPage = () => {
                                     key={cat.id} 
                                     onClick={() => setSelectedCat(cat.id)} 
                                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center gap-2 ${selectedCat === cat.id
-                                        ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm'
-                                        : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#E87A1E] hover:text-[#1C1917]'}`}
+                                        ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm'
+                                        : 'bg-white border-[#E7E0D8] text-[#78716C] hover:border-[#EAB308] hover:text-[#1C1917]'}`}
                                 >
                                     <IconComponent className="w-3.5 h-3.5"/>
                                     <span>{cat.name}</span>
@@ -172,7 +172,7 @@ export const ServicesPage = () => {
                                     const IconComponent = category.icon;
                                     return (
                                         <div className="flex items-center gap-4 mb-6">
-                                            <div className="w-12 h-12 rounded-2xl bg-[#FFF5EA] border border-[#FDBA74] flex items-center justify-center text-[#E87A1E]">
+                                            <div className="w-12 h-12 rounded-2xl bg-[#FEFCE8] border border-[#FEF08A] flex items-center justify-center text-[#EAB308]">
                                                 <IconComponent className="w-5 h-5"/>
                                             </div>
                                             <div>
@@ -189,14 +189,14 @@ export const ServicesPage = () => {
                                         <div 
                                             key={item.name} 
                                             onClick={() => navigate('/login')} 
-                                            className="group relative bg-white border border-[#E7E0D8] hover:border-[#E87A1E]/50 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden shadow-sm"
+                                            className="group relative bg-white border border-[#E7E0D8] hover:border-[#EAB308]/50 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden shadow-sm"
                                         >
                                             <div className="flex items-start justify-between mb-4">
-                                                <h3 className="font-bold text-[#1C1917] text-base leading-tight group-hover:text-[#E87A1E] transition-colors w-2/3">
+                                                <h3 className="font-bold text-[#1C1917] text-base leading-tight group-hover:text-[#EAB308] transition-colors w-2/3">
                                                     {item.name}
                                                 </h3>
                                                 {item.popular && (
-                                                    <span className="bg-[#FFF5EA] border border-[#FDBA74] text-[#E87A1E] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                                                    <span className="bg-[#FEFCE8] border border-[#FEF08A] text-[#EAB308] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
                                                         ★ Popular
                                                     </span>
                                                 )}
@@ -205,7 +205,7 @@ export const ServicesPage = () => {
                                             <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#E7E0D8]">
                                                 <div>
                                                     <div className="text-[10px] text-[#A8A29E] font-semibold uppercase tracking-wider">Avg Price</div>
-                                                    <div className="text-[#E87A1E] font-black text-base mt-0.5">{item.price}</div>
+                                                    <div className="text-[#EAB308] font-black text-base mt-0.5">{item.price}</div>
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-[10px] text-[#A8A29E] font-semibold uppercase tracking-wider">Duration</div>
@@ -213,7 +213,7 @@ export const ServicesPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="absolute top-4 right-4 text-[#E87A1E] opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                            <div className="absolute top-4 right-4 text-[#EAB308] opacity-0 group-hover:opacity-100 transition-all duration-300">
                                                 <ChevronRight className="w-4 h-4"/>
                                             </div>
                                         </div>

@@ -56,7 +56,7 @@ export const Login = () => {
                             <span className="text-white text-xl font-black">H</span>
                         </div>
                         <span className="text-2xl font-bold tracking-tight text-[#1C1917]">
-                            HyperLocal<span className="text-[#E87A1E]">.</span>
+                            HyperLocal<span className="text-[#EAB308]">.</span>
                         </span>
                     </div>
 
@@ -72,14 +72,14 @@ export const Login = () => {
                         {/* Practical Trust Points */}
                         <div className="space-y-4">
                             <div className="flex items-start gap-3.5">
-                                <ShieldCheck className="w-5 h-5 text-[#E87A1E] flex-shrink-0 mt-0.5" />
+                                <ShieldCheck className="w-5 h-5 text-[#EAB308] flex-shrink-0 mt-0.5" />
                                 <div>
                                     <h3 className="text-sm font-semibold text-[#1C1917]">Identity Verified Professionals</h3>
                                     <p className="text-xs text-[#78716C]">Government ID checked and background screened for safety.</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3.5">
-                                <Award className="w-5 h-5 text-[#E87A1E] flex-shrink-0 mt-0.5" />
+                                <Award className="w-5 h-5 text-[#EAB308] flex-shrink-0 mt-0.5" />
                                 <div>
                                     <h3 className="text-sm font-semibold text-[#1C1917]">Transparent Pricing</h3>
                                     <p className="text-xs text-[#78716C]">Clear flat-rates upfront without hidden platform charges.</p>
@@ -178,21 +178,21 @@ export const Login = () => {
                                 <button 
                                     type="button" 
                                     onClick={() => quickLogin('admin@hyperlocal.com', 'admin123')} 
-                                    className="bg-[#FFF5EA] border border-[#E7E0D8] hover:border-[#E87A1E] text-[#1C1917] hover:text-[#E87A1E] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
+                                    className="bg-[#FEFCE8] border border-[#E7E0D8] hover:border-[#EAB308] text-[#1C1917] hover:text-[#EAB308] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
                                 >
                                     Admin
                                 </button>
                                 <button 
                                     type="button" 
                                     onClick={() => quickLogin('customer@hyperlocal.com', 'customer123')} 
-                                    className="bg-[#FFF5EA] border border-[#E7E0D8] hover:border-[#E87A1E] text-[#1C1917] hover:text-[#E87A1E] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
+                                    className="bg-[#FEFCE8] border border-[#E7E0D8] hover:border-[#EAB308] text-[#1C1917] hover:text-[#EAB308] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
                                 >
                                     Customer
                                 </button>
                                 <button 
                                     type="button" 
                                     onClick={() => quickLogin('worker@hyperlocal.com', 'worker123')} 
-                                    className="bg-[#FFF5EA] border border-[#E7E0D8] hover:border-[#E87A1E] text-[#1C1917] hover:text-[#E87A1E] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
+                                    className="bg-[#FEFCE8] border border-[#E7E0D8] hover:border-[#EAB308] text-[#1C1917] hover:text-[#EAB308] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium"
                                 >
                                     Worker
                                 </button>
@@ -202,7 +202,7 @@ export const Login = () => {
 
                     <div className="text-center text-xs text-[#78716C]">
                         Don't have an account yet?{' '}
-                        <Link to="/register" className="text-[#E87A1E] font-semibold hover:underline">
+                        <Link to="/register" className="text-[#EAB308] font-semibold hover:underline">
                             Create Account
                         </Link>
                     </div>

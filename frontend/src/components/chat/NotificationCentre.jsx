@@ -87,7 +87,7 @@ export const NotificationCentre = () => {
                         {unreadCount > 0 && (
                             <button 
                                 onClick={markAllRead}
-                                className="text-xs text-[#E87A1E] font-medium hover:underline flex items-center gap-1"
+                                className="text-xs text-[#EAB308] font-medium hover:underline flex items-center gap-1"
                             >
                                 <Check size={14} /> Mark all read
                             </button>
@@ -108,7 +108,7 @@ export const NotificationCentre = () => {
                                         className={`p-4 flex gap-3 ${notification.status === 'UNREAD' ? 'bg-white' : 'bg-[#FAF6F0] opacity-80'}`}
                                     >
                                         {/* Optional Icon based on category */}
-                                        <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${notification.status === 'UNREAD' ? 'bg-[#E87A1E]' : 'bg-transparent'}`} />
+                                        <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${notification.status === 'UNREAD' ? 'bg-[#EAB308]' : 'bg-transparent'}`} />
                                         
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-[#1C1917] truncate">{notification.title}</p>
@@ -133,7 +133,7 @@ export const NotificationCentre = () => {
                         )}
                     </div>
                     <div className="p-2 border-t border-[#E7E0D8] bg-white text-center">
-                        <button className="text-sm text-[#44403C] font-medium hover:text-[#E87A1E] transition-colors">
+                        <button className="text-sm text-[#44403C] font-medium hover:text-[#EAB308] transition-colors">
                             View all settings
                         </button>
                     </div>

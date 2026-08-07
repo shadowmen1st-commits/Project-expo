@@ -82,10 +82,10 @@ export const HowItWorksPage = () => {
 
             {/* Header */}
             <section className="relative pt-32 pb-12 px-6 overflow-hidden text-center">
-                <div className="absolute top-[-120px] left-1/3 w-[600px] h-[300px] bg-[#E87A1E]/10 blur-[120px] rounded-full pointer-events-none"/>
+                <div className="absolute top-[-120px] left-1/3 w-[600px] h-[300px] bg-[#EAB308]/10 blur-[120px] rounded-full pointer-events-none"/>
 
                 <div className="relative max-w-4xl mx-auto z-10">
-                    <div className="inline-flex items-center gap-2 bg-[#FFF5EA] border border-[#FDBA74] rounded-full px-4 py-1.5 text-xs font-semibold text-[#E87A1E] mb-6">
+                    <div className="inline-flex items-center gap-2 bg-[#FEFCE8] border border-[#FEF08A] rounded-full px-4 py-1.5 text-xs font-semibold text-[#EAB308] mb-6">
                         <Sparkles className="w-3.5 h-3.5"/> Simple, Secure, Transparent
                     </div>
 
@@ -102,7 +102,7 @@ export const HowItWorksPage = () => {
                         <button 
                             onClick={() => setActiveTab('customer')} 
                             className={`px-6 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 outline-none border ${activeTab === 'customer'
-                                ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm'
+                                ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm'
                                 : 'border-transparent text-[#78716C] hover:text-[#1C1917]'}`}
                         >
                             <User className="w-4 h-4"/> Booking a Service
@@ -110,7 +110,7 @@ export const HowItWorksPage = () => {
                         <button 
                             onClick={() => setActiveTab('worker')} 
                             className={`px-6 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 outline-none border ${activeTab === 'worker'
-                                ? 'bg-[#E87A1E] border-[#E87A1E] text-white shadow-sm'
+                                ? 'bg-[#EAB308] border-[#EAB308] text-white shadow-sm'
                                 : 'border-transparent text-[#78716C] hover:text-[#1C1917]'}`}
                         >
                             <Wrench className="w-4 h-4"/> Earning as a Professional
@@ -134,13 +134,13 @@ export const HowItWorksPage = () => {
                         const IconComponent = step.icon;
                         return (
                             <div key={step.n} className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                                <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border border-[#FDBA74] bg-[#FFF5EA] items-center justify-center font-black text-xs text-[#E87A1E] z-10 shadow-sm">
+                                <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-10 h-10 rounded-full border border-[#FEF08A] bg-[#FEFCE8] items-center justify-center font-black text-xs text-[#EAB308] z-10 shadow-sm">
                                     {step.n}
                                 </div>
 
                                 <div className={`w-full md:w-1/2 flex justify-end ${isEven ? 'md:order-1' : 'md:order-2 md:justify-start'}`}>
-                                    <div className="w-full max-w-md bg-white border border-[#E7E0D8] hover:border-[#E87A1E]/50 rounded-3xl p-6 md:p-8 transition-all shadow-sm">
-                                        <div className="inline-flex bg-[#FFF5EA] border border-[#FDBA74] text-[#E87A1E] text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg mb-4">
+                                    <div className="w-full max-w-md bg-white border border-[#E7E0D8] hover:border-[#EAB308]/50 rounded-3xl p-6 md:p-8 transition-all shadow-sm">
+                                        <div className="inline-flex bg-[#FEFCE8] border border-[#FEF08A] text-[#EAB308] text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg mb-4">
                                             {step.badge}
                                         </div>
 
@@ -164,7 +164,7 @@ export const HowItWorksPage = () => {
                                 </div>
 
                                 <div className={`w-full md:w-1/2 flex items-center justify-center ${isEven ? 'md:order-2 md:justify-start' : 'md:order-1 md:justify-end'}`}>
-                                    <div className="w-24 h-24 md:w-36 md:h-36 bg-[#F4EFE6] border border-[#E7E0D8] rounded-3xl flex items-center justify-center text-[#E87A1E]">
+                                    <div className="w-24 h-24 md:w-36 md:h-36 bg-[#F4EFE6] border border-[#E7E0D8] rounded-3xl flex items-center justify-center text-[#EAB308]">
                                         <IconComponent className="w-10 h-10 md:w-14 md:h-14"/>
                                     </div>
                                 </div>
@@ -177,7 +177,7 @@ export const HowItWorksPage = () => {
             {/* Guarantee Protection */}
             <section className="max-w-5xl mx-auto px-6 mt-24">
                 <div className="bg-white border border-[#E7E0D8] rounded-3xl p-8 flex flex-col md:flex-row items-center gap-6 md:gap-10 shadow-sm">
-                    <div className="w-16 h-16 rounded-2xl bg-[#FFF5EA] border border-[#FDBA74] flex items-center justify-center text-[#E87A1E] flex-shrink-0">
+                    <div className="w-16 h-16 rounded-2xl bg-[#FEFCE8] border border-[#FEF08A] flex items-center justify-center text-[#EAB308] flex-shrink-0">
                         <ShieldCheck className="w-8 h-8"/>
                     </div>
                     <div className="flex-1">

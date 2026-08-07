@@ -413,18 +413,18 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                         <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
                             H
                         </div>
-                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#E87A1E]">.</span></span>
+                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
                         <span className="bg-[#FEF2F2] text-[#DC2626] text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border border-[#FCA5A5]">
                             Admin
                         </span>
                     </div>
 
                     <nav className="space-y-1.5">
-                        <button onClick={() => { setActiveSection('analytics'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'analytics' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('analytics'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'analytics' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <BarChart3 className="w-4 h-4"/>
                             Platform Analytics
                         </button>
-                        <button onClick={() => { setActiveSection('queue'); setError(''); setSuccess(''); }} className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'queue' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('queue'); setError(''); setSuccess(''); }} className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'queue' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <div className="flex items-center gap-3">
                                 <UserCheck className="w-4 h-4"/>
                                 Verification Queue
@@ -435,15 +435,15 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 </span>
                             )}
                         </button>
-                        <button onClick={() => { setActiveSection('categories'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'categories' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('categories'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'categories' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <Settings className="w-4 h-4"/>
                             Service Categories
                         </button>
-                        <button onClick={() => { setActiveSection('commissions'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'commissions' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('commissions'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'commissions' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <ListFilter className="w-4 h-4"/>
                             Commission Overrides
                         </button>
-                        <button onClick={() => { setActiveSection('payouts'); setError(''); setSuccess(''); }} className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'payouts' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('payouts'); setError(''); setSuccess(''); }} className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'payouts' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <div className="flex items-center gap-3">
                                 <DollarSign className="w-4 h-4"/>
                                 Payout Approvals
@@ -454,23 +454,23 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 </span>
                             )}
                         </button>
-                        <button onClick={() => { setActiveSection('audit'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'audit' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('audit'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'audit' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <ShieldCheck className="w-4 h-4"/>
                             System Audit Logs
                         </button>
-                        <button onClick={() => { setActiveSection('ledger'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'ledger' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('ledger'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'ledger' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <FileText className="w-4 h-4"/>
                             Platform Ledger
                         </button>
-                        <button onClick={() => { setActiveSection('reviews'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'reviews' ? 'bg-[#E87A1E] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FFF5EA] hover:text-[#1C1917]'}`}>
+                        <button onClick={() => { setActiveSection('reviews'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'reviews' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <ShieldAlert className="w-4 h-4"/> Review Moderation
                         </button>
-                        <button onClick={()=>setActiveSection('support')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='support'?'bg-[#E87A1E] text-white':'text-[#78716C]'}`}><Users className="w-4 h-4"/>Support Operations</button>
-                        <button onClick={()=>setActiveSection('chat-moderation')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='chat-moderation'?'bg-[#E87A1E] text-white':'text-[#78716C]'}`}><ShieldAlert className="w-4 h-4"/>Chat Moderation</button>
+                        <button onClick={()=>setActiveSection('support')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='support'?'bg-[#EAB308] text-white':'text-[#78716C]'}`}><Users className="w-4 h-4"/>Support Operations</button>
+                        <button onClick={()=>setActiveSection('chat-moderation')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='chat-moderation'?'bg-[#EAB308] text-white':'text-[#78716C]'}`}><ShieldAlert className="w-4 h-4"/>Chat Moderation</button>
                     </nav>
                 </div>
 
-                <button onClick={logout} className="bg-[#FAF6F0] hover:bg-[#FFF5EA] border border-[#E7E0D8] rounded-xl py-2 px-4 text-[#44403C] text-xs font-semibold cursor-pointer">
+                <button onClick={logout} className="bg-[#FAF6F0] hover:bg-[#FEFCE8] border border-[#E7E0D8] rounded-xl py-2 px-4 text-[#44403C] text-xs font-semibold cursor-pointer">
                     Sign Out Dashboard
                 </button>
             </aside>
@@ -500,14 +500,14 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
 
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <div className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                                    <div className="p-3 rounded-xl bg-[#FFF5EA] text-[#E87A1E]"><Users className="w-5 h-5"/></div>
+                                    <div className="p-3 rounded-xl bg-[#FEFCE8] text-[#EAB308]"><Users className="w-5 h-5"/></div>
                                     <div>
                                         <span className="block text-[10px] text-[#A8A29E] font-semibold uppercase">Total Users</span>
                                         <span className="text-lg font-black text-[#1C1917]">{(metrics.totalCustomers || 0) + (metrics.totalWorkers || 0)}</span>
                                     </div>
                                 </div>
                                 <div className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                                    <div className="p-3 rounded-xl bg-[#FFF5EA] text-[#E87A1E]"><ShoppingBag className="w-5 h-5"/></div>
+                                    <div className="p-3 rounded-xl bg-[#FEFCE8] text-[#EAB308]"><ShoppingBag className="w-5 h-5"/></div>
                                     <div>
                                         <span className="block text-[10px] text-[#A8A29E] font-semibold uppercase">Active Orders</span>
                                         <span className="text-lg font-black text-[#1C1917]">{metrics.activeBookings || 0}</span>
@@ -521,7 +521,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                     </div>
                                 </div>
                                 <div className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                                    <div className="p-3 rounded-xl bg-[#FFF5EA] text-[#D97706]"><DollarSign className="w-5 h-5"/></div>
+                                    <div className="p-3 rounded-xl bg-[#FEFCE8] text-[#D97706]"><DollarSign className="w-5 h-5"/></div>
                                     <div>
                                         <span className="block text-[10px] text-[#A8A29E] font-semibold uppercase">Rev Commission</span>
                                         <span className="text-lg font-black text-[#1C1917]">₹{((metrics.platformCommission || 0) / 100).toFixed(0)}</span>
@@ -546,7 +546,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                             <YAxis stroke="#78716C" fontSize={11}/>
                                             <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E7E0D8' }}/>
                                             <Legend />
-                                            <Line type="monotone" dataKey="Revenue" stroke="#E87A1E" activeDot={{ r: 8 }}/>
+                                            <Line type="monotone" dataKey="Revenue" stroke="#EAB308" activeDot={{ r: 8 }}/>
                                             <Line type="monotone" dataKey="Commission" stroke="#D97706"/>
                                         </LineChart>
                                     </ResponsiveContainer>
@@ -567,7 +567,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                             onClick={() => { setQueueFilter(status); fetchVerificationQueue(status); }}
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
                                                 queueFilter === status 
-                                                    ? 'bg-[#FFF5EA] border-[#E87A1E] text-[#E87A1E]' 
+                                                    ? 'bg-[#FEFCE8] border-[#EAB308] text-[#EAB308]' 
                                                     : 'bg-white border-[#E7E0D8] text-[#78716C] hover:bg-[#FAF6F0]'
                                             }`}
                                         >
@@ -587,7 +587,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                         <div key={sub._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-sm">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <div className="w-10 h-10 rounded-xl bg-[#FFF5EA] border border-[#FDBA74] flex items-center justify-center font-bold text-[#E87A1E] text-sm">
+                                                    <div className="w-10 h-10 rounded-xl bg-[#FEFCE8] border border-[#FEF08A] flex items-center justify-center font-bold text-[#EAB308] text-sm">
                                                         {sub.profileSnapshot?.fullName ? sub.profileSnapshot.fullName[0] : (sub.workerId?.name ? sub.workerId.name[0] : 'W')}
                                                     </div>
                                                     <div>
@@ -595,10 +595,10 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                             <h3 className="font-bold text-[#1C1917] text-sm">{sub.profileSnapshot?.fullName || sub.workerId?.name}</h3>
                                                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                                                                 sub.status === 'APPROVED' ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#16A34A]' :
-                                                                sub.status === 'CHANGES_REQUIRED' ? 'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]' :
+                                                                sub.status === 'CHANGES_REQUIRED' ? 'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]' :
                                                                 sub.status === 'REJECTED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
                                                                 sub.status === 'SUSPENDED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
-                                                                'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'
+                                                                'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]'
                                                             }`}>
                                                                 {sub.status.replace('_', ' ')}
                                                             </span>
@@ -649,7 +649,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                         onClick={() => setActivePreviewDoc(doc)}
                                                         className={`border rounded-2xl p-4 flex flex-col gap-2 transition-all cursor-pointer ${
                                                             activePreviewDoc?._id === doc._id 
-                                                                ? 'border-[#E87A1E] bg-[#FFF5EA]' 
+                                                                ? 'border-[#EAB308] bg-[#FEFCE8]' 
                                                                 : 'border-[#E7E0D8] bg-[#FAF6F0] hover:bg-white'
                                                         }`}
                                                     >
@@ -667,12 +667,12 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                             {doc.expiryDate && <span>Expires: {new Date(doc.expiryDate).toLocaleDateString()}</span>}
                                                         </div>
                                                         {decryptedNumber && activePreviewDoc?._id === doc._id && (
-                                                            <span className="block text-[10px] text-[#E87A1E] font-mono font-bold mt-1">Decrypted: {decryptedNumber}</span>
+                                                            <span className="block text-[10px] text-[#EAB308] font-mono font-bold mt-1">Decrypted: {decryptedNumber}</span>
                                                         )}
                                                         <div className="flex gap-2 justify-end mt-1">
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); handleViewDecryptedDoc(doc._id); }} 
-                                                                className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E] text-[#44403C] font-bold text-[9px] py-1 px-2.5 rounded-lg cursor-pointer"
+                                                                className="bg-white border border-[#E7E0D8] hover:border-[#EAB308] text-[#44403C] font-bold text-[9px] py-1 px-2.5 rounded-lg cursor-pointer"
                                                             >
                                                                 Decrypt ID
                                                             </button>
@@ -707,7 +707,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                                     href={documentPreviewUrl} 
                                                                     target="_blank" 
                                                                     rel="noopener noreferrer"
-                                                                    className="block text-[10px] text-[#E87A1E] font-bold mt-1 underline"
+                                                                    className="block text-[10px] text-[#EAB308] font-bold mt-1 underline"
                                                                 >
                                                                     Open PDF In New Tab
                                                                 </a>
@@ -778,7 +778,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                         value={reviewReason} 
                                                         onChange={(e) => setReviewReason(e.target.value)} 
                                                         placeholder="Write detailed reason notes..." 
-                                                        className="w-full bg-white border border-[#E7E0D8] focus:border-[#E87A1E] rounded-xl py-2.5 px-4 text-[#1C1917] text-xs outline-none resize-none"
+                                                        className="w-full bg-white border border-[#E7E0D8] focus:border-[#EAB308] rounded-xl py-2.5 px-4 text-[#1C1917] text-xs outline-none resize-none"
                                                     />
                                                 </div>
 
@@ -848,7 +848,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                             <div>
                                                 <h3 className="font-bold text-[#1C1917] text-sm">{cat.name}</h3>
                                                 <p className="text-[#78716C] text-xs mt-1">{cat.description}</p>
-                                                <span className="inline-block bg-[#FFF5EA] text-[#E87A1E] text-[9px] font-semibold px-2 py-0.5 rounded-full mt-2 border border-[#FDBA74]">
+                                                <span className="inline-block bg-[#FEFCE8] text-[#EAB308] text-[9px] font-semibold px-2 py-0.5 rounded-full mt-2 border border-[#FEF08A]">
                                                     Commission: {cat.defaultCommission}%
                                                 </span>
                                             </div>
@@ -897,7 +897,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 <div className="lg:col-span-2 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h1 className="text-xl font-extrabold text-[#1C1917]">Commission Tier Rules & Overrides</h1>
-                                        <button onClick={() => handleRunLivePreview()} className="bg-white border border-[#E87A1E] text-[#E87A1E] hover:bg-[#FFF5EA] font-bold text-xs px-3.5 py-2 rounded-xl cursor-pointer">
+                                        <button onClick={() => handleRunLivePreview()} className="bg-white border border-[#EAB308] text-[#EAB308] hover:bg-[#FEFCE8] font-bold text-xs px-3.5 py-2 rounded-xl cursor-pointer">
                                             Live Calculation Preview
                                         </button>
                                     </div>
@@ -913,7 +913,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <h3 className="font-bold text-[#1C1917] text-sm">{rule.name}</h3>
-                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${rule.scope === 'WORKER' ? 'bg-[#F0FDF4] text-[#16A34A] border-[#86EFAC]' : rule.scope === 'CATEGORY' ? 'bg-[#FFF5EA] text-[#E87A1E] border-[#FDBA74]' : 'bg-[#FAF6F0] text-[#78716C] border-[#E7E0D8]'}`}>
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${rule.scope === 'WORKER' ? 'bg-[#F0FDF4] text-[#16A34A] border-[#86EFAC]' : rule.scope === 'CATEGORY' ? 'bg-[#FEFCE8] text-[#EAB308] border-[#FEF08A]' : 'bg-[#FAF6F0] text-[#78716C] border-[#E7E0D8]'}`}>
                                                                 Scope: {rule.scope}
                                                             </span>
                                                             <span className="bg-[#FAF6F0] text-[#78716C] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#E7E0D8]">
@@ -952,7 +952,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                             else setRulePriority(4); // GLOBAL seeded rule uses 3
                                                             setConflictWarning('');
                                                         }}
-                                                        className={`py-1.5 rounded-lg cursor-pointer ${ruleScope === s ? 'bg-[#E87A1E] text-white' : 'text-[#78716C]'}`}
+                                                        className={`py-1.5 rounded-lg cursor-pointer ${ruleScope === s ? 'bg-[#EAB308] text-white' : 'text-[#78716C]'}`}
                                                     >
                                                         {s}
                                                     </button>
@@ -1052,7 +1052,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                     } catch (err) {
                                         setError('Reconciliation sweep failed.');
                                     }
-                                }} className="bg-white border border-[#E87A1E] text-[#E87A1E] hover:bg-[#FFF5EA] font-bold text-xs px-3.5 py-2 rounded-xl cursor-pointer">
+                                }} className="bg-white border border-[#EAB308] text-[#EAB308] hover:bg-[#FEFCE8] font-bold text-xs px-3.5 py-2 rounded-xl cursor-pointer">
                                     Reconcile All Wallets
                                 </button>
                             </div>
@@ -1107,7 +1107,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                             </span>
                                                         </td>
                                                         <td className="py-3 px-4">
-                                                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${tx.status === 'POSTED' ? 'bg-[#F0FDF4] text-[#16A34A]' : tx.status === 'REVERSED' ? 'bg-[#FEF2F2] text-[#DC2626]' : 'bg-[#FFF5EA] text-[#E87A1E]'}`}>
+                                                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${tx.status === 'POSTED' ? 'bg-[#F0FDF4] text-[#16A34A]' : tx.status === 'REVERSED' ? 'bg-[#FEF2F2] text-[#DC2626]' : 'bg-[#FEFCE8] text-[#EAB308]'}`}>
                                                                 {tx.status}
                                                             </span>
                                                         </td>
@@ -1164,12 +1164,12 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                             <span className="text-[#1C1917]">{req.userId?.name || 'Worker'}</span>
                                             <span className="text-[#16A34A] font-bold">₹{(req.amount / 100).toFixed(2)}</span>
                                             <span className="text-[#78716C]">Masked payout account</span>
-                                            <span className="inline-block bg-[#FFF5EA] text-[#E87A1E] text-[10px] font-bold px-2 py-0.5 rounded-full w-max">
+                                            <span className="inline-block bg-[#FEFCE8] text-[#EAB308] text-[10px] font-bold px-2 py-0.5 rounded-full w-max">
                                                 {req.status}
                                             </span>
                                             <div className="flex justify-end gap-2">
                                                 {req.status === 'UNDER_REVIEW' && <button onClick={() => handleProcessPayout(req._id, 'approve')} className="bg-[#16A34A] text-white font-bold text-[10px] px-3 py-1.5 rounded-lg cursor-pointer">Approve</button>}
-                                                {req.status === 'RESERVED' && <button onClick={() => handleProcessPayout(req._id, 'process')} className="bg-[#E87A1E] text-white font-bold text-[10px] px-3 py-1.5 rounded-lg cursor-pointer">Submit Provider</button>}
+                                                {req.status === 'RESERVED' && <button onClick={() => handleProcessPayout(req._id, 'process')} className="bg-[#EAB308] text-white font-bold text-[10px] px-3 py-1.5 rounded-lg cursor-pointer">Submit Provider</button>}
                                             </div>
                                         </div>
                                     ))}
@@ -1197,7 +1197,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                     {auditLogs.map((log) => (
                                         <div key={log._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2.5 rounded-xl bg-[#FFF5EA] text-[#E87A1E]">
+                                                <div className="p-2.5 rounded-xl bg-[#FEFCE8] text-[#EAB308]">
                                                     <ShieldCheck className="w-4 h-4"/>
                                                 </div>
                                                 <div>

@@ -72,7 +72,7 @@ export const SupportPortal = () => {
         switch (status) {
             case 'OPEN': return 'bg-blue-100 text-blue-800';
             case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800';
-            case 'WAITING_FOR_USER': return 'bg-orange-100 text-[#E87A1E]';
+            case 'WAITING_FOR_USER': return 'bg-yellow-100 text-[#EAB308]';
             case 'RESOLVED':
             case 'CLOSED': return 'bg-green-100 text-green-800';
             default: return 'bg-gray-100 text-gray-800';
@@ -87,7 +87,7 @@ export const SupportPortal = () => {
                     <h2 className="font-semibold text-lg">Support Tickets</h2>
                     <button 
                         onClick={() => { setIsCreating(true); setSelectedTicket(null); }}
-                        className="p-2 bg-[#E87A1E] text-white rounded-lg hover:bg-[#D97706] transition"
+                        className="p-2 bg-[#EAB308] text-white rounded-lg hover:bg-[#D97706] transition"
                     >
                         <Plus size={20} />
                     </button>
@@ -105,7 +105,7 @@ export const SupportPortal = () => {
                                 onClick={() => { fetchTicketDetails(ticket._id); setIsCreating(false); }}
                                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
                                     selectedTicket?._id === ticket._id 
-                                        ? 'bg-white border-[#E87A1E] shadow-sm' 
+                                        ? 'bg-white border-[#EAB308] shadow-sm' 
                                         : 'bg-white border-[#E7E0D8] hover:border-[#DCD4C8]'
                                 }`}
                             >
@@ -202,7 +202,7 @@ export const SupportPortal = () => {
                                             isInternal 
                                                 ? 'bg-yellow-100 border border-yellow-300 text-yellow-900' 
                                                 : msg.senderType === user.role 
-                                                    ? 'bg-[#E87A1E] text-white rounded-tr-sm' 
+                                                    ? 'bg-[#EAB308] text-white rounded-tr-sm' 
                                                     : 'bg-white border border-[#E7E0D8] text-[#1C1917] rounded-tl-sm'
                                         }`}>
                                             {isInternal && <p className="text-[10px] font-bold uppercase mb-1 flex items-center gap-1"><AlertCircle size={12}/> Internal Note</p>}
@@ -225,7 +225,7 @@ export const SupportPortal = () => {
                                     <button 
                                         type="submit" 
                                         disabled={!replyText.trim()}
-                                        className="px-6 rounded-lg bg-[#E87A1E] text-white hover:bg-[#D97706] disabled:opacity-50 transition"
+                                        className="px-6 rounded-lg bg-[#EAB308] text-white hover:bg-[#D97706] disabled:opacity-50 transition"
                                     >
                                         Reply
                                     </button>

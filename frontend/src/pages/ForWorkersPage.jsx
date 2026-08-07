@@ -62,11 +62,11 @@ export const ForWorkersPage = () => {
 
             {/* Hero */}
             <section className="relative pt-32 pb-12 px-6 overflow-hidden">
-                <div className="absolute top-[-100px] left-1/4 w-[600px] h-[300px] bg-[#E87A1E]/10 blur-[120px] rounded-full pointer-events-none"/>
+                <div className="absolute top-[-100px] left-1/4 w-[600px] h-[300px] bg-[#EAB308]/10 blur-[120px] rounded-full pointer-events-none"/>
 
                 <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center z-10">
                     <div className="lg:col-span-7 text-left">
-                        <div className="inline-flex items-center gap-2 bg-[#FFF5EA] border border-[#FDBA74] rounded-full px-4.5 py-1.5 text-xs font-semibold text-[#E87A1E] mb-6">
+                        <div className="inline-flex items-center gap-2 bg-[#FEFCE8] border border-[#FEF08A] rounded-full px-4.5 py-1.5 text-xs font-semibold text-[#EAB308] mb-6">
                             💼 Earning Opportunity for Specialists
                         </div>
 
@@ -87,7 +87,7 @@ export const ForWorkersPage = () => {
                                     const target = document.getElementById('calc');
                                     if (target) target.scrollIntoView({ behavior: 'smooth' });
                                 }} 
-                                className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E] text-[#1C1917] text-sm font-semibold px-8 py-3.5 rounded-xl cursor-pointer shadow-sm"
+                                className="bg-white border border-[#E7E0D8] hover:border-[#EAB308] text-[#1C1917] text-sm font-semibold px-8 py-3.5 rounded-xl cursor-pointer shadow-sm"
                             >
                                 Calculate Earnings
                             </button>
@@ -101,7 +101,7 @@ export const ForWorkersPage = () => {
                             { val: '8K+', label: 'Active Specialists', desc: 'In 120+ Indian cities' },
                             { val: 'Verified', label: 'Booking reviews', desc: 'Only after completed services' }
                         ].map((stat) => (
-                            <div key={stat.label} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 text-center transition-all hover:border-[#E87A1E]/50 shadow-sm">
+                            <div key={stat.label} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 text-center transition-all hover:border-[#EAB308]/50 shadow-sm">
                                 <div className="text-3xl font-black text-[#1C1917] mb-1.5">{stat.val}</div>
                                 <div className="text-[#1C1917] text-xs font-semibold mb-0.5">{stat.label}</div>
                                 <div className="text-[#78716C] text-[10px]">{stat.desc}</div>
@@ -129,9 +129,9 @@ export const ForWorkersPage = () => {
                             <div>
                                 <div className="flex justify-between text-xs font-semibold text-[#78716C] uppercase tracking-wider mb-2">
                                     <span>Weekly Commitment</span>
-                                    <span className="text-[#E87A1E] font-bold">{hours} Hours/week</span>
+                                    <span className="text-[#EAB308] font-bold">{hours} Hours/week</span>
                                 </div>
-                                <input type="range" min="5" max="60" value={hours} onChange={e => setHours(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#E87A1E]"/>
+                                <input type="range" min="5" max="60" value={hours} onChange={e => setHours(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#EAB308]"/>
                                 <div className="flex justify-between text-[10px] text-[#A8A29E] mt-1.5 font-medium">
                                     <span>5 hrs (Part-time)</span>
                                     <span>60 hrs (Full-time)</span>
@@ -141,9 +141,9 @@ export const ForWorkersPage = () => {
                             <div>
                                 <div className="flex justify-between text-xs font-semibold text-[#78716C] uppercase tracking-wider mb-2">
                                     <span>Your Hourly Asking Rate</span>
-                                    <span className="text-[#E87A1E] font-bold">₹{rate}/hour</span>
+                                    <span className="text-[#EAB308] font-bold">₹{rate}/hour</span>
                                 </div>
-                                <input type="range" min="150" max="800" step="25" value={rate} onChange={e => setRate(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#E87A1E]"/>
+                                <input type="range" min="150" max="800" step="25" value={rate} onChange={e => setRate(Number(e.target.value))} className="w-full h-1.5 bg-[#FAF6F0] rounded-lg appearance-none cursor-pointer accent-[#EAB308]"/>
                                 <div className="flex justify-between text-[10px] text-[#A8A29E] mt-1.5 font-medium">
                                     <span>₹150/hr (Base)</span>
                                     <span>₹800/hr (Expert)</span>
@@ -170,13 +170,13 @@ export const ForWorkersPage = () => {
             {/* Main Benefits list */}
             <section className="max-w-6xl mx-auto px-6 mt-24">
                 <div className="text-center mb-16">
-                    <p className="text-[#E87A1E] text-sm font-semibold uppercase tracking-wider mb-2">Designed for Specialists</p>
+                    <p className="text-[#EAB308] text-sm font-semibold uppercase tracking-wider mb-2">Designed for Specialists</p>
                     <h2 className="text-3xl md:text-4xl font-black text-[#1C1917]">Why Join HyperLocal?</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {BENEFITS.map((benefit) => (
-                        <div key={benefit.title} className="bg-white border border-[#E7E0D8] hover:border-[#E87A1E]/50 rounded-2xl p-6 text-left transition-all shadow-sm">
+                        <div key={benefit.title} className="bg-white border border-[#E7E0D8] hover:border-[#EAB308]/50 rounded-2xl p-6 text-left transition-all shadow-sm">
                             <span className="text-3xl mb-4 block">{benefit.icon}</span>
                             <h3 className="font-bold text-[#1C1917] text-base mb-2">{benefit.title}</h3>
                             <p className="text-[#78716C] text-xs leading-relaxed">{benefit.desc}</p>
@@ -188,7 +188,7 @@ export const ForWorkersPage = () => {
             {/* Testimonials */}
             <section className="max-w-4xl mx-auto px-6 mt-24">
                 <div className="text-center mb-12">
-                    <p className="text-[#E87A1E] text-sm font-semibold uppercase tracking-wider mb-2">Success Stories</p>
+                    <p className="text-[#EAB308] text-sm font-semibold uppercase tracking-wider mb-2">Success Stories</p>
                     <h2 className="text-3xl font-black text-[#1C1917]">From Our Vetted Crew</h2>
                 </div>
 

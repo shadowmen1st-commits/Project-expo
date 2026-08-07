@@ -32,17 +32,17 @@ export const SharedNavbar = () => {
                             <div className="w-8 h-8 rounded-xl logo-gradient flex items-center justify-center shadow-sm">
                                 <span className="text-white text-sm font-black">H</span>
                             </div>
-                            <span className="text-[#1C1917] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#E87A1E]">.</span></span>
+                            <span className="text-[#1C1917] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
                         </div>
                     ) : (
-                        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#E87A1E] font-semibold text-sm cursor-pointer outline-none">
+                        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#EAB308] font-semibold text-sm cursor-pointer outline-none">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
                             </svg>
                             Back
                         </button>
                     )}
-                    <div className="text-[10px] bg-[#FFF5EA] border border-[#E7E0D8] text-[#E87A1E] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                    <div className="text-[10px] bg-[#FEFCE8] border border-[#E7E0D8] text-[#EAB308] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                         App Mode
                     </div>
                 </div>
@@ -61,7 +61,7 @@ export const SharedNavbar = () => {
                         <div className="w-8 h-8 rounded-xl logo-gradient flex items-center justify-center shadow-md">
                             <span className="text-white text-sm font-black">H</span>
                         </div>
-                        <span className="text-[#1C1917] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#E87A1E]">.</span></span>
+                        <span className="text-[#1C1917] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
                     </button>
 
                     {/* Desktop Nav links */}
@@ -72,10 +72,10 @@ export const SharedNavbar = () => {
                                 <button 
                                     key={link.label} 
                                     onClick={() => navigate(link.path)} 
-                                    className={`text-sm font-medium transition-all relative py-1 cursor-pointer outline-none ${isActive ? 'text-[#E87A1E] font-semibold' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+                                    className={`text-sm font-medium transition-all relative py-1 cursor-pointer outline-none ${isActive ? 'text-[#EAB308] font-semibold' : 'text-[#78716C] hover:text-[#1C1917]'}`}
                                 >
                                     {link.label}
-                                    {isActive && (<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E87A1E] rounded-full"/>)}
+                                    {isActive && (<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EAB308] rounded-full"/>)}
                                 </button>
                             );
                         })}
@@ -118,7 +118,7 @@ export const SharedNavbar = () => {
                                     setMobileMenuOpen(false);
                                     navigate(link.path);
                                 }} 
-                                className={`text-2xl font-bold transition-all cursor-pointer outline-none ${isActive ? 'text-[#E87A1E] translate-x-2' : 'text-[#78716C] hover:text-[#1C1917]'}`}
+                                className={`text-2xl font-bold transition-all cursor-pointer outline-none ${isActive ? 'text-[#EAB308] translate-x-2' : 'text-[#78716C] hover:text-[#1C1917]'}`}
                             >
                                 {link.label}
                             </button>
@@ -126,7 +126,7 @@ export const SharedNavbar = () => {
                     })}
 
                     <div className="pt-8 border-t border-[#E7E0D8] flex flex-col gap-4">
-                        <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="text-[#1C1917] hover:text-[#E87A1E] text-lg font-semibold py-3 border border-[#E7E0D8] rounded-2xl bg-white cursor-pointer outline-none">
+                        <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="text-[#1C1917] hover:text-[#EAB308] text-lg font-semibold py-3 border border-[#E7E0D8] rounded-2xl bg-white cursor-pointer outline-none">
                             Sign In
                         </button>
                         <button onClick={() => { setMobileMenuOpen(false); navigate('/register'); }} className="btn-primary-gradient text-white text-lg font-bold py-3.5 rounded-2xl cursor-pointer outline-none">

@@ -41,7 +41,7 @@ export default function ConnectedAccounts() {
                             <p className="text-xs text-[#78716C]">Not connected</p>
                         </div>
                     </div>
-                    <button className="text-xs font-semibold text-[#E87A1E] hover:text-[#C56616] cursor-pointer bg-[#FFF6EE] px-3 py-1.5 rounded-lg">
+                    <button className="text-xs font-semibold text-[#EAB308] hover:text-[#C56616] cursor-pointer bg-[#FFF6EE] px-3 py-1.5 rounded-lg">
                         Connect
                     </button>
                 </div>
@@ -56,7 +56,7 @@ export default function ConnectedAccounts() {
                             <p className="text-xs text-[#78716C]">Not connected</p>
                         </div>
                     </div>
-                    <button className="text-xs font-semibold text-[#E87A1E] hover:text-[#C56616] cursor-pointer bg-[#FFF6EE] px-3 py-1.5 rounded-lg">
+                    <button className="text-xs font-semibold text-[#EAB308] hover:text-[#C56616] cursor-pointer bg-[#FFF6EE] px-3 py-1.5 rounded-lg">
                         Connect
                     </button>
                 </div>

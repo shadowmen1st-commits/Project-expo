@@ -132,7 +132,7 @@ export const WorkerDashboard = () => {
                     <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
                         H
                     </div>
-                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#E87A1E]">.</span></span>
+                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
                     <span className="bg-[#F0FDF4] text-[#16A34A] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#86EFAC]">
                         Worker Workspace
                     </span>
@@ -147,7 +147,7 @@ export const WorkerDashboard = () => {
                             {profile.isOnline ? 'ONLINE' : 'OFFLINE'}
                         </button>
                     )}
-                    <button onClick={logout} className="bg-white hover:bg-[#FFF5EA] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                    <button onClick={logout} className="bg-white hover:bg-[#FEFCE8] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
                         Sign Out
                     </button>
                 </div>
@@ -222,7 +222,7 @@ export const WorkerDashboard = () => {
                                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                                                     doc.verificationStatus === 'APPROVED' ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#16A34A]' :
                                                     doc.verificationStatus === 'REJECTED' ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]' :
-                                                    'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'
+                                                    'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]'
                                                 }`}>
                                                     {doc.verificationStatus.replace('_', ' ')}
                                                 </span>
@@ -249,7 +249,7 @@ export const WorkerDashboard = () => {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-[#1C1917]">Your Assigned Bookings</h2>
-                            <button onClick={fetchDashboardDetails} className="text-[#E87A1E] hover:underline flex items-center gap-1 text-xs cursor-pointer font-semibold">
+                            <button onClick={fetchDashboardDetails} className="text-[#EAB308] hover:underline flex items-center gap-1 text-xs cursor-pointer font-semibold">
                                 <RefreshCw className="w-3.5 h-3.5"/> Refresh
                             </button>
                         </div>
@@ -265,7 +265,7 @@ export const WorkerDashboard = () => {
                                         <div>
                                             <div className="flex items-center justify-between text-xs mb-3">
                                                 <span className="font-mono text-[#78716C] font-semibold">{booking.bookingNumber}</span>
-                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${booking.bookingStatus === 'COMPLETED' ? 'bg-[#16A34A]/10 border-[#16A34A]/20 text-[#16A34A]' : booking.bookingStatus === 'CANCELLED' || booking.bookingStatus === 'REJECTED' ? 'bg-[#DC2626]/10 border-[#DC2626]/20 text-[#DC2626]' : 'bg-[#FFF5EA] border-[#FDBA74] text-[#E87A1E]'}`}>
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${booking.bookingStatus === 'COMPLETED' ? 'bg-[#16A34A]/10 border-[#16A34A]/20 text-[#16A34A]' : booking.bookingStatus === 'CANCELLED' || booking.bookingStatus === 'REJECTED' ? 'bg-[#DC2626]/10 border-[#DC2626]/20 text-[#DC2626]' : 'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]'}`}>
                                                     {booking.bookingStatus}
                                                 </span>
                                             </div>
@@ -274,7 +274,7 @@ export const WorkerDashboard = () => {
                                                 <div className="font-bold text-[#1C1917]">Customer: {booking.customer?.name || 'Customer'}</div>
                                                 <div className="text-[#78716C]">Category: {booking.category?.name || 'Service'}</div>
                                                 <div className="text-[#78716C] flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3 text-[#E87A1E] flex-shrink-0"/>
+                                                    <MapPin className="w-3 h-3 text-[#EAB308] flex-shrink-0"/>
                                                     <span>Address: {booking.serviceAddress}</span>
                                                 </div>
                                                 <div className="text-[#78716C]">Start: {new Date(booking.scheduledStart).toLocaleString()}</div>
@@ -292,7 +292,7 @@ export const WorkerDashboard = () => {
                                                         <span>Platform Commission:</span>
                                                         <span>-₹{((booking.commissionAmount || 0) / 100).toFixed(2)} ({booking.commissionPercentage || 10}%)</span>
                                                     </div>
-                                                    <div className="flex justify-between font-extrabold text-[#E87A1E] text-xs pt-1 border-t border-[#E7E0D8]">
+                                                    <div className="flex justify-between font-extrabold text-[#EAB308] text-xs pt-1 border-t border-[#E7E0D8]">
                                                         <span>Expected Net Earning:</span>
                                                         <span>₹{((booking.workerEarning || 0) / 100).toFixed(2)}</span>
                                                     </div>
@@ -305,11 +305,11 @@ export const WorkerDashboard = () => {
 
                                         {/* Intention Action Buttons */}
                                         <div className="flex flex-col gap-2 pt-3 border-t border-[#E7E0D8]">
-                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(booking.bookingStatus)&&<button onClick={()=>setChatBooking(booking)} className="w-full bg-white border border-[#E87A1E] text-[#E87A1E] font-bold text-xs py-2 rounded-xl">Chat with customer</button>}
+                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(booking.bookingStatus)&&<button onClick={()=>setChatBooking(booking)} className="w-full bg-white border border-[#EAB308] text-[#EAB308] font-bold text-xs py-2 rounded-xl">Chat with customer</button>}
                                             {['PAYMENT_PENDING', 'PAID', 'REQUESTED'].includes(booking.bookingStatus) && (
                                                 <div className="space-y-2">
                                                     {booking.paymentStatus !== 'PAID' && (
-                                                        <div className="bg-[#FFF5EA] border border-[#FDBA74] text-[#E87A1E] text-[10px] p-2 rounded-xl text-center font-bold">
+                                                        <div className="bg-[#FEFCE8] border border-[#FEF08A] text-[#EAB308] text-[10px] p-2 rounded-xl text-center font-bold">
                                                             Customer payment pending. Action disabled.
                                                         </div>
                                                     )}
@@ -342,7 +342,7 @@ export const WorkerDashboard = () => {
                                                     <button
                                                         onClick={() => handleIntentionAction(booking.id, 'en-route')}
                                                         disabled={!isWorkerApproved || actionLoading === booking.id}
-                                                        className="w-1/2 bg-white border border-[#E87A1E] text-[#E87A1E] hover:bg-[#FFF5EA] font-bold text-xs py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1"
+                                                        className="w-1/2 bg-white border border-[#EAB308] text-[#EAB308] hover:bg-[#FEFCE8] font-bold text-xs py-2 rounded-xl cursor-pointer flex items-center justify-center gap-1"
                                                     >
                                                         <Navigation className="w-3.5 h-3.5"/> En Route
                                                     </button>
@@ -377,7 +377,7 @@ export const WorkerDashboard = () => {
                                             )}
 
                                             {booking.bookingStatus === 'COMPLETION_REQUESTED' && (
-                                                <div className="bg-[#FFF5EA] border border-[#FDBA74] p-2 rounded-xl text-[10px] text-[#E87A1E] text-center font-bold">
+                                                <div className="bg-[#FEFCE8] border border-[#FEF08A] p-2 rounded-xl text-[10px] text-[#EAB308] text-center font-bold">
                                                     Awaiting Customer Confirmation
                                                 </div>
                                             )}
@@ -394,7 +394,7 @@ export const WorkerDashboard = () => {
                     {wallet && (
                         <div className="bg-white border border-[#E7E0D8] rounded-3xl p-6 space-y-5 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="p-3 bg-[#FFF5EA] rounded-2xl text-[#E87A1E] border border-[#FDBA74]">
+                                <div className="p-3 bg-[#FEFCE8] rounded-2xl text-[#EAB308] border border-[#FEF08A]">
                                     <Wallet className="w-6 h-6"/>
                                 </div>
                                 <div>
@@ -410,7 +410,7 @@ export const WorkerDashboard = () => {
                                 </div>
                                 <div className="bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl p-3">
                                     <span className="block text-[10px] text-[#A8A29E] font-semibold uppercase">Reserved Hold</span>
-                                    <span className="text-sm font-bold text-[#E87A1E]">₹{(wallet.balances.reserved / 100).toFixed(2)}</span>
+                                    <span className="text-sm font-bold text-[#EAB308]">₹{(wallet.balances.reserved / 100).toFixed(2)}</span>
                                 </div>
                             </div>
 
