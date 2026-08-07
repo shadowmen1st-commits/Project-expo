@@ -14,6 +14,8 @@ const toSafePayoutDto = (value) => {
     const payout = value?.toObject ? value.toObject() : value;
     if (!payout) return payout;
     const { ledgerReservationTransactionId, ledgerProcessedTransactionId, ledgerFailureReleaseTransactionId, ledgerReversalTransactionId, ledgerCancellationTransactionId, requestFingerprint, providerIdempotencyKey, metadata, ...safe } = payout;
+    safe.amount = safe.amountPaise;
+    safe.userId = safe.workerId;
     return safe;
 };
 
@@ -151,7 +153,7 @@ export const blockAdminPayoutAccount = async (req, res, next) => {
 
 export const listAdminPayouts = async (req, res, next) => {
     try {
-        const payouts = await WorkerPayout.find().sort({ createdAt: -1 });
+        const payouts = await WorkerPayout.find().populate('workerId', 'name email').sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: payouts.map(toSafePayoutDto) });
     } catch (error) { next(error); }
 };

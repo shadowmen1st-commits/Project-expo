@@ -148,6 +148,10 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     useEffect(() => {
         if (activeSection === 'ledger') {
             fetchLedgerData();
+        } else if (activeSection === 'payouts') {
+            fetchPayoutsList();
+        } else if (activeSection === 'audit') {
+            fetchAuditLogsList();
         }
     }, [activeSection]);
 

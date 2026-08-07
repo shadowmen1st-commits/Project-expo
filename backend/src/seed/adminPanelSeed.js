@@ -26,6 +26,7 @@ import AuditLog from '../models/AuditLog.js';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import CommissionRule from '../models/CommissionRule.js';
+import MessageReport from '../models/MessageReport.js';
 
 dotenv.config();
 
@@ -380,7 +381,7 @@ const runSeed = async () => {
 
             await Message.deleteMany({ conversationId: conv._id }); // refresh messages
 
-            await Message.create({
+            const m1 = await Message.create({
                 conversationId: conv._id,
                 senderId: cust._id,
                 senderRole: 'CUSTOMER',
@@ -399,6 +400,21 @@ const runSeed = async () => {
                 moderationStatus: moderationStatus === 'FLAGGED' ? 'FLAGGED' : 'CLEAR',
                 metadataSafe: flagReason ? { flaggedReason: flagReason } : {},
             });
+
+            if (moderationStatus === 'FLAGGED') {
+                let report = await MessageReport.findOne({ messageId: m1._id });
+                if (!report) {
+                    await MessageReport.create({
+                        messageId: m1._id,
+                        conversationId: conv._id,
+                        reporterId: work._id,
+                        reportedUserId: cust._id,
+                        reasonCode: 'ABUSE',
+                        descriptionSafe: 'User sent abusive words in chat.',
+                        status: 'OPEN',
+                    });
+                }
+            }
         };
 
         await createChat(customer1, worker1, 'Hello I need cleaning service', 'Sure I can help you', 'CLEAR', '');
