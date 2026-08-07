@@ -11,6 +11,7 @@
     "seed": "node src/utils/seed.js",
     "seed:auth": "node src/utils/seedAuth.js",
     "seed:full": "node src/seed/fullMarketplaceSeed.js",
+    "seed:admin": "node src/seed/adminPanelSeed.js",
     "migrate:verification-status": "node src/utils/migrateWorkerVerificationStatus.js",
     "migrate:verification-document-indexes": "node src/utils/migrateVerificationDocumentIndexes.js",
     "settlement:release": "node src/utils/settlementReleaseSweep.js",
