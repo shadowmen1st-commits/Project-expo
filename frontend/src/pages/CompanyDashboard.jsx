@@ -18,7 +18,8 @@ import {
     FileText,
     Percent,
     Lock,
-    Bell
+    Bell,
+    Wallet
 } from 'lucide-react';
 
 export default function CompanyDashboard() {
