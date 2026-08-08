@@ -3,6 +3,8 @@ import {
     getPendingWorkers, verifyWorker, viewDocumentDetails,
     createCategory, getCategories, createCommissionRule, getCommissionRules,
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
+    getCompanies, verifyCompany, rejectCompany, suspendCompany, activateCompany,
+    getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
 } from '../controllers/adminController.js';
 import {
     listPayments, getPaymentDetail, reconcilePayment,
@@ -96,5 +98,15 @@ router.post('/ledger/reconcile/:workerId', requirePermission('payments.manage'),
 router.post('/ledger/reconcile-all', requirePermission('payments.manage'), reconcileAllWallets);
 router.post('/ledger/reverse/:transactionId', requirePermission('payments.manage'), reverseLedgerTransaction);
 router.post('/ledger/manual', requirePermission('payments.manage'), postManualJournalEntry);
+
+// ── Company Administration ───────────────────────────────────────────────────
+router.get('/companies', requirePermission('users.read'), getCompanies);
+router.post('/companies/:id/verify', requirePermission('users.manage'), verifyCompany);
+router.post('/companies/:id/reject', requirePermission('users.manage'), rejectCompany);
+router.post('/companies/:id/suspend', requirePermission('users.manage'), suspendCompany);
+router.post('/companies/:id/activate', requirePermission('users.manage'), activateCompany);
+router.get('/companies/:id/jobs', requirePermission('users.read'), getCompanyJobsAdmin);
+router.get('/companies/:id/workers', requirePermission('users.read'), getCompanyWorkersAdmin);
+router.get('/companies/:id/payments', requirePermission('users.read'), getCompanyPaymentsAdmin);
 
 export default router;

@@ -28,6 +28,7 @@ import mongoose from 'mongoose';
 import NotificationOutbox from './models/NotificationOutbox.js';
 import verificationRoutes from './routes/verificationRoutes.js';
 import devRoutes from './routes/devRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
 
 export const createApp = () => {
     const app = express();
@@ -86,6 +87,7 @@ export const createApp = () => {
     app.use('/api/v1/notifications', notificationRoutes);
     app.use('/api/v1/support', supportRoutes);
     app.use('/api/v1', verificationRoutes);
+    app.use('/api/company', companyRoutes);
     app.get('/api/categories', getCategories);
     const healthLimiter = rateLimit({
         windowMs: 60000,

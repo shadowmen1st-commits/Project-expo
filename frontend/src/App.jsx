@@ -16,6 +16,8 @@ import OAuthCallback from './pages/OAuthCallback';
 import SupportPortal from './pages/SupportPortal';
 import WorkerVerificationPage from './pages/WorkerVerificationPage';
 import AdminWorkerVerificationsPage from './pages/AdminWorkerVerificationsPage';
+import CompanyDashboard from './pages/CompanyDashboard';
+import CompanyRegister from './pages/CompanyRegister';
 /* ─── Route guard ─── */
 const ProtectedRoute = ({ children, allowedRoles, }) => {
     const { user, loading } = useAuth();
@@ -34,8 +36,10 @@ const ProtectedRoute = ({ children, allowedRoles, }) => {
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
             return <Navigate to="/admin" replace/>;
-        if (user.role === 'WORKER' || user.role === 'COMPANY')
+        if (user.role === 'WORKER')
             return <Navigate to="/worker" replace/>;
+        if (user.role === 'COMPANY')
+            return <Navigate to="/company" replace/>;
         return <Navigate to="/dashboard" replace/>;
     }
     return <>{children}</>;
@@ -51,6 +55,7 @@ function AppRoutes() {
       <Route path="/pricing" element={<PricingPage />}/>
       <Route path="/login" element={<Login />}/>
       <Route path="/register" element={<Register />}/>
+      <Route path="/company/register" element={<CompanyRegister />}/>
       <Route path="/auth/oauth/callback" element={<OAuthCallback />}/>
 
       {/* ── Customer Dashboard ── */}
@@ -70,6 +75,11 @@ function AppRoutes() {
       {/* ── Support Portal ── */}
       <Route path="/support" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COMPANY']}>
             <SupportPortal />
+          </ProtectedRoute>}/>
+
+      {/* ── Company Portal ── */}
+      <Route path="/company" element={<ProtectedRoute allowedRoles={['COMPANY']}>
+            <CompanyDashboard />
           </ProtectedRoute>}/>
 
       {/* ── Admin Panel ── */}

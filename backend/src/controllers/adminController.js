@@ -10,6 +10,10 @@ import WalletLedger from '../models/WalletLedger.js';
 import { adminVerifyWorkerSchema, categoryCreateSchema, commissionRuleCreateSchema } from '../utils/validation.js';
 import { decryptText } from '../utils/crypto.js';
 import { recordTransaction } from '../services/ledger.js';
+import CompanyProfile from '../models/CompanyProfile.js';
+import Job from '../models/Job.js';
+import WorkerAssignment from '../models/WorkerAssignment.js';
+import CompanyPayment from '../models/CompanyPayment.js';
 export const getPendingWorkers = async (req, res, next) => {
     try {
         const pending = await WorkerProfile.find({
@@ -305,3 +309,119 @@ export const processPayout = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getCompanies = async (req, res, next) => {
+    try {
+        const users = await User.find({ role: 'COMPANY' }).lean();
+        const data = [];
+        for (const u of users) {
+            const profile = await CompanyProfile.findOne({ userId: u._id }).lean();
+            const activeJobs = await Job.countDocuments({ companyId: u._id, status: 'ACTIVE' });
+            const jobs = await Job.find({ companyId: u._id }).select('_id');
+            const jobIds = jobs.map(j => j._id);
+            const workersHired = await WorkerAssignment.countDocuments({ jobId: { $in: jobIds }, status: 'COMPLETED' });
+
+            const payments = await CompanyPayment.aggregate([
+                { $match: { companyId: u._id, status: 'RELEASED' } },
+                { $group: { _id: null, totalSpent: { $sum: '$amountPaise' } } }
+            ]);
+            const totalSpending = payments[0]?.totalSpent || 0;
+
+            data.push({
+                user: u,
+                profile,
+                activeJobs,
+                workersHired,
+                totalSpending
+            });
+        }
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const verifyCompany = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const profile = await CompanyProfile.findOneAndUpdate(
+            { userId: id },
+            { verificationStatus: 'VERIFIED' },
+            { new: true }
+        );
+        res.status(200).json({ success: true, message: 'Company profile verified successfully.', profile });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const rejectCompany = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const profile = await CompanyProfile.findOneAndUpdate(
+            { userId: id },
+            { verificationStatus: 'REJECTED' },
+            { new: true }
+        );
+        res.status(200).json({ success: true, message: 'Company profile verification rejected.', profile });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const suspendCompany = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await User.findByIdAndUpdate(id, { status: 'SUSPENDED' });
+        res.status(200).json({ success: true, message: 'Company account suspended.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const activateCompany = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await User.findByIdAndUpdate(id, { status: 'ACTIVE' });
+        res.status(200).json({ success: true, message: 'Company account activated.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getCompanyJobsAdmin = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const jobs = await Job.find({ companyId: id }).sort({ createdAt: -1 });
+        res.status(200).json({ success: true, jobs });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getCompanyWorkersAdmin = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const jobs = await Job.find({ companyId: id }).select('_id');
+        const jobIds = jobs.map(j => j._id);
+        const workers = await WorkerAssignment.find({ jobId: { $in: jobIds } })
+            .populate('workerId', 'name email phone')
+            .populate('jobId', 'title');
+        res.status(200).json({ success: true, data: workers });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getCompanyPaymentsAdmin = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const payments = await CompanyPayment.find({ companyId: id })
+            .populate('workerId', 'name email')
+            .populate('jobId', 'title');
+        res.status(200).json({ success: true, data: payments });
+    } catch (error) {
+        next(error);
+    }
+};
+

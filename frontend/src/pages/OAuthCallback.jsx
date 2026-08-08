@@ -25,13 +25,15 @@ export default function OAuthCallback() {
 
                     if (user.role === 'CUSTOMER') {
                         navigate('/dashboard', { replace: true });
-                    } else if (user.role === 'WORKER' || user.role === 'COMPANY') {
+                    } else if (user.role === 'WORKER') {
                         // Check if pending approval
                         if (user.status === 'ACTIVE') {
                             navigate('/worker', { replace: true });
                         } else {
                             navigate('/onboarding', { replace: true });
                         }
+                    } else if (user.role === 'COMPANY') {
+                        navigate('/company', { replace: true });
                     } else if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
                         navigate('/admin', { replace: true });
                     } else {

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText } from 'lucide-react';
+import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
 import AdminSupportPanel from '../components/AdminSupportPanel';import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
+import AdminCompanies from './AdminCompanies';
 
 export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const { logout } = useAuth();
@@ -471,6 +472,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                         </button>
                         <button onClick={()=>setActiveSection('support')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='support'?'bg-[#EAB308] text-white':'text-[#78716C]'}`}><Users className="w-4 h-4"/>Support Operations</button>
                         <button onClick={()=>setActiveSection('chat-moderation')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='chat-moderation'?'bg-[#EAB308] text-white':'text-[#78716C]'}`}><ShieldAlert className="w-4 h-4"/>Chat Moderation</button>
+                        <button onClick={()=>setActiveSection('companies')} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${activeSection==='companies'?'bg-[#EAB308] text-white text-xs font-semibold':'text-[#78716C]'}`}><Building2 className="w-4 h-4"/>Company Directory</button>
                     </nav>
                 </div>
 
@@ -1186,6 +1188,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     {activeSection === 'reviews' && <AdminReviewsPanel />}
                     {activeSection === 'support' && <AdminSupportPanel />}
                     {activeSection === 'chat-moderation' && <AdminChatModerationPanel />}
+                    {activeSection === 'companies' && <AdminCompanies />}
 
                     {/* Audit Logs Section */}
                     {activeSection === 'audit' && (
