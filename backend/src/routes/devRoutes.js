@@ -43,6 +43,47 @@ const CATEGORIES_DATA = [
     { name: 'Driver Service', slug: 'driver-service', description: 'Reliable private driver services.', icon: 'Car', defaultCommission: 12 },
 ];
 
+// Quick seed endpoint for test auth accounts
+router.get('/seed-auth', async (req, res) => {
+    try {
+        const testUsers = [
+            { name: 'System Admin', email: 'admin@test.com', password: 'Admin@12345', role: 'ADMIN', phone: '9999911111' },
+            { name: 'Test Customer', email: 'user@test.com', password: 'User@12345', role: 'CUSTOMER', phone: '9999922222' },
+            { name: 'Test Worker', email: 'worker@test.com', password: 'Worker@12345', role: 'WORKER', phone: '9999933333' },
+        ];
+
+        const results = [];
+        for (const u of testUsers) {
+            const passwordHash = await bcrypt.hash(u.password, 10);
+            const existing = await User.findOne({ email: u.email });
+            let action;
+            if (existing) {
+                existing.passwordHash = passwordHash;
+                existing.role = u.role;
+                existing.status = 'ACTIVE';
+                existing.emailVerified = true;
+                existing.phoneVerified = true;
+                existing.failedLoginAttempts = 0;
+                existing.lockedUntil = undefined;
+                await existing.save();
+                action = 'updated';
+            } else {
+                await User.create({
+                    name: u.name, email: u.email, phone: u.phone,
+                    passwordHash, role: u.role,
+                    status: 'ACTIVE', emailVerified: true, phoneVerified: true
+                });
+                action = 'created';
+            }
+            results.push({ email: u.email, role: u.role, action });
+        }
+
+        return res.json({ success: true, message: 'Test auth accounts seeded successfully.', results });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 router.post('/seed', async (req, res, next) => {
     try {
         console.log('Starting full DB Seeding via API...');
