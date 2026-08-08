@@ -1,15 +1,100 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
-import config from '../config/env.js';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
-import WorkerProfile from '../models/WorkerProfile.js';
-import { hashPassword } from './authUtils.js';
 
-const accounts=[
- {name:'Super Admin',email:'admin@hyperlocal.com',phone:'9999999999',password:'admin123',role:'ADMIN'},
- {name:'John Customer',email:'customer@hyperlocal.com',phone:'8888888888',password:'customer123',role:'CUSTOMER'},
- {name:'Alice Worker',email:'worker@hyperlocal.com',phone:'7777777777',password:'worker123',role:'WORKER'},
+// Resolve directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from backend root
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hyperlocal';
+
+const testUsers = [
+    {
+        name: 'System Admin',
+        email: 'admin@test.com',
+        password: 'Admin@12345',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        emailVerified: true,
+        phoneVerified: true
+    },
+    {
+        name: 'Test Customer',
+        email: 'user@test.com',
+        password: 'User@12345',
+        role: 'CUSTOMER',
+        status: 'ACTIVE',
+        emailVerified: true,
+        phoneVerified: true
+    },
+    {
+        name: 'Test Worker',
+        email: 'worker@test.com',
+        password: 'Worker@12345',
+        role: 'WORKER',
+        status: 'ACTIVE',
+        emailVerified: true,
+        phoneVerified: true
+    }
 ];
-try{
- await mongoose.connect(config.MONGODB_URI);
- for(const account of accounts){const passwordHash=await hashPassword(account.password);const user=await User.findOneAndUpdate({email:account.email},{$set:{name:account.name,phone:account.phone,passwordHash,role:account.role,status:'ACTIVE',emailVerified:true,phoneVerified:true}},{upsert:true,new:true,setDefaultsOnInsert:true});if(account.role==='WORKER')await WorkerProfile.findOneAndUpdate({userId:user._id},{$set:{verificationStatus:'APPROVED',verificationBadge:true,isPubliclyVisible:true,isOnline:true}},{upsert:true,setDefaultsOnInsert:true});console.log(`AUTH_SEED_OK=${account.email} ROLE=${account.role}`);}
-}finally{await mongoose.disconnect();}
+
+const seed = async () => {
+    try {
+        console.log(`Connecting to MongoDB at: ${MONGODB_URI}`);
+        await mongoose.connect(MONGODB_URI);
+        console.log('Connected to MongoDB.');
+
+        console.log('\n--- Seeding Auth Test Users ---');
+        for (const user of testUsers) {
+            const passwordHash = await bcrypt.hash(user.password, 10);
+            
+            // Check if user exists
+            const existingUser = await User.findOne({ email: user.email });
+            let seededUser;
+            
+            if (existingUser) {
+                // Update credentials
+                existingUser.name = user.name;
+                existingUser.passwordHash = passwordHash;
+                existingUser.role = user.role;
+                existingUser.status = user.status;
+                existingUser.emailVerified = user.emailVerified;
+                existingUser.phoneVerified = user.phoneVerified;
+                seededUser = await existingUser.save();
+                console.log(`Updated existing user: ${user.email} (ID: ${seededUser._id})`);
+            } else {
+                // Create user
+                seededUser = await User.create({
+                    name: user.name,
+                    email: user.email,
+                    phone: user.role === 'ADMIN' ? '9999911111' : user.role === 'CUSTOMER' ? '9999922222' : '9999933333',
+                    passwordHash,
+                    role: user.role,
+                    status: user.status,
+                    emailVerified: user.emailVerified,
+                    phoneVerified: user.phoneVerified
+                });
+                console.log(`Created new user: ${user.email} (ID: ${seededUser._id})`);
+            }
+        }
+        
+        console.log('\n--- Seeding Completed Successfully ---');
+        console.log('Credentials:');
+        testUsers.forEach(u => {
+            console.log(`- Role: ${u.role} | Email: ${u.email} | Password: ${u.password}`);
+        });
+
+        process.exit(0);
+    } catch (error) {
+        console.error('Seeding Failed:', error);
+        process.exit(1);
+    }
+};
+
+seed();
