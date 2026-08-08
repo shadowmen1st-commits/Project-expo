@@ -142,7 +142,7 @@ export const createCategory = async (req, res, next) => {
 };
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await ServiceCategory.find({ isActive: true }).sort({ sortOrder: 1 });
+        const categories = await ServiceCategory.find({ isActive: { $ne: false } }).sort({ sortOrder: 1 });
         res.status(200).json({ success: true, categories });
     }
     catch (error) {
@@ -151,20 +151,28 @@ export const getCategories = async (req, res, next) => {
 };
 export const deleteCategory = async (req, res, next) => {
     try {
-        const { id } = req.params;
+        const categoryId = req.params.categoryId || req.params.id;
+
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Authentication required' });
+        }
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
+        }
+
         // Validate ObjectId format
-        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        if (!categoryId || !categoryId.match(/^[0-9a-fA-F]{24}$/)) {
             return res.status(400).json({ success: false, message: 'Invalid category ID format.' });
         }
-        const category = await ServiceCategory.findById(id);
+        const category = await ServiceCategory.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ success: false, message: 'Service category not found.' });
+            return res.status(404).json({ success: false, message: 'Service category not found' });
         }
-        if (!category.isActive) {
+        if (category.isActive === false) {
             return res.status(409).json({ success: false, message: 'This category has already been removed.' });
         }
         // Check for references: active bookings
-        const bookingRef = await Booking.findOne({ serviceCategoryId: id, status: { $in: ['PENDING', 'ACCEPTED', 'IN_PROGRESS'] } });
+        const bookingRef = await Booking.findOne({ serviceCategoryId: categoryId, status: { $in: ['PENDING', 'ACCEPTED', 'IN_PROGRESS'] } });
         if (bookingRef) {
             return res.status(409).json({
                 success: false,
@@ -174,8 +182,8 @@ export const deleteCategory = async (req, res, next) => {
         // Check for references: active workers assigned to this category
         const workerRef = await WorkerProfile.findOne({
             $or: [
-                { primaryServiceCategoryId: id },
-                { serviceCategoryIds: id },
+                { primaryServiceCategoryId: categoryId },
+                { serviceCategoryIds: categoryId },
             ],
             verificationStatus: 'APPROVED',
         });
@@ -188,9 +196,13 @@ export const deleteCategory = async (req, res, next) => {
         // Soft delete
         category.isActive = false;
         category.deletedAt = new Date();
-        category.deletedBy = req.user?.userId;
+        category.deletedBy = req.user?.userId || req.user?.id;
         await category.save();
-        res.status(200).json({ success: true, message: `Service category "${category.name}" removed successfully.` });
+        res.status(200).json({
+            success: true,
+            message: 'Service category removed successfully',
+            category,
+        });
     } catch (error) {
         next(error);
     }

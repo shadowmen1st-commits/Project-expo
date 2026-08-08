@@ -53,6 +53,7 @@ router.get('/documents/view/:docId', requirePermission('documents.review'), view
 // ── Categories & Commission ────────────────────────────────────────────────────
 router.post('/categories', requirePermission('categories.manage'), createCategory);
 router.get('/categories/all', getCategories);
+router.delete('/categories/:categoryId', requirePermission('categories.manage'), deleteCategory);
 router.delete('/categories/:id', requirePermission('categories.manage'), deleteCategory);
 router.post('/commissions', requirePermission('commissions.manage'), createCommissionRule);
 router.get('/commissions', requirePermission('commissions.manage'), getCommissionRules);

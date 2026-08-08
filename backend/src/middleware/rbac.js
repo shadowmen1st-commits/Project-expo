@@ -58,6 +58,7 @@ export const requirePermission = (permission) => {
         const requestId = req.requestId || 'REQ-MOCK-ID';
         if (!user) {
             res.status(401).json({
+                success: false,
                 statusCode: 401,
                 errorCode: 'UNAUTHENTICATED',
                 message: 'Authentication required.',
@@ -71,9 +72,10 @@ export const requirePermission = (permission) => {
         const hasAccess = permissions.includes('*') || permissions.includes(permission);
         if (!hasAccess) {
             res.status(403).json({
+                success: false,
                 statusCode: 403,
                 errorCode: 'UNAUTHORIZED',
-                message: 'You do not have permission to perform this action.',
+                message: 'Admin access required.',
                 timestamp: new Date().toISOString(),
                 requestId,
             });
