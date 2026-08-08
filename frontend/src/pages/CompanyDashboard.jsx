@@ -1042,15 +1042,15 @@ export default function CompanyDashboard() {
                             <div className="space-y-3">
                                 <div className="flex justify-between border-b border-[#FEF3C7] pb-2">
                                     <span className="text-xs text-[#4B5563]">Available Balance:</span>
-                                    <span className="font-black text-[#111827]">₹{(wallet.availableBalancePaise / 100).toFixed(2)}</span>
+                                    <span className="font-black text-[#111827]">₹{((wallet?.availableBalancePaise || 0) / 100).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-[#FEF3C7] pb-2">
                                     <span className="text-xs text-[#4B5563]">Held in Escrow:</span>
-                                    <span className="font-black text-orange-600">₹{(wallet.escrowAmountPaise / 100).toFixed(2)}</span>
+                                    <span className="font-black text-orange-600">₹{((wallet?.escrowAmountPaise || 0) / 100).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-xs text-[#4B5563]">Total Spent:</span>
-                                    <span className="font-black text-blue-600">₹{(wallet.totalSpentPaise / 100).toFixed(2)}</span>
+                                    <span className="font-black text-blue-600">₹{((wallet?.totalSpentPaise || 0) / 100).toFixed(2)}</span>
                                 </div>
                             </div>
 
@@ -1069,7 +1069,7 @@ export default function CompanyDashboard() {
                                 <button 
                                     type="submit"
                                     className="w-full btn-primary-gradient font-bold py-2 rounded-xl text-xs cursor-pointer"
-                                >
+                                  >
                                     Deposit Simulated Funds
                                 </button>
                             </form>
@@ -1078,7 +1078,7 @@ export default function CompanyDashboard() {
                         {/* Transaction history */}
                         <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl shadow-sm col-span-2">
                             <h3 className="font-bold text-lg mb-4">Transaction Ledger</h3>
-                            {wallet.transactionHistory.length === 0 ? (
+                            {(!wallet?.transactionHistory || wallet.transactionHistory.length === 0) ? (
                                 <p className="text-xs text-[#4B5563] italic">No transaction history.</p>
                             ) : (
                                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
