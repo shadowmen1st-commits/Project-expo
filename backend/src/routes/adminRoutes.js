@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
     getPendingWorkers, verifyWorker, viewDocumentDetails,
-    createCategory, getCategories, createCommissionRule, getCommissionRules,
+    createCategory, getCategories, deleteCategory, createCommissionRule, getCommissionRules,
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
@@ -53,6 +53,7 @@ router.get('/documents/view/:docId', requirePermission('documents.review'), view
 // ── Categories & Commission ────────────────────────────────────────────────────
 router.post('/categories', requirePermission('categories.manage'), createCategory);
 router.get('/categories/all', getCategories);
+router.delete('/categories/:id', requirePermission('categories.manage'), deleteCategory);
 router.post('/commissions', requirePermission('commissions.manage'), createCommissionRule);
 router.get('/commissions', requirePermission('commissions.manage'), getCommissionRules);
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2 } from 'lucide-react';
+import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2, Trash2 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
@@ -200,6 +200,19 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     };
 
 
+
+    const handleDeleteCategory = async (id, name) => {
+        if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+        try {
+            const res = await api.delete(`/admin/categories/${id}`);
+            if (res.data.success) {
+                setSuccess(`Category "${name}" deleted.`);
+                fetchCategoriesList();
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to delete category.');
+        }
+    };
 
     const handleCreateCommissionRule = async (e) => {
         e.preventDefault();
@@ -850,7 +863,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 <h1 className="text-xl font-extrabold text-[#1C1917]">Active Service Categories</h1>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {categories.map((cat) => (
-                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-center justify-between shadow-sm">
+                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-start justify-between shadow-sm group">
                                             <div>
                                                 <h3 className="font-bold text-[#1C1917] text-sm">{cat.name}</h3>
                                                 <p className="text-[#78716C] text-xs mt-1">{cat.description}</p>
@@ -858,6 +871,13 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                     Commission: {cat.defaultCommission}%
                                                 </span>
                                             </div>
+                                            <button
+                                                onClick={() => handleDeleteCategory(cat._id, cat.name)}
+                                                title="Delete category"
+                                                className="ml-3 flex-shrink-0 p-1.5 rounded-lg text-[#A8A29E] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-colors duration-150 opacity-0 group-hover:opacity-100"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
