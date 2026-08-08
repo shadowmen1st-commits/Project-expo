@@ -142,7 +142,7 @@ export const createCategory = async (req, res, next) => {
 };
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await ServiceCategory.find().sort({ sortOrder: 1 });
+        const categories = await ServiceCategory.find({ isActive: true }).sort({ sortOrder: 1 });
         res.status(200).json({ success: true, categories });
     }
     catch (error) {
@@ -152,11 +152,45 @@ export const getCategories = async (req, res, next) => {
 export const deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const category = await ServiceCategory.findByIdAndDelete(id);
-        if (!category) {
-            return res.status(404).json({ success: false, message: 'Category not found.' });
+        // Validate ObjectId format
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ success: false, message: 'Invalid category ID format.' });
         }
-        res.status(200).json({ success: true, message: `Category "${category.name}" deleted successfully.` });
+        const category = await ServiceCategory.findById(id);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Service category not found.' });
+        }
+        if (!category.isActive) {
+            return res.status(409).json({ success: false, message: 'This category has already been removed.' });
+        }
+        // Check for references: active bookings
+        const bookingRef = await Booking.findOne({ serviceCategoryId: id, status: { $in: ['PENDING', 'ACCEPTED', 'IN_PROGRESS'] } });
+        if (bookingRef) {
+            return res.status(409).json({
+                success: false,
+                message: `Cannot remove "${category.name}" — it has active bookings. Resolve existing bookings first.`
+            });
+        }
+        // Check for references: active workers assigned to this category
+        const workerRef = await WorkerProfile.findOne({
+            $or: [
+                { primaryServiceCategoryId: id },
+                { serviceCategoryIds: id },
+            ],
+            verificationStatus: 'APPROVED',
+        });
+        if (workerRef) {
+            return res.status(409).json({
+                success: false,
+                message: `Cannot remove "${category.name}" — it has approved workers assigned. Reassign workers first.`
+            });
+        }
+        // Soft delete
+        category.isActive = false;
+        category.deletedAt = new Date();
+        category.deletedBy = req.user?.userId;
+        await category.save();
+        res.status(200).json({ success: true, message: `Service category "${category.name}" removed successfully.` });
     } catch (error) {
         next(error);
     }

@@ -13,6 +13,8 @@ const serviceCategorySchema = new Schema({
     cancellationRules: { type: String },
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
+    deletedAt: { type: Date, default: null },
+    deletedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
 }, {
     timestamps: true,
 });

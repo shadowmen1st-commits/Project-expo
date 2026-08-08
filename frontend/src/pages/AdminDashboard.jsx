@@ -22,6 +22,11 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const [auditLogs, setAuditLogs] = useState([]);
     const [payoutRequests, setPayoutRequests] = useState([]);
 
+    // Category delete modal
+    const [deleteModal, setDeleteModal] = useState({ open: false, id: null, name: '' });
+    const [deletingCategory, setDeletingCategory] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
     const [catName, setCatName] = useState('');
     const [catDesc, setCatDesc] = useState('');
     const [catIcon] = useState('Zap');
@@ -201,16 +206,26 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
 
 
 
-    const handleDeleteCategory = async (id, name) => {
-        if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3500);
+    };
+
+    const handleDeleteCategory = async () => {
+        if (deletingCategory) return;
+        setDeletingCategory(true);
         try {
-            const res = await api.delete(`/admin/categories/${id}`);
+            const res = await api.delete(`/admin/categories/${deleteModal.id}`);
             if (res.data.success) {
-                setSuccess(`Category "${name}" deleted.`);
-                fetchCategoriesList();
+                setDeleteModal({ open: false, id: null, name: '' });
+                setCategories(prev => prev.filter(c => c._id !== deleteModal.id));
+                showToast('Service category removed successfully.', 'success');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to delete category.');
+            setDeleteModal({ open: false, id: null, name: '' });
+            showToast(err.response?.data?.message || 'Failed to remove category.', 'error');
+        } finally {
+            setDeletingCategory(false);
         }
     };
 
@@ -863,7 +878,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 <h1 className="text-xl font-extrabold text-[#1C1917]">Active Service Categories</h1>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {categories.map((cat) => (
-                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex items-start justify-between shadow-sm group">
+                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
                                             <div>
                                                 <h3 className="font-bold text-[#1C1917] text-sm">{cat.name}</h3>
                                                 <p className="text-[#78716C] text-xs mt-1">{cat.description}</p>
@@ -871,13 +886,15 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                                     Commission: {cat.defaultCommission}%
                                                 </span>
                                             </div>
-                                            <button
-                                                onClick={() => handleDeleteCategory(cat._id, cat.name)}
-                                                title="Delete category"
-                                                className="ml-3 flex-shrink-0 p-1.5 rounded-lg text-[#A8A29E] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-colors duration-150 opacity-0 group-hover:opacity-100"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex justify-end pt-1 border-t border-[#F5F0E8]">
+                                                <button
+                                                    onClick={() => setDeleteModal({ open: true, id: cat._id, name: cat.name })}
+                                                    className="flex items-center gap-1.5 text-[#EF4444] hover:bg-[#FEF2F2] text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-[#FECACA] hover:border-[#EF4444] transition-colors duration-150"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    Remove
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1243,6 +1260,69 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     )}
                 </div>
             </main>
+
+            {/* ── Delete Confirmation Modal ────────────────────────────────── */}
+            {deleteModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-7 border border-[#E7E0D8] animate-in fade-in zoom-in-95 duration-150">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-2xl bg-[#FEF2F2] flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5 text-[#EF4444]" />
+                            </div>
+                            <h2 className="font-extrabold text-[#1C1917] text-base">Remove Service Category?</h2>
+                        </div>
+                        <p className="text-[#78716C] text-sm leading-relaxed mb-6">
+                            Are you sure you want to remove <span className="font-bold text-[#1C1917]">{deleteModal.name}</span>?
+                            <br />
+                            <span className="text-xs mt-1 block text-[#A8A29E]">Existing jobs or workers using this category may be affected.</span>
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteModal({ open: false, id: null, name: '' })}
+                                disabled={deletingCategory}
+                                className="flex-1 bg-[#FAF6F0] border border-[#E7E0D8] text-[#44403C] font-bold text-xs py-2.5 rounded-xl hover:bg-[#F0EBE3] transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteCategory}
+                                disabled={deletingCategory}
+                                className="flex-1 bg-[#EF4444] hover:bg-[#DC2626] text-white font-bold text-xs py-2.5 rounded-xl transition-colors disabled:opacity-70 cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                                {deletingCategory ? (
+                                    <>
+                                        <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3V4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"/>
+                                        </svg>
+                                        Removing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Remove Category
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Toast Notification ───────────────────────────────────────── */}
+            {toast.show && (
+                <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-sm font-semibold transition-all duration-300 ${
+                    toast.type === 'success'
+                        ? 'bg-[#F0FDF4] text-[#16A34A] border border-[#86EFAC]'
+                        : 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]'
+                }`}>
+                    {toast.type === 'success'
+                        ? <Check className="w-4 h-4 flex-shrink-0" />
+                        : <X className="w-4 h-4 flex-shrink-0" />
+                    }
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 };
