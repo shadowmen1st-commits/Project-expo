@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import ServiceCategory from '../models/ServiceCategory.js';
 import WorkerProfile from '../models/WorkerProfile.js';
+import CompanyProfile from '../models/CompanyProfile.js';
 import Booking from '../models/Booking.js';
 import PaymentTransaction from '../models/PaymentTransaction.js';
 import PaymentOrder from '../models/PaymentOrder.js';
@@ -43,42 +44,101 @@ const CATEGORIES_DATA = [
     { name: 'Driver Service', slug: 'driver-service', description: 'Reliable private driver services.', icon: 'Car', defaultCommission: 12 },
 ];
 
-// Quick seed endpoint for test auth accounts
+// Quick seed endpoint for test auth accounts (callable via GET from browser)
 router.get('/seed-auth', async (req, res) => {
     try {
         const testUsers = [
-            { name: 'System Admin', email: 'admin@test.com', password: 'Admin@12345', role: 'ADMIN', phone: '9999911111' },
-            { name: 'Test Customer', email: 'user@test.com', password: 'User@12345', role: 'CUSTOMER', phone: '9999922222' },
-            { name: 'Test Worker', email: 'worker@test.com', password: 'Worker@12345', role: 'WORKER', phone: '9999933333' },
+            { name: 'System Admin',  email: 'admin@test.com',   password: 'Admin@12345',   phone: '9999999900', role: 'ADMIN' },
+            { name: 'Test Customer', email: 'user@test.com',    password: 'User@12345',    phone: '9999999901', role: 'CUSTOMER' },
+            { name: 'Test Worker',   email: 'worker@test.com',  password: 'Worker@12345',  phone: '9999999902', role: 'WORKER' },
+            { name: 'Test Company',  email: 'company@test.com', password: 'Company@12345', phone: '9999999903', role: 'COMPANY' },
         ];
 
         const results = [];
         for (const u of testUsers) {
             const passwordHash = await bcrypt.hash(u.password, 10);
-            const existing = await User.findOne({ email: u.email });
+            let dbUser = await User.findOne({ email: u.email });
             let action;
-            if (existing) {
-                existing.passwordHash = passwordHash;
-                existing.role = u.role;
-                existing.status = 'ACTIVE';
-                existing.emailVerified = true;
-                existing.phoneVerified = true;
-                existing.failedLoginAttempts = 0;
-                existing.lockedUntil = undefined;
-                await existing.save();
+
+            if (dbUser) {
+                dbUser.name = u.name;
+                dbUser.phone = u.phone;
+                dbUser.passwordHash = passwordHash;
+                dbUser.role = u.role;
+                dbUser.status = 'ACTIVE';
+                dbUser.emailVerified = true;
+                dbUser.phoneVerified = true;
+                dbUser.failedLoginAttempts = 0;
+                dbUser.lockedUntil = undefined;
+                await dbUser.save();
                 action = 'updated';
             } else {
-                await User.create({
+                dbUser = await User.create({
                     name: u.name, email: u.email, phone: u.phone,
                     passwordHash, role: u.role,
                     status: 'ACTIVE', emailVerified: true, phoneVerified: true
                 });
                 action = 'created';
             }
-            results.push({ email: u.email, role: u.role, action });
+
+            // Worker profile
+            if (u.role === 'WORKER') {
+                const wp = await WorkerProfile.findOne({ userId: dbUser._id });
+                if (!wp) {
+                    await WorkerProfile.create({
+                        userId: dbUser._id,
+                        fullName: u.name,
+                        phone: u.phone,
+                        verificationStatus: 'APPROVED',
+                        approvedAt: new Date(),
+                        isPubliclyVisible: true,
+                        isOnline: true,
+                        bio: 'Test worker account.',
+                        skills: ['General Labour'],
+                        languages: ['Hindi', 'English'],
+                        hourlyRate: 15000,
+                        dailyRate: 100000,
+                        city: 'Delhi',
+                        state: 'Delhi',
+                    });
+                } else {
+                    wp.verificationStatus = 'APPROVED';
+                    await wp.save();
+                }
+            }
+
+            // Company profile — VERIFIED
+            if (u.role === 'COMPANY') {
+                const cp = await CompanyProfile.findOne({ userId: dbUser._id });
+                if (!cp) {
+                    await CompanyProfile.create({
+                        userId: dbUser._id,
+                        companyName: 'Test Company Pvt Ltd',
+                        email: u.email,
+                        phone: u.phone,
+                        address: '123 Test Street, Connaught Place',
+                        city: 'Delhi',
+                        state: 'Delhi',
+                        pincode: '110001',
+                        businessType: 'Private Limited',
+                        description: 'Test company for platform testing.',
+                        authorizedPersonName: 'Test Authorized Person',
+                        authorizedPersonPhone: '9999999999',
+                        gstNumber: 'GST1234TEST',
+                        panNumber: 'TESTPAN0001',
+                        verificationStatus: 'VERIFIED',
+                    });
+                } else {
+                    cp.verificationStatus = 'VERIFIED';
+                    await cp.save();
+                }
+            }
+
+            results.push({ email: u.email, role: u.role, action, id: dbUser._id });
         }
 
-        return res.json({ success: true, message: 'Test auth accounts seeded successfully.', results });
+        const count = await User.countDocuments({ email: { $in: testUsers.map(u => u.email) } });
+        return res.json({ success: true, message: `Test users seeded. Total matching: ${count}`, count, results });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
