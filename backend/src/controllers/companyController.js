@@ -1,5 +1,7 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
 import User from '../models/User.js';
 import CompanyProfile from '../models/CompanyProfile.js';
 import Job from '../models/Job.js';
@@ -10,6 +12,8 @@ import Attendance from '../models/Attendance.js';
 import CompanyWallet from '../models/CompanyWallet.js';
 import CompanyPayment from '../models/CompanyPayment.js';
 import Notification from '../models/Notification.js';
+import AuditLog from '../models/AuditLog.js';
+import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
 import { hashPassword, comparePassword } from '../utils/authUtils.js';
 import { issueSession, setSessionCookies, safeUser } from './authController.js';
 
@@ -33,10 +37,13 @@ export const registerCompany = async (req, res, next) => {
             gstNumber,
             website,
             password,
-            confirmPassword
+            confirmPassword,
+            authorizedPersonName,
+            authorizedPersonPhone,
+            panNumber
         } = req.body;
 
-        if (!companyName || !email || !phone || !address || !city || !state || !pincode || !businessType || !description || !password) {
+        if (!companyName || !email || !phone || !address || !city || !state || !pincode || !businessType || !description || !password || !authorizedPersonName || !authorizedPersonPhone) {
             return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
         }
 
@@ -82,6 +89,9 @@ export const registerCompany = async (req, res, next) => {
             description,
             gstNumber,
             website,
+            authorizedPersonName,
+            authorizedPersonPhone,
+            panNumber,
             verificationStatus: 'PENDING'
         });
 
@@ -720,3 +730,166 @@ export const getCompanyDashboard = async (req, res, next) => {
         next(error);
     }
 };
+
+// Company KYC Verification Endpoints
+export const getCompanyVerification = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const profile = await CompanyProfile.findOne({ userId: companyId });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const documents = await CompanyVerificationDocument.find({ companyId });
+
+        // Calculate Progress
+        let progress = 0;
+        const checklist = {
+            profile: !!(profile.companyName && profile.address && profile.businessType && profile.authorizedPersonName),
+            businessRegistration: false,
+            addressProof: false,
+            authorizedPersonId: false,
+            companyPan: false
+        };
+
+        if (checklist.profile) progress += 20;
+
+        documents.forEach(doc => {
+            if (doc.status === 'APPROVED' || doc.status === 'PENDING') {
+                if (doc.documentType === 'BUSINESS_REGISTRATION') {
+                    checklist.businessRegistration = doc.status;
+                } else if (doc.documentType === 'ADDRESS_PROOF') {
+                    checklist.addressProof = doc.status;
+                } else if (doc.documentType === 'AUTHORIZED_PERSON_ID') {
+                    checklist.authorizedPersonId = doc.status;
+                } else if (doc.documentType === 'COMPANY_PAN') {
+                    checklist.companyPan = doc.status;
+                }
+            }
+        });
+
+        // Add 20% for each present/approved document
+        const docs = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN'];
+        docs.forEach(dtype => {
+            const hasDoc = documents.find(d => d.documentType === dtype && (d.status === 'APPROVED' || d.status === 'PENDING'));
+            if (hasDoc) progress += 20;
+        });
+
+        return res.status(200).json({
+            success: true,
+            verificationStatus: profile.verificationStatus,
+            progress,
+            checklist,
+            documents,
+            needsInfoReason: profile.needsInfoReason,
+            rejectionReason: profile.rejectionReason,
+            suspensionReason: profile.suspensionReason
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const uploadCompanyDocument = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const { documentType } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded.' });
+        }
+
+        if (!documentType) {
+            return res.status(400).json({ success: false, message: 'documentType is required.' });
+        }
+
+        const STORAGE_DIR = path.resolve('uploads/verification');
+        if (!fs.existsSync(STORAGE_DIR)) {
+            fs.mkdirSync(STORAGE_DIR, { recursive: true });
+        }
+
+        const fileExt = path.extname(req.file.originalname);
+        const randomName = `${crypto.randomUUID()}${fileExt}`;
+        const filePath = path.join(STORAGE_DIR, randomName);
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Upsert document
+        const document = await CompanyVerificationDocument.findOneAndUpdate(
+            { companyId, documentType },
+            {
+                documentUrl: `/uploads/verification/${randomName}`,
+                storageKey: randomName,
+                status: 'PENDING',
+                rejectionReason: null
+            },
+            { upsert: true, new: true }
+        );
+
+        return res.status(200).json({ success: true, message: 'Document uploaded successfully.', document });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const submitCompanyVerification = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const profile = await CompanyProfile.findOne({ userId: companyId });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        // Validate completeness
+        const requiredDocs = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN'];
+        const uploadedDocs = await CompanyVerificationDocument.find({ companyId });
+
+        for (const type of requiredDocs) {
+            const hasDoc = uploadedDocs.some(d => d.documentType === type);
+            if (!hasDoc) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Please upload all required documents: ${type.replace('_', ' ')} is missing.` 
+                });
+            }
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'UNDER_REVIEW';
+        await profile.save();
+
+        // Audit Log
+        await new AuditLog({
+            actor: companyId,
+            action: 'COMPANY_VERIFICATION_SUBMITTED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: companyId.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        // Notify Admins
+        const admins = await User.find({ role: 'ADMIN' });
+        for (const admin of admins) {
+            await new Notification({
+                recipientId: admin._id,
+                title: 'New Company KYC Submitted',
+                message: `Company ${profile.companyName} has submitted KYC documents for review.`,
+                type: 'WARNING'
+            }).save();
+        }
+
+        // Notify Company
+        await new Notification({
+            recipientId: companyId,
+            title: 'KYC Submitted Successfully',
+            message: 'Your company verification documents are under review.',
+            type: 'INFO'
+        }).save();
+
+        return res.status(200).json({ success: true, message: 'KYC submitted for review.', profile });
+    } catch (error) {
+        next(error);
+    }
+};
+

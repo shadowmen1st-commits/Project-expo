@@ -122,6 +122,22 @@ export default function CompanyDashboard() {
         fetchData();
     }, [activeTab]);
 
+    useEffect(() => {
+        if (activeTab === 'verification') {
+            navigate('/company/verification');
+            return;
+        }
+
+        if (companyInfo && companyInfo.verificationStatus !== 'VERIFIED') {
+            const forbiddenTabs = ['post-job', 'applications', 'workers', 'teams', 'assign', 'attendance', 'payments', 'wallet'];
+            if (forbiddenTabs.includes(activeTab)) {
+                setError('Company verification is required before performing this action.');
+                setActiveTab('dashboard');
+                navigate('/company/verification');
+            }
+        }
+    }, [activeTab, companyInfo]);
+
     const handleLogout = async () => {
         await logout();
         navigate('/login');
@@ -364,11 +380,15 @@ export default function CompanyDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">{companyInfo.companyName}</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                    companyInfo.verificationStatus === 'VERIFIED' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                                }`}>
-                                    {companyInfo.verificationStatus}
-                                </span>
+                                {companyInfo.verificationStatus === 'VERIFIED' ? (
+                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-green-50 border-green-200 text-green-700">
+                                        ✓ VERIFIED COMPANY
+                                    </span>
+                                ) : (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-yellow-50 border-yellow-200 text-yellow-700">
+                                        {companyInfo.verificationStatus || 'PENDING'}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

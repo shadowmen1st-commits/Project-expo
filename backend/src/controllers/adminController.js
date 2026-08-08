@@ -14,6 +14,7 @@ import CompanyProfile from '../models/CompanyProfile.js';
 import Job from '../models/Job.js';
 import WorkerAssignment from '../models/WorkerAssignment.js';
 import CompanyPayment from '../models/CompanyPayment.js';
+import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
 export const getPendingWorkers = async (req, res, next) => {
     try {
         const pending = await WorkerProfile.find({
@@ -341,15 +342,128 @@ export const getCompanies = async (req, res, next) => {
     }
 };
 
+export const getCompanyVerificationAdmin = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+        const documents = await CompanyVerificationDocument.find({ companyId: id });
+        res.status(200).json({ success: true, profile, documents });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const verifyCompany = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const profile = await CompanyProfile.findOneAndUpdate(
-            { userId: id },
-            { verificationStatus: 'VERIFIED' },
-            { new: true }
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'VERIFIED';
+        profile.rejectionReason = null;
+        profile.needsInfoReason = null;
+        profile.suspensionReason = null;
+        await profile.save();
+
+        // Approve all documents
+        await CompanyVerificationDocument.updateMany(
+            { companyId: id },
+            { status: 'APPROVED', reviewedBy: req.user.userId, reviewedAt: new Date() }
         );
+
+        // Audit Log
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_VERIFICATION_APPROVED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: id.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        // Notify
+        await new Notification({
+            recipientId: id,
+            title: 'Company KYC Approved',
+            message: 'Your company verification is approved. You can now post jobs.',
+            type: 'SUCCESS'
+        }).save();
+
         res.status(200).json({ success: true, message: 'Company profile verified successfully.', profile });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const requestInfoCompanyVerification = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { reason, rejectedDocuments } = req.body;
+
+        if (!reason) {
+            return res.status(400).json({ success: false, message: 'Reason is required to request more information.' });
+        }
+
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'NEEDS_INFORMATION';
+        profile.needsInfoReason = reason;
+        await profile.save();
+
+        // Mark rejected documents
+        if (Array.isArray(rejectedDocuments) && rejectedDocuments.length > 0) {
+            for (const docId of rejectedDocuments) {
+                const doc = await CompanyVerificationDocument.findById(docId);
+                if (doc && doc.companyId.toString() === id) {
+                    doc.status = 'REJECTED';
+                    doc.rejectionReason = reason;
+                    doc.reviewedBy = req.user.userId;
+                    doc.reviewedAt = new Date();
+                    await doc.save();
+
+                    // Audit log for document rejection
+                    await new AuditLog({
+                        actor: req.user.userId,
+                        action: 'COMPANY_DOCUMENT_REJECTED',
+                        resourceType: 'COMPANY_VERIFICATION_DOCUMENT',
+                        resourceId: doc._id.toString(),
+                        requestId: req.requestId
+                    }).save();
+                }
+            }
+        }
+
+        // Audit Log
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_VERIFICATION_INFO_REQUESTED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: id.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        // Notify
+        await new Notification({
+            recipientId: id,
+            title: 'Information Required for KYC',
+            message: `Admin requested additional details: ${reason}`,
+            type: 'WARNING'
+        }).save();
+
+        res.status(200).json({ success: true, message: 'Information request sent successfully.', profile });
     } catch (error) {
         next(error);
     }
@@ -358,11 +472,41 @@ export const verifyCompany = async (req, res, next) => {
 export const rejectCompany = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const profile = await CompanyProfile.findOneAndUpdate(
-            { userId: id },
-            { verificationStatus: 'REJECTED' },
-            { new: true }
-        );
+        const { reason } = req.body;
+
+        if (!reason) {
+            return res.status(400).json({ success: false, message: 'Rejection reason is required.' });
+        }
+
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'REJECTED';
+        profile.rejectionReason = reason;
+        await profile.save();
+
+        // Audit Log
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_VERIFICATION_REJECTED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: id.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        // Notify
+        await new Notification({
+            recipientId: id,
+            title: 'Company KYC Rejected',
+            message: `Verification was rejected: ${reason}`,
+            type: 'DANGER'
+        }).save();
+
         res.status(200).json({ success: true, message: 'Company profile verification rejected.', profile });
     } catch (error) {
         next(error);
@@ -372,7 +516,43 @@ export const rejectCompany = async (req, res, next) => {
 export const suspendCompany = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { reason } = req.body;
+
+        if (!reason) {
+            return res.status(400).json({ success: false, message: 'Suspension reason is required.' });
+        }
+
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'SUSPENDED';
+        profile.suspensionReason = reason;
+        await profile.save();
+
         await User.findByIdAndUpdate(id, { status: 'SUSPENDED' });
+
+        // Audit Log
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_SUSPENDED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: id.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        // Notify
+        await new Notification({
+            recipientId: id,
+            title: 'Company Account Suspended',
+            message: `Your company operations have been suspended: ${reason}`,
+            type: 'DANGER'
+        }).save();
+
         res.status(200).json({ success: true, message: 'Company account suspended.' });
     } catch (error) {
         next(error);
@@ -382,8 +562,30 @@ export const suspendCompany = async (req, res, next) => {
 export const activateCompany = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const profile = await CompanyProfile.findOne({ userId: id });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+        profile.verificationStatus = 'VERIFIED';
+        profile.suspensionReason = null;
+        await profile.save();
+
         await User.findByIdAndUpdate(id, { status: 'ACTIVE' });
-        res.status(200).json({ success: true, message: 'Company account activated.' });
+
+        // Audit Log
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_VERIFICATION_APPROVED',
+            resourceType: 'COMPANY_PROFILE',
+            resourceId: id.toString(),
+            beforeSnapshot,
+            afterSnapshot: JSON.parse(JSON.stringify(profile)),
+            requestId: req.requestId
+        }).save();
+
+        res.status(200).json({ success: true, message: 'Company account activated successfully.' });
     } catch (error) {
         next(error);
     }

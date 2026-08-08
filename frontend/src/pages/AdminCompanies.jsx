@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShieldCheck, XCircle, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminCompanies() {
+    const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -95,22 +97,12 @@ export default function AdminCompanies() {
                                 <td className="p-4 font-semibold">{item.workersHired}</td>
                                 <td className="p-4 font-semibold">₹{(item.totalSpending/100).toFixed(0)}</td>
                                 <td className="p-4 text-right space-x-2">
-                                    {item.profile?.verificationStatus === 'PENDING' && (
-                                        <>
-                                            <button 
-                                                onClick={() => handleAction(item.user?._id, 'verify')}
-                                                className="text-xs bg-green-50 text-green-700 font-bold px-2.5 py-1 rounded-lg border border-green-200 cursor-pointer"
-                                            >
-                                                Verify
-                                            </button>
-                                            <button 
-                                                onClick={() => handleAction(item.user?._id, 'reject')}
-                                                className="text-xs bg-red-50 text-red-700 font-bold px-2.5 py-1 rounded-lg border border-red-200 cursor-pointer"
-                                            >
-                                                Reject
-                                            </button>
-                                        </>
-                                    )}
+                                    <button 
+                                        onClick={() => navigate(`/admin/companies/${item.user?._id}/verification`)}
+                                        className="text-xs bg-[#FFFBEB] border border-[#FEF3C7] text-[#F97316] font-bold px-2.5 py-1 rounded-lg hover:bg-[#FEF3C7] cursor-pointer"
+                                    >
+                                        Review KYC
+                                    </button>
                                     {item.user?.status === 'ACTIVE' ? (
                                         <button 
                                             onClick={() => handleAction(item.user?._id, 'suspend')}

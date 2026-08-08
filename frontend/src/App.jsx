@@ -18,6 +18,8 @@ import WorkerVerificationPage from './pages/WorkerVerificationPage';
 import AdminWorkerVerificationsPage from './pages/AdminWorkerVerificationsPage';
 import CompanyDashboard from './pages/CompanyDashboard';
 import CompanyRegister from './pages/CompanyRegister';
+import CompanyVerification from './pages/CompanyVerification';
+import AdminCompanyVerification from './pages/AdminCompanyVerification';
 /* ─── Route guard ─── */
 const ProtectedRoute = ({ children, allowedRoles, }) => {
     const { user, loading } = useAuth();
@@ -81,12 +83,15 @@ function AppRoutes() {
       <Route path="/company" element={<ProtectedRoute allowedRoles={['COMPANY']}>
             <CompanyDashboard />
           </ProtectedRoute>}/>
+      <Route path="/company/verification" element={<ProtectedRoute allowedRoles={['COMPANY']}>
+            <CompanyVerification />
+          </ProtectedRoute>}/>
 
-      {/* ── Admin Panel ── */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminDashboard />
           </ProtectedRoute>}/>
       <Route path="/admin/worker-verifications" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><AdminWorkerVerificationsPage /></ProtectedRoute>}/>
+      <Route path="/admin/companies/:id/verification" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><AdminCompanyVerification /></ProtectedRoute>}/>
 
       {/* ── Catch-all ── */}
       <Route path="*" element={<Navigate to="/" replace/>}/>

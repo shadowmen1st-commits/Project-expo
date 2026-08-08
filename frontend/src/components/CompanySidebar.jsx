@@ -14,12 +14,14 @@ import {
     BarChart3, 
     Bell, 
     Settings, 
-    LogOut 
+    LogOut,
+    ShieldCheck
 } from 'lucide-react';
 
 const MENU_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'profile', label: 'Company Profile', icon: Building2 },
+    { id: 'verification', label: 'KYC Verification', icon: ShieldCheck },
     { id: 'post-job', label: 'Post Job', icon: FilePlus2 },
     { id: 'jobs', label: 'My Jobs', icon: Briefcase },
     { id: 'applications', label: 'Applications', icon: UserCheck },

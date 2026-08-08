@@ -27,8 +27,16 @@ import {
     releaseEscrowPayment,
     getCompanyReports,
     getCompanyNotifications,
-    getCompanyDashboard
+    getCompanyDashboard,
+    getCompanyVerification,
+    uploadCompanyDocument,
+    submitCompanyVerification
 } from '../controllers/companyController.js';
+import { requireVerifiedCompany } from '../middleware/requireVerifiedCompany.js';
+import multer from 'multer';
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -52,27 +60,27 @@ router.get('/profile', authMiddleware, requireCompanyRole, getCompanyProfile);
 router.put('/profile', authMiddleware, requireCompanyRole, updateCompanyProfile);
 
 // Jobs
-router.post('/jobs', authMiddleware, requireCompanyRole, createJob);
+router.post('/jobs', authMiddleware, requireCompanyRole, requireVerifiedCompany, createJob);
 router.get('/jobs', authMiddleware, requireCompanyRole, getCompanyJobs);
 router.get('/jobs/:id', authMiddleware, requireCompanyRole, getCompanyJobById);
-router.put('/jobs/:id', authMiddleware, requireCompanyRole, updateCompanyJob);
-router.delete('/jobs/:id', authMiddleware, requireCompanyRole, deleteCompanyJob);
+router.put('/jobs/:id', authMiddleware, requireCompanyRole, requireVerifiedCompany, updateCompanyJob);
+router.delete('/jobs/:id', authMiddleware, requireCompanyRole, requireVerifiedCompany, deleteCompanyJob);
 
 // Applications
 router.get('/applications', authMiddleware, requireCompanyRole, getCompanyApplications);
-router.patch('/applications/:id/:status', authMiddleware, requireCompanyRole, updateApplicationStatus);
+router.patch('/applications/:id/:status', authMiddleware, requireCompanyRole, requireVerifiedCompany, updateApplicationStatus);
 
 // Workers
 router.get('/workers', authMiddleware, requireCompanyRole, getCompanyWorkers);
 
 // Teams
 router.get('/teams', authMiddleware, requireCompanyRole, getCompanyTeams);
-router.post('/teams', authMiddleware, requireCompanyRole, createCompanyTeam);
-router.put('/teams/:id', authMiddleware, requireCompanyRole, updateCompanyTeam);
-router.delete('/teams/:id', authMiddleware, requireCompanyRole, deleteCompanyTeam);
+router.post('/teams', authMiddleware, requireCompanyRole, requireVerifiedCompany, createCompanyTeam);
+router.put('/teams/:id', authMiddleware, requireCompanyRole, requireVerifiedCompany, updateCompanyTeam);
+router.delete('/teams/:id', authMiddleware, requireCompanyRole, requireVerifiedCompany, deleteCompanyTeam);
 
 // Assignments
-router.post('/assignments', authMiddleware, requireCompanyRole, assignWorkers);
+router.post('/assignments', authMiddleware, requireCompanyRole, requireVerifiedCompany, assignWorkers);
 
 // Attendance
 router.get('/attendance', authMiddleware, requireCompanyRole, getCompanyAttendance);
@@ -82,12 +90,17 @@ router.post('/attendance', authMiddleware, requireCompanyRole, postAttendance);
 router.get('/wallet', authMiddleware, requireCompanyRole, getCompanyWallet);
 router.post('/wallet/add', authMiddleware, requireCompanyRole, addWalletMoney);
 router.get('/payments', authMiddleware, requireCompanyRole, getCompanyPayments);
-router.post('/payments/release', authMiddleware, requireCompanyRole, releaseEscrowPayment);
+router.post('/payments/release', authMiddleware, requireCompanyRole, requireVerifiedCompany, releaseEscrowPayment);
 
 // Reports
 router.get('/reports', authMiddleware, requireCompanyRole, getCompanyReports);
 
 // Notifications
 router.get('/notifications', authMiddleware, requireCompanyRole, getCompanyNotifications);
+
+// Company KYC Verification
+router.get('/verification', authMiddleware, requireCompanyRole, getCompanyVerification);
+router.post('/verification/submit', authMiddleware, requireCompanyRole, submitCompanyVerification);
+router.post('/verification/documents', authMiddleware, requireCompanyRole, upload.single('file'), uploadCompanyDocument);
 
 export default router;

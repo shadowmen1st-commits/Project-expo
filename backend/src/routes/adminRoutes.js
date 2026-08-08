@@ -5,6 +5,7 @@ import {
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
+    getCompanyVerificationAdmin, requestInfoCompanyVerification,
 } from '../controllers/adminController.js';
 import {
     listPayments, getPaymentDetail, reconcilePayment,
@@ -101,9 +102,11 @@ router.post('/ledger/manual', requirePermission('payments.manage'), postManualJo
 
 // ── Company Administration ───────────────────────────────────────────────────
 router.get('/companies', requirePermission('users.read'), getCompanies);
-router.post('/companies/:id/verify', requirePermission('users.manage'), verifyCompany);
-router.post('/companies/:id/reject', requirePermission('users.manage'), rejectCompany);
-router.post('/companies/:id/suspend', requirePermission('users.manage'), suspendCompany);
+router.get('/companies/:id/verification', requirePermission('users.read'), getCompanyVerificationAdmin);
+router.patch('/companies/:id/verification/approve', requirePermission('users.manage'), verifyCompany);
+router.patch('/companies/:id/verification/request-information', requirePermission('users.manage'), requestInfoCompanyVerification);
+router.patch('/companies/:id/verification/reject', requirePermission('users.manage'), rejectCompany);
+router.patch('/companies/:id/suspend', requirePermission('users.manage'), suspendCompany);
 router.post('/companies/:id/activate', requirePermission('users.manage'), activateCompany);
 router.get('/companies/:id/jobs', requirePermission('users.read'), getCompanyJobsAdmin);
 router.get('/companies/:id/workers', requirePermission('users.read'), getCompanyWorkersAdmin);

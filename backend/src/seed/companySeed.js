@@ -3,12 +3,7 @@ import dotenv from 'dotenv';
 import User from '../models/User.js';
 import CompanyProfile from '../models/CompanyProfile.js';
 import CompanyWallet from '../models/CompanyWallet.js';
-import Job from '../models/Job.js';
-import JobApplication from '../models/JobApplication.js';
-import CompanyTeam from '../models/CompanyTeam.js';
-import WorkerAssignment from '../models/WorkerAssignment.js';
-import Attendance from '../models/Attendance.js';
-import CompanyPayment from '../models/CompanyPayment.js';
+import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
 import { hashPassword } from '../utils/authUtils.js';
 
 dotenv.config();
@@ -39,216 +34,184 @@ const run = async () => {
             console.log('Admin seeded.');
         }
 
-        // Create Workers
-        let w1 = await User.findOne({ email: 'worker1@test.com' });
-        if (!w1) {
-            w1 = await User.create({
-                name: 'Amit Kumar',
-                email: 'worker1@test.com',
-                phone: '7777700001',
-                passwordHash: await hashPassword('Worker@12345'),
-                role: 'WORKER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-        }
-        let w2 = await User.findOne({ email: 'worker2@test.com' });
-        if (!w2) {
-            w2 = await User.create({
-                name: 'Sumit Singh',
-                email: 'worker2@test.com',
-                phone: '7777700002',
-                passwordHash: await hashPassword('Worker@12345'),
-                role: 'WORKER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-        }
-        console.log('Workers seeded.');
+        // Clean existing companies
+        await User.deleteMany({ role: 'COMPANY' });
+        await CompanyProfile.deleteMany({});
+        await CompanyWallet.deleteMany({});
+        await CompanyVerificationDocument.deleteMany({});
 
-        // Create Customers
-        let c1 = await User.findOne({ email: 'customer1@test.com' });
-        if (!c1) {
-            c1 = await User.create({
-                name: 'Rohan Verma',
-                email: 'customer1@test.com',
-                phone: '8888800001',
-                passwordHash: await hashPassword('Customer@12345'),
-                role: 'CUSTOMER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-        }
-        let c2 = await User.findOne({ email: 'customer2@test.com' });
-        if (!c2) {
-            c2 = await User.create({
-                name: 'Vikram Sharma',
-                email: 'customer2@test.com',
-                phone: '8888800002',
-                passwordHash: await hashPassword('Customer@12345'),
-                role: 'CUSTOMER',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-        }
-        console.log('Customers seeded.');
-
-        // Create Companies
-        let comp1 = await User.findOne({ email: 'company1@test.com' });
-        if (!comp1) {
-            comp1 = await User.create({
-                name: 'Apex Events Pvt. Ltd.',
-                email: 'company1@test.com',
-                phone: '9000000001',
-                passwordHash: passHash,
-                role: 'COMPANY',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-
-            await CompanyProfile.create({
-                userId: comp1._id,
-                companyName: 'Apex Events Pvt. Ltd.',
-                email: 'company1@test.com',
-                phone: '9000000001',
-                address: 'Plot 42, Sector 62',
-                city: 'Noida',
-                state: 'Uttar Pradesh',
-                pincode: '201301',
-                businessType: 'Event Management',
-                description: 'A leading event workforce provider in NCR.',
-                gstNumber: '09AAAAA1111A1Z1',
-                website: 'https://apexevents.example.com',
-                verificationStatus: 'VERIFIED'
-            });
-
-            await CompanyWallet.create({
-                companyId: comp1._id,
-                availableBalancePaise: 5000000, // ₹50,000
-                pendingAmountPaise: 0,
-                escrowAmountPaise: 0,
-                totalSpentPaise: 0
-            });
-        }
-
-        let comp2 = await User.findOne({ email: 'company2@test.com' });
-        if (!comp2) {
-            comp2 = await User.create({
-                name: 'Delhi Logistics Corp',
-                email: 'company2@test.com',
-                phone: '9000000002',
-                passwordHash: passHash,
-                role: 'COMPANY',
-                status: 'ACTIVE',
-                emailVerified: true,
-                phoneVerified: true
-            });
-
-            await CompanyProfile.create({
-                userId: comp2._id,
-                companyName: 'Delhi Logistics Corp',
-                email: 'company2@test.com',
-                phone: '9000000002',
-                address: '12, Okhla Phase 3',
-                city: 'New Delhi',
-                state: 'Delhi',
-                pincode: '110020',
-                businessType: 'Logistics',
-                description: 'Workforce delivery & warehousing agents.',
-                gstNumber: '07BBBBB2222B2Z2',
-                website: 'https://delhilogistics.example.com',
-                verificationStatus: 'PENDING'
-            });
-
-            await CompanyWallet.create({
-                companyId: comp2._id,
-                availableBalancePaise: 1000000, // ₹10,000
-                pendingAmountPaise: 0,
-                escrowAmountPaise: 0,
-                totalSpentPaise: 0
-            });
-        }
-        console.log('Companies seeded.');
-
-        // Seed sample company jobs
-        await Job.deleteMany({ companyId: { $in: [comp1._id, comp2._id] } });
-        const j1 = await Job.create({
-            companyId: comp1._id,
-            title: 'Event Helper / Marshal',
-            description: 'Marshal duties and ticketing management for upcoming concert.',
-            category: 'Event Management',
-            requiredSkills: ['Crowd Management', 'Ticketing', 'English'],
-            workersRequired: 10,
-            location: 'Noida Stadium',
-            address: 'Sector 21, Noida',
-            workingDate: new Date(Date.now() + 86400000 * 2),
-            startTime: '14:00',
-            endTime: '22:00',
-            payRate: 80000, // ₹800.00 in paise
-            paymentType: 'DAILY',
-            duration: '1 day',
-            experienceRequired: 0,
-            genderPreference: 'ANY',
-            instructions: 'Report at Gate 4 by 1:30 PM in black dress.',
-            applicationDeadline: new Date(Date.now() + 86400000),
-            status: 'ACTIVE'
+        // Company 1: PENDING
+        const comp1 = await User.create({
+            name: 'Apex Events Pvt. Ltd.',
+            email: 'company1@test.com',
+            phone: '9000000001',
+            passwordHash: passHash,
+            role: 'COMPANY',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
         });
-
-        // Set wallet escrow for Job 1
-        const wallet1 = await CompanyWallet.findOne({ companyId: comp1._id });
-        wallet1.escrowAmountPaise += 80000 * 10;
-        await wallet1.save();
-
-        // Seed Application
-        await JobApplication.deleteMany({ jobId: j1._id });
-        await JobApplication.create({
-            jobId: j1._id,
-            workerId: w1._id,
-            status: 'SELECTED'
+        await CompanyProfile.create({
+            userId: comp1._id,
+            companyName: 'Apex Events Pvt. Ltd.',
+            email: 'company1@test.com',
+            phone: '9000000001',
+            address: 'Plot 42, Sector 62',
+            city: 'Noida',
+            state: 'Uttar Pradesh',
+            pincode: '201301',
+            businessType: 'Event Management',
+            description: 'A leading event workforce provider in NCR.',
+            authorizedPersonName: 'Amit Verma',
+            authorizedPersonPhone: '9000000011',
+            panNumber: 'ABCDE1234F',
+            verificationStatus: 'PENDING'
         });
-        await JobApplication.create({
-            jobId: j1._id,
-            workerId: w2._id,
-            status: 'PENDING'
-        });
+        await CompanyWallet.create({ companyId: comp1._id });
 
-        // Seed Assignment
-        await WorkerAssignment.deleteMany({ jobId: j1._id });
-        await WorkerAssignment.create({
-            jobId: j1._id,
-            workerId: w1._id,
-            assignedBy: comp1._id,
-            status: 'ASSIGNED'
+        // Company 2: UNDER_REVIEW
+        const comp2 = await User.create({
+            name: 'Delhi Logistics Corp',
+            email: 'company2@test.com',
+            phone: '9000000002',
+            passwordHash: passHash,
+            role: 'COMPANY',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
         });
-
-        // Seed Team
-        await CompanyTeam.deleteMany({ companyId: comp1._id });
-        await CompanyTeam.create({
-            companyId: comp1._id,
-            name: 'Concert Team A',
-            leaderId: w1._id,
-            members: [w1._id, w2._id]
+        await CompanyProfile.create({
+            userId: comp2._id,
+            companyName: 'Delhi Logistics Corp',
+            email: 'company2@test.com',
+            phone: '9000000002',
+            address: '12, Okhla Phase 3',
+            city: 'New Delhi',
+            state: 'Delhi',
+            pincode: '110020',
+            businessType: 'Logistics',
+            description: 'Workforce delivery & warehousing agents.',
+            authorizedPersonName: 'Sumit Singh',
+            authorizedPersonPhone: '9000000022',
+            panNumber: 'FGHIJ5678K',
+            verificationStatus: 'UNDER_REVIEW'
         });
+        await CompanyWallet.create({ companyId: comp2._id });
+        await CompanyVerificationDocument.create([
+            { companyId: comp2._id, documentType: 'BUSINESS_REGISTRATION', documentUrl: '/uploads/verification/mock-inc.pdf', status: 'PENDING' },
+            { companyId: comp2._id, documentType: 'ADDRESS_PROOF', documentUrl: '/uploads/verification/mock-addr.pdf', status: 'PENDING' },
+            { companyId: comp2._id, documentType: 'AUTHORIZED_PERSON_ID', documentUrl: '/uploads/verification/mock-id.pdf', status: 'PENDING' },
+            { companyId: comp2._id, documentType: 'COMPANY_PAN', documentUrl: '/uploads/verification/mock-pan.pdf', status: 'PENDING' }
+        ]);
 
-        // Seed Attendance
-        await Attendance.deleteMany({ jobId: j1._id });
-        await Attendance.create({
-            jobId: j1._id,
-            workerId: w1._id,
-            date: new Date(),
-            startTime: '14:00',
-            endTime: '22:00',
-            status: 'PRESENT',
-            hoursWorked: 8
+        // Company 3: NEEDS_INFORMATION
+        const comp3 = await User.create({
+            name: 'NCR Facility Care',
+            email: 'company3@test.com',
+            phone: '9000000003',
+            passwordHash: passHash,
+            role: 'COMPANY',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
         });
+        await CompanyProfile.create({
+            userId: comp3._id,
+            companyName: 'NCR Facility Care',
+            email: 'company3@test.com',
+            phone: '9000000003',
+            address: 'A-23, Sector 2',
+            city: 'Noida',
+            state: 'Uttar Pradesh',
+            pincode: '201301',
+            businessType: 'Facility Management',
+            description: 'Cleaners and housekeeping teams.',
+            authorizedPersonName: 'Vikram Sharma',
+            authorizedPersonPhone: '9000000033',
+            panNumber: 'LMNOP9012Q',
+            verificationStatus: 'NEEDS_INFORMATION',
+            needsInfoReason: 'Please upload a clearer address proof.'
+        });
+        await CompanyWallet.create({ companyId: comp3._id });
+        await CompanyVerificationDocument.create([
+            { companyId: comp3._id, documentType: 'BUSINESS_REGISTRATION', documentUrl: '/uploads/verification/mock-inc.pdf', status: 'APPROVED' },
+            { companyId: comp3._id, documentType: 'ADDRESS_PROOF', documentUrl: '/uploads/verification/mock-addr.pdf', status: 'REJECTED', rejectionReason: 'Please upload a clearer address proof.' },
+            { companyId: comp3._id, documentType: 'AUTHORIZED_PERSON_ID', documentUrl: '/uploads/verification/mock-id.pdf', status: 'APPROVED' },
+            { companyId: comp3._id, documentType: 'COMPANY_PAN', documentUrl: '/uploads/verification/mock-pan.pdf', status: 'APPROVED' }
+        ]);
 
-        console.log('Seeded company job, applications, assignments, and teams.');
-        console.log('Company Seed successful.');
+        // Company 4: VERIFIED
+        const comp4 = await User.create({
+            name: 'Noida Security Solutions',
+            email: 'company4@test.com',
+            phone: '9000000004',
+            passwordHash: passHash,
+            role: 'COMPANY',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
+        });
+        await CompanyProfile.create({
+            userId: comp4._id,
+            companyName: 'Noida Security Solutions',
+            email: 'company4@test.com',
+            phone: '9000000004',
+            address: 'Sec-18 Mall Road',
+            city: 'Noida',
+            state: 'Uttar Pradesh',
+            pincode: '201301',
+            businessType: 'Security Services',
+            description: 'Professional guards and marshals.',
+            authorizedPersonName: 'Rohan Verma',
+            authorizedPersonPhone: '9000000044',
+            panNumber: 'RSTUV3456W',
+            verificationStatus: 'VERIFIED'
+        });
+        await CompanyWallet.create({ companyId: comp4._id, availableBalancePaise: 500000 });
+        await CompanyVerificationDocument.create([
+            { companyId: comp4._id, documentType: 'BUSINESS_REGISTRATION', documentUrl: '/uploads/verification/mock-inc.pdf', status: 'APPROVED' },
+            { companyId: comp4._id, documentType: 'ADDRESS_PROOF', documentUrl: '/uploads/verification/mock-addr.pdf', status: 'APPROVED' },
+            { companyId: comp4._id, documentType: 'AUTHORIZED_PERSON_ID', documentUrl: '/uploads/verification/mock-id.pdf', status: 'APPROVED' },
+            { companyId: comp4._id, documentType: 'COMPANY_PAN', documentUrl: '/uploads/verification/mock-pan.pdf', status: 'APPROVED' }
+        ]);
+
+        // Company 5: REJECTED
+        const comp5 = await User.create({
+            name: 'Gurgaon Staffing Agency',
+            email: 'company5@test.com',
+            phone: '9000000005',
+            passwordHash: passHash,
+            role: 'COMPANY',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
+        });
+        await CompanyProfile.create({
+            userId: comp5._id,
+            companyName: 'Gurgaon Staffing Agency',
+            email: 'company5@test.com',
+            phone: '9000000005',
+            address: 'Cyber City Phase 2',
+            city: 'Gurugram',
+            state: 'Haryana',
+            pincode: '122002',
+            businessType: 'Recruitment',
+            description: 'Hyperlocal workforce supplier.',
+            authorizedPersonName: 'Sunita Sharma',
+            authorizedPersonPhone: '9000000055',
+            panNumber: 'XYZAB7890C',
+            verificationStatus: 'REJECTED',
+            rejectionReason: 'Invalid business registration certificate.'
+        });
+        await CompanyWallet.create({ companyId: comp5._id });
+        await CompanyVerificationDocument.create([
+            { companyId: comp5._id, documentType: 'BUSINESS_REGISTRATION', documentUrl: '/uploads/verification/mock-inc.pdf', status: 'REJECTED', rejectionReason: 'Invalid business registration certificate.' },
+            { companyId: comp5._id, documentType: 'ADDRESS_PROOF', documentUrl: '/uploads/verification/mock-addr.pdf', status: 'APPROVED' },
+            { companyId: comp5._id, documentType: 'AUTHORIZED_PERSON_ID', documentUrl: '/uploads/verification/mock-id.pdf', status: 'APPROVED' },
+            { companyId: comp5._id, documentType: 'COMPANY_PAN', documentUrl: '/uploads/verification/mock-pan.pdf', status: 'APPROVED' }
+        ]);
+
+        console.log('Seeded Companies 1-5 with different verification states & documents successfully.');
         process.exit(0);
     } catch (e) {
         console.error('Company Seed Error:', e);

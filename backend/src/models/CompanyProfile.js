@@ -15,11 +15,17 @@ const companyProfileSchema = new Schema(
         description: { type: String, required: true, trim: true },
         gstNumber: { type: String, trim: true },
         website: { type: String, trim: true },
+        authorizedPersonName: { type: String, required: true, trim: true },
+        authorizedPersonPhone: { type: String, required: true, trim: true },
+        panNumber: { type: String, trim: true },
         verificationStatus: {
             type: String,
-            enum: ['PENDING', 'VERIFIED', 'REJECTED'],
+            enum: ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'VERIFIED', 'REJECTED', 'SUSPENDED'],
             default: 'PENDING'
-        }
+        },
+        rejectionReason: { type: String },
+        needsInfoReason: { type: String },
+        suspensionReason: { type: String }
     },
     {
         timestamps: true

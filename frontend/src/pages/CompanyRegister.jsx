@@ -18,6 +18,9 @@ export default function CompanyRegister() {
     const [website, setWebsite] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [authorizedPersonName, setAuthorizedPersonName] = useState('');
+    const [authorizedPersonPhone, setAuthorizedPersonPhone] = useState('');
+    const [panNumber, setPanNumber] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
@@ -46,7 +49,10 @@ export default function CompanyRegister() {
                 gstNumber,
                 website,
                 password,
-                confirmPassword
+                confirmPassword,
+                authorizedPersonName,
+                authorizedPersonPhone,
+                panNumber
             });
 
             setSuccess('Registration successful! Redirecting to login...');
@@ -212,6 +218,39 @@ export default function CompanyRegister() {
                                     type="text" 
                                     value={state} 
                                     onChange={e => setState(e.target.value)} 
+                                    className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#FACC15]/25 focus:border-[#F97316] border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151] mb-1.5">Authorized Person Name</label>
+                                <input 
+                                    type="text" 
+                                    value={authorizedPersonName} 
+                                    onChange={e => setAuthorizedPersonName(e.target.value)} 
+                                    className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#FACC15]/25 focus:border-[#F97316] border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151] mb-1.5">Authorized Person Phone</label>
+                                <input 
+                                    type="tel" 
+                                    value={authorizedPersonPhone} 
+                                    onChange={e => setAuthorizedPersonPhone(e.target.value)} 
+                                    className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#FACC15]/25 focus:border-[#F97316] border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151] mb-1.5">PAN Card Number</label>
+                                <input 
+                                    type="text" 
+                                    value={panNumber} 
+                                    onChange={e => setPanNumber(e.target.value)} 
                                     className="w-full input-field-style rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#FACC15]/25 focus:border-[#F97316] border border-[#FEF3C7]"
                                     required
                                 />
