@@ -16,7 +16,9 @@ import {
     Calendar,
     Plus,
     FileText,
-    Percent
+    Percent,
+    Lock,
+    Bell
 } from 'lucide-react';
 
 export default function CompanyDashboard() {
@@ -37,6 +39,8 @@ export default function CompanyDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showLockModal, setShowLockModal] = useState(false);
+    const [lockedFeatureName, setLockedFeatureName] = useState('');
 
     // Form states
     const [newJob, setNewJob] = useState({
@@ -125,18 +129,8 @@ export default function CompanyDashboard() {
     useEffect(() => {
         if (activeTab === 'verification') {
             navigate('/company/verification');
-            return;
         }
-
-        if (companyInfo && companyInfo.verificationStatus !== 'VERIFIED') {
-            const forbiddenTabs = ['post-job', 'applications', 'workers', 'teams', 'assign', 'attendance', 'payments', 'wallet'];
-            if (forbiddenTabs.includes(activeTab)) {
-                setError('Company verification is required before performing this action.');
-                setActiveTab('dashboard');
-                navigate('/company/verification');
-            }
-        }
-    }, [activeTab, companyInfo]);
+    }, [activeTab]);
 
     const handleLogout = async () => {
         await logout();
@@ -249,15 +243,46 @@ export default function CompanyDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] text-[#111827] flex font-sans">
+        <div className="min-h-screen bg-[#FFFCF5] text-[#171717] flex font-sans">
             <CompanySidebar 
                 activeTab={activeTab} 
                 setActiveTab={setActiveTab} 
                 onLogout={handleLogout} 
                 companyName={companyInfo?.companyName} 
+                verificationStatus={companyInfo?.verificationStatus}
+                onLockedClick={(name) => { setLockedFeatureName(name); setShowLockModal(true); }}
             />
 
             <main className="flex-1 p-8 overflow-y-auto max-h-screen">
+                {/* Header Bar */}
+                <div className="flex justify-between items-center border-b border-[#FFF7D6] pb-4 mb-6 text-sm">
+                    <div className="flex items-center gap-3">
+                        {companyInfo?.verificationStatus === 'VERIFIED' ? (
+                            <span className="bg-green-50 border border-green-200 text-green-700 font-extrabold text-[10px] uppercase px-3 py-1 rounded-full flex items-center gap-1">
+                                <span>✓</span> VERIFIED COMPANY
+                            </span>
+                        ) : (
+                            <span className="bg-yellow-50 border border-yellow-200 text-yellow-700 font-extrabold text-[10px] uppercase px-3 py-1 rounded-full">
+                                {companyInfo?.verificationStatus || 'PENDING'}
+                            </span>
+                        )}
+                        <span className="font-bold text-[#171717]">{companyInfo?.companyName}</span>
+                    </div>
+
+                    <div className="flex items-center gap-6 font-semibold">
+                        <div className="flex items-center gap-1.5 text-[#171717]">
+                            <span className="text-[#A8A29E] text-xs uppercase font-bold">Wallet:</span>
+                            <span>₹{((wallet?.availableBalancePaise || stats?.walletBalance || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <button onClick={() => setActiveTab('notifications')} className="relative p-1 text-[#78716C] hover:text-[#171717] cursor-pointer">
+                            {notifications.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-orange-600 rounded-full"></span>}
+                            <Bell className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => setActiveTab('profile')} className="font-bold text-sm text-[#F97316] hover:underline cursor-pointer">
+                            Profile
+                        </button>
+                    </div>
+                </div>
                 {/* Status messages */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-3">
@@ -1206,6 +1231,40 @@ export default function CompanyDashboard() {
                     </div>
                 )}
             </main>
+
+            {/* Lock feature modal */}
+            {showLockModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-3xl border border-[#FFF7D6] p-8 max-w-sm w-full text-center space-y-6">
+                        <div className="w-16 h-16 bg-[#FFF7D6] text-[#F97316] rounded-full flex items-center justify-center mx-auto">
+                            <Lock className="w-8 h-8" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-black text-[#171717]">Feature Locked</h3>
+                            <p className="text-sm text-[#78716C]">
+                                Company verification is required to access this feature.
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setShowLockModal(false)}
+                                className="bg-[#FFFCF5] hover:bg-[#FFF7D6] border border-[#FFF7D6] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer flex-1"
+                            >
+                                Close
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setShowLockModal(false);
+                                    navigate('/company/verification');
+                                }}
+                                className="bg-[#F97316] hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer flex-1"
+                            >
+                                Complete Verification
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

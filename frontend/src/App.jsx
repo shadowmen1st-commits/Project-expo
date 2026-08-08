@@ -20,6 +20,8 @@ import CompanyDashboard from './pages/CompanyDashboard';
 import CompanyRegister from './pages/CompanyRegister';
 import CompanyVerification from './pages/CompanyVerification';
 import AdminCompanyVerification from './pages/AdminCompanyVerification';
+import { XCircle } from 'lucide-react';
+
 /* ─── Route guard ─── */
 const ProtectedRoute = ({ children, allowedRoles, }) => {
     const { user, loading } = useAuth();
@@ -46,6 +48,50 @@ const ProtectedRoute = ({ children, allowedRoles, }) => {
     }
     return <>{children}</>;
 };
+
+const CompanyRouteGuard = ({ children, isVerificationPage = false }) => {
+    const { user, loading } = useAuth();
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#FFFCF5] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+    if (user.role !== 'COMPANY') {
+        return <Navigate to="/" replace />;
+    }
+    if (user.status === 'SUSPENDED') {
+        return <Navigate to="/company/suspended" replace />;
+    }
+    return <>{children}</>;
+};
+
+function CompanySuspended() {
+    return (
+        <div className="min-h-screen bg-[#FFFCF5] flex items-center justify-center p-8 text-[#171717] font-sans">
+            <div className="max-w-md w-full bg-white border border-red-100 rounded-3xl p-8 shadow-sm text-center space-y-6">
+                <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                    <XCircle className="w-8 h-8" />
+                </div>
+                <h1 className="text-2xl font-black">Account Suspended</h1>
+                <p className="text-sm text-[#78716C]">
+                    Your company account has been suspended by the administrator. Please contact our support team to resolve this issue.
+                </p>
+                <button 
+                    onClick={() => window.location.href = '/support'}
+                    className="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3 rounded-xl cursor-pointer"
+                >
+                    Contact Support
+                </button>
+            </div>
+        </div>
+    );
+}
+
 /* ─── Routes ─── */
 function AppRoutes() {
     return (<Routes>
@@ -57,7 +103,7 @@ function AppRoutes() {
       <Route path="/pricing" element={<PricingPage />}/>
       <Route path="/login" element={<Login />}/>
       <Route path="/register" element={<Register />}/>
-      <Route path="/company/register" element={<CompanyRegister />}/>
+      <Route path="/register/company" element={<CompanyRegister />}/>
       <Route path="/auth/oauth/callback" element={<OAuthCallback />}/>
 
       {/* ── Customer Dashboard ── */}
@@ -80,12 +126,9 @@ function AppRoutes() {
           </ProtectedRoute>}/>
 
       {/* ── Company Portal ── */}
-      <Route path="/company" element={<ProtectedRoute allowedRoles={['COMPANY']}>
-            <CompanyDashboard />
-          </ProtectedRoute>}/>
-      <Route path="/company/verification" element={<ProtectedRoute allowedRoles={['COMPANY']}>
-            <CompanyVerification />
-          </ProtectedRoute>}/>
+      <Route path="/company" element={<CompanyRouteGuard><CompanyDashboard /></CompanyRouteGuard>}/>
+      <Route path="/company/verification" element={<CompanyRouteGuard isVerificationPage={true}><CompanyVerification /></CompanyRouteGuard>}/>
+      <Route path="/company/suspended" element={<CompanySuspended />} />
 
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminDashboard />
