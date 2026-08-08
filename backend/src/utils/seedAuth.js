@@ -66,6 +66,8 @@ const seed = async () => {
                 existingUser.status = user.status;
                 existingUser.emailVerified = user.emailVerified;
                 existingUser.phoneVerified = user.phoneVerified;
+                existingUser.failedLoginAttempts = 0;
+                existingUser.lockedUntil = undefined;
                 seededUser = await existingUser.save();
                 console.log(`Updated existing user: ${user.email} (ID: ${seededUser._id})`);
             } else {
