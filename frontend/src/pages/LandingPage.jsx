@@ -188,7 +188,7 @@ export const LandingPage = () => {
     useEffect(() => {
         if (user) {
             if (user.role === 'CUSTOMER') navigate('/dashboard');
-            else if (user.role === 'WORKER') navigate('/worker');
+            else if (user.role === 'WORKER' || user.role === 'COMPANY') navigate('/worker');
             else navigate('/admin');
         }
     }, [user, navigate]);

@@ -8,7 +8,7 @@ const userSchema = new Schema({
     primaryAuthenticationMethod: { type: String, enum: ['PASSWORD', 'GOOGLE', 'APPLE'], default: 'PASSWORD' },
     role: {
         type: String,
-        enum: ['CUSTOMER', 'WORKER', 'ADMIN', 'SUPER_ADMIN'],
+        enum: ['CUSTOMER', 'WORKER', 'ADMIN', 'SUPER_ADMIN', 'COMPANY'],
         default: 'CUSTOMER',
     },
     status: {

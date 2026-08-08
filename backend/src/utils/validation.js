@@ -5,7 +5,7 @@ export const registerSchema = z.object({
     email: z.string().trim().email('Invalid email address').transform(value => value.toLowerCase()),
     phone: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
     password: z.string().min(8, 'Password must be at least 8 characters').regex(/[A-Za-z]/, 'Password must contain a letter').regex(/\d/, 'Password must contain a number'),
-    role: z.enum(['CUSTOMER', 'WORKER']).default('CUSTOMER'),
+    role: z.enum(['CUSTOMER', 'WORKER', 'COMPANY']).default('CUSTOMER'),
 });
 
 export const loginSchema = z.object({

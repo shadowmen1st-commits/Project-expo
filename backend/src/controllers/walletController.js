@@ -51,7 +51,7 @@ export const getWalletDetails = async (req, res, next) => {
 
 export const requestWithdrawal = async (req, res, next) => {
     const user = req.user;
-    if (!user || user.role !== 'WORKER') {
+    if (!user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
         res.status(403).json({
             statusCode: 403,
             errorCode: 'FORBIDDEN',

@@ -26,7 +26,7 @@ export const Login = () => {
             if (u) {
                 if (u.role === 'ADMIN' || u.role === 'SUPER_ADMIN') {
                     navigate('/admin');
-                } else if (u.role === 'WORKER') {
+                } else if (u.role === 'WORKER' || u.role === 'COMPANY') {
                     navigate('/worker');
                 } else {
                     navigate('/dashboard');

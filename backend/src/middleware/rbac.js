@@ -43,6 +43,14 @@ export const ROLE_PERMISSIONS = {
         'payouts.manage',
         'reviews.read',
     ],
+    COMPANY: [
+        'workers.read',
+        'bookings.read',
+        'bookings.manage',
+        'wallet.read',
+        'payouts.manage',
+        'reviews.read',
+    ],
 };
 export const requirePermission = (permission) => {
     return (req, res, next) => {

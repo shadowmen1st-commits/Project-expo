@@ -150,7 +150,7 @@ class OAuthService {
                 primaryAuthenticationMethod: providerName
             });
 
-            if (role === 'WORKER') {
+            if (role === 'WORKER' || role === 'COMPANY') {
                 await WorkerProfile.create({
                     userId: user._id,
                     verificationStatus: 'PENDING_APPROVAL',

@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children, allowedRoles, }) => {
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
             return <Navigate to="/admin" replace/>;
-        if (user.role === 'WORKER')
+        if (user.role === 'WORKER' || user.role === 'COMPANY')
             return <Navigate to="/worker" replace/>;
         return <Navigate to="/dashboard" replace/>;
     }
@@ -59,16 +59,16 @@ function AppRoutes() {
           </ProtectedRoute>}/>
 
       {/* ── Worker Portal ── */}
-      <Route path="/worker" element={<ProtectedRoute allowedRoles={['WORKER']}>
+      <Route path="/worker" element={<ProtectedRoute allowedRoles={['WORKER', 'COMPANY']}>
             <WorkerDashboard />
           </ProtectedRoute>}/>
-      <Route path="/worker/verification" element={<ProtectedRoute allowedRoles={['WORKER']}><WorkerVerificationPage /></ProtectedRoute>}/>
-      <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['WORKER']}>
+      <Route path="/worker/verification" element={<ProtectedRoute allowedRoles={['WORKER', 'COMPANY']}><WorkerVerificationPage /></ProtectedRoute>}/>
+      <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['WORKER', 'COMPANY']}>
             <WorkerOnboarding />
           </ProtectedRoute>}/>
 
       {/* ── Support Portal ── */}
-      <Route path="/support" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER']}>
+      <Route path="/support" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COMPANY']}>
             <SupportPortal />
           </ProtectedRoute>}/>
 

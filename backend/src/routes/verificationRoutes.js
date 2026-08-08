@@ -33,8 +33,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, preservePath: true });
 const router = Router();
 const requireWorkerRole = (req, res, next) => {
-    if (req.user?.role !== 'WORKER') {
-        return res.status(403).json({ statusCode: 403, errorCode: 'FORBIDDEN', message: 'Worker account required.' });
+    if (req.user?.role !== 'WORKER' && req.user?.role !== 'COMPANY') {
+        return res.status(403).json({ statusCode: 403, errorCode: 'FORBIDDEN', message: 'Worker or Company account required.' });
     }
     next();
 };

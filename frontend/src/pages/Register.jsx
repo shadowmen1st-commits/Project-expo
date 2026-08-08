@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, User, Wrench, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
+import { Eye, EyeOff, User, Wrench, Building2, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import SocialAuthButtons from '../components/SocialAuthButtons';
 
 // Mirror of backend Zod password rules
@@ -148,13 +148,13 @@ export const Register = () => {
                             <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151] mb-2">
                                 I am registering as
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-3">
                                 <button 
                                     type="button" 
                                     onClick={() => setRole('CUSTOMER')} 
                                     className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'CUSTOMER' ? 'bg-[#FFEDD5] border-[#F97316] text-[#F97316] font-bold' : 'bg-white border-[#FEF3C7] text-[#4B5563] hover:border-[#FCD34D]'}`}
                                 >
-                                    <User className="w-4 h-4 text-[#F97316]" />
+                                    <User className="w-4 h-4 text-[#F97316] flex-shrink-0" />
                                     <span className="text-xs">Customer</span>
                                 </button>
                                 <button 
@@ -162,8 +162,16 @@ export const Register = () => {
                                     onClick={() => setRole('WORKER')} 
                                     className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'WORKER' ? 'bg-[#FFEDD5] border-[#F97316] text-[#F97316] font-bold' : 'bg-white border-[#FEF3C7] text-[#4B5563] hover:border-[#FCD34D]'}`}
                                 >
-                                    <Wrench className="w-4 h-4 text-[#F97316]" />
-                                    <span className="text-xs">Professional Worker</span>
+                                    <Wrench className="w-4 h-4 text-[#F97316] flex-shrink-0" />
+                                    <span className="text-xs">Worker</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setRole('COMPANY')} 
+                                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'COMPANY' ? 'bg-[#FFEDD5] border-[#F97316] text-[#F97316] font-bold' : 'bg-white border-[#FEF3C7] text-[#4B5563] hover:border-[#FCD34D]'}`}
+                                >
+                                    <Building2 className="w-4 h-4 text-[#F97316] flex-shrink-0" />
+                                    <span className="text-xs">Company</span>
                                 </button>
                             </div>
                         </div>
@@ -300,7 +308,7 @@ export const Register = () => {
                             disabled={loading} 
                             className="w-full btn-primary-gradient font-semibold py-3.5 rounded-xl cursor-pointer disabled:opacity-50 text-sm flex items-center justify-center gap-2 mt-4"
                         >
-                            {loading ? 'Creating account...' : `Register as ${role === 'CUSTOMER' ? 'Customer' : 'Worker'}`}
+                            {loading ? 'Creating account...' : `Register as ${role === 'CUSTOMER' ? 'Customer' : role === 'WORKER' ? 'Worker' : 'Company'}`}
                         </button>
                     </form>
 

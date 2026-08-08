@@ -107,7 +107,7 @@ export const createBooking = async (req, res, next) => {
 
         // 2. Validate Target Worker
         const workerUser = await User.findById(workerId);
-        if (!workerUser || workerUser.role !== 'WORKER' || workerUser.status !== 'ACTIVE') {
+        if (!workerUser || (workerUser.role !== 'WORKER' && workerUser.role !== 'COMPANY') || workerUser.status !== 'ACTIVE') {
             res.status(400).json({
                 statusCode: 400,
                 errorCode: 'WORKER_NOT_AVAILABLE',
@@ -325,7 +325,7 @@ export const getCustomerBookings = async (req, res, next) => {
  */
 export const getWorkerBookings = async (req, res, next) => {
     const user = req.user;
-    if (!user || user.role !== 'WORKER') {
+    if (!user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
         res.status(403).json({ success: false, message: 'Forbidden' });
         return;
     }
@@ -372,7 +372,7 @@ export const getBookings = async (req, res, next) => {
     try {
         const filter = user.role === 'CUSTOMER'
             ? { customerId: user.userId }
-            : user.role === 'WORKER'
+            : (user.role === 'WORKER' || user.role === 'COMPANY')
             ? { workerId: user.userId }
             : {};
 

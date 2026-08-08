@@ -25,7 +25,7 @@ export default function OAuthCallback() {
 
                     if (user.role === 'CUSTOMER') {
                         navigate('/dashboard', { replace: true });
-                    } else if (user.role === 'WORKER') {
+                    } else if (user.role === 'WORKER' || user.role === 'COMPANY') {
                         // Check if pending approval
                         if (user.status === 'ACTIVE') {
                             navigate('/worker', { replace: true });

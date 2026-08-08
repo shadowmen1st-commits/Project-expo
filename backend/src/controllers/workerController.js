@@ -7,7 +7,7 @@ import { encryptText, maskDocumentNumber } from '../utils/crypto.js';
 
 export const submitOnboarding = async (req, res, next) => {
     const user = req.user;
-    if (!user || user.role !== 'WORKER') {
+    if (!user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
         res.status(403).json({
             statusCode: 403,
             errorCode: 'FORBIDDEN',
@@ -85,7 +85,7 @@ export const submitOnboarding = async (req, res, next) => {
 
 export const updateLocation = async (req, res, next) => {
     const user = req.user;
-    if (!user || user.role !== 'WORKER') {
+    if (!user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
         res.status(403).json({ success: false, message: 'Forbidden' });
         return;
     }
@@ -223,7 +223,7 @@ export const getWorkerProfile = async (req, res, next) => {
 
         if (!profile) {
             const targetUser = await User.findById(objectId);
-            if (targetUser && targetUser.role === 'WORKER') {
+            if (targetUser && (targetUser.role === 'WORKER' || targetUser.role === 'COMPANY')) {
                 profile = new WorkerProfile({
                     userId: targetUser._id,
                     verificationStatus: 'DRAFT',
