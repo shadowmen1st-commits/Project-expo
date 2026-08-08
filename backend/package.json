@@ -10,7 +10,7 @@
     "dev": "node --watch src/index.js",
     "seed": "node src/utils/seed.js",
     "seed:auth": "node src/utils/seedAuth.js",
-    "seed:test-users": "node src/utils/seedTestUsers.js",
+    "seed:test-users": "node src/seed/seedTestUsers.js",
     "seed:import-test-users": "node seed/importTestUsers.js",
     "seed:full": "node src/seed/fullMarketplaceSeed.js",
     "seed:admin": "node src/seed/adminPanelSeed.js",
