@@ -4,36 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import SharedNavbar from '../components/SharedNavbar';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
-import { Sparkles, Wrench, Zap, Heart, Leaf, Paintbrush, Bath, PawPrint, ChevronRight, Search, Calendar, CreditCard, Star } from 'lucide-react';
+import { Sparkles, Wrench, Zap, Heart, Leaf, Paintbrush, Bath, PawPrint, ChevronRight, Search, Calendar, CreditCard, Star, ShieldCheck, Clock, Coins, ThumbsUp } from 'lucide-react';
 
-function useInView(threshold = 0.15) {
-    const ref = useRef(null);
-    const [visible, setVisible] = useState(false);
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const obs = new IntersectionObserver(([entry]) => { 
-            if (entry.isIntersecting) {
-                setVisible(true);
-                obs.disconnect();
-            } 
-        }, { threshold });
-        obs.observe(el);
-        return () => obs.disconnect();
-    }, [threshold]);
-    return { ref, visible };
-}
-
-const SERVICES = [
-    { icon: Sparkles, name: 'Home Cleaning', desc: 'Deep clean, regular upkeep & more' },
-    { icon: Wrench, name: 'Plumbing', desc: 'Leaks, installations & pipe work' },
-    { icon: Zap, name: 'Electrician', desc: 'Wiring, fittings & switchboards' },
-    { icon: Heart, name: 'Massage Therapy', desc: 'Relaxation & therapeutic care' },
-    { icon: Leaf, name: 'Gardening', desc: 'Lawn care, pruning & landscaping' },
-    { icon: Paintbrush, name: 'Painting', desc: 'Interior & exterior painting' },
-    { icon: Bath, name: 'Bathroom Work', desc: 'Renovation & sanitary fitting' },
-    { icon: PawPrint, name: 'Pet Care', desc: 'Walking, grooming & sitting' },
-];
 
 const STEPS = [
     { n: '01', icon: Search, title: 'Search & Browse', desc: 'Find verified professionals near you by service, rating, or price — all in real time.' },
@@ -70,41 +42,73 @@ const TESTIMONIALS = [
     },
 ];
 
-const ServicesSection = ({ navigate }) => {
+function useInView(threshold = 0.15) {
+    const ref = useRef(null);
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => { 
+            if (entry.isIntersecting) {
+                setVisible(true);
+                obs.disconnect();
+            } 
+        }, { threshold });
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, [threshold]);
+    return { ref, visible };
+}
+
+const WhyChooseUsSection = () => {
     const { ref, visible } = useInView();
+    const benefits = [
+        {
+            icon: ShieldCheck,
+            title: 'Verified Professionals',
+            desc: 'Every worker undergoes strict background checks, identity verification, and manual screening to ensure your complete safety.'
+        },
+        {
+            icon: Coins,
+            title: 'Secure Escrow Payments',
+            desc: 'Your money is held safely in escrow and only released to the professional once you are fully satisfied with the completed work.'
+        },
+        {
+            icon: Clock,
+            title: 'On-Time Guarantee',
+            desc: 'We value your time. If our service provider does not arrive within the scheduled window, we offer a dedicated service discount.'
+        },
+        {
+            icon: ThumbsUp,
+            title: '100% Satisfaction Warranty',
+            desc: 'Not happy with the quality? Our dedicated support team is available 24/7, and we cover a 30-day service satisfaction warranty.'
+        }
+    ];
+
     return (
-        <section id="services" className="py-24 px-6 bg-[#FFFBEB]" ref={ref}>
+        <section id="why-choose-us" className="py-24 px-6 bg-[#FFFBEB]" ref={ref}>
             <div className="max-w-7xl mx-auto">
                 <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                    <p className="text-[#F97316] text-sm font-semibold uppercase tracking-wider mb-3">What We Offer</p>
-                    <h2 className="text-4xl md:text-5xl font-black text-[#111827] mb-4">80+ Services, One Platform</h2>
-                    <p className="text-[#4B5563] max-w-xl mx-auto font-normal">From urgent repairs to regular upkeep — find the right expert for every need.</p>
+                    <p className="text-[#F97316] text-sm font-semibold uppercase tracking-wider mb-3">Why HyperLocal</p>
+                    <h2 className="text-4xl md:text-5xl font-black text-[#111827] mb-4">Quality Service, Guaranteed Trust</h2>
+                    <p className="text-[#4B5563] max-w-xl mx-auto font-normal">We are committed to providing the safest, most reliable, and highly professional experience at your doorstep.</p>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                    {SERVICES.map((s) => {
-                        const IconComponent = s.icon;
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {benefits.map((b) => {
+                        const IconComponent = b.icon;
                         return (
-                            <button 
-                                key={s.name} 
-                                onClick={() => navigate('/services')} 
-                                className="group relative bg-white border border-[#FEF3C7] hover:border-[#F97316]/50 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 cursor-pointer outline-none shadow-sm hover:shadow-orange-100 hover:shadow-md"
+                            <div 
+                                key={b.title} 
+                                className="group relative bg-white border border-[#FEF3C7] hover:border-[#F97316]/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-orange-100 hover:shadow-md"
                             >
                                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 border border-[#FEF3C7] bg-[#FFEDD5] text-[#F97316] transition-transform group-hover:scale-110">
-                                    <IconComponent className="w-5 h-5"/>
+                                    <IconComponent className="w-6 h-6"/>
                                 </div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <h3 className="text-[#111827] font-bold text-sm md:text-base group-hover:text-[#F97316] transition-colors">{s.name}</h3>
-                                    <ChevronRight className="w-4 h-4 text-[#F97316] opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0"/>
-                                </div>
-                                <p className="text-[#4B5563] text-xs leading-relaxed">{s.desc}</p>
-                            </button>
+                                <h3 className="text-[#111827] font-bold text-lg mb-2.5 group-hover:text-[#F97316] transition-colors">{b.title}</h3>
+                                <p className="text-[#4B5563] text-xs leading-relaxed">{b.desc}</p>
+                            </div>
                         );
                     })}
-                </div>
-                <div className="text-center mt-12">
-                    <button onClick={() => navigate('/services')} className="inline-flex items-center gap-2 text-[#F97316] hover:text-[#111827] text-sm font-semibold transition-colors cursor-pointer border border-[#FEF3C7] hover:border-[#F97316] rounded-xl px-6 py-2.5 bg-white shadow-sm hover:bg-[#FFFBEB]">
-                        View All 80+ Services →
-                    </button>
                 </div>
             </div>
         </section>
@@ -262,8 +266,8 @@ export const LandingPage = () => {
                 </div>
             </section>
 
-            {/* SERVICES */}
-            <ServicesSection navigate={navigate}/>
+            {/* SERVICES REPLACED BY WHY CHOOSE US */}
+            <WhyChooseUsSection />
 
             {/* HOW IT WORKS */}
             <HowItWorksSection />
