@@ -3,6 +3,11 @@ import Constants from 'expo-constants';
 import storage from '../utils/storage';
 
 const getBaseUrl = () => {
+  // Use environment variable for production
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
   const debuggerHost = Constants.expoConfig?.hostUri;
   const ip = debuggerHost ? debuggerHost.split(':')[0] : 'localhost';
   return `http://${ip}:5001/api`;

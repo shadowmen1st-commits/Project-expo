@@ -42,6 +42,7 @@ export const createApp = () => {
         if (!origin) return true;
         if (config.CORS_ALLOWED_ORIGINS.includes(origin)) return true;
         if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+        if (/^capacitor:\/\/localhost$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
         return false;
     };

@@ -75,34 +75,39 @@ export const registerCompany = async (req, res, next) => {
             status: 'ACTIVE'
         });
 
-        // Create Profile
-        await CompanyProfile.create({
-            userId: user._id,
-            companyName,
-            email: email.toLowerCase().trim(),
-            phone: phone.trim(),
-            address,
-            city,
-            state,
-            pincode,
-            businessType,
-            description,
-            gstNumber,
-            website,
-            authorizedPersonName,
-            authorizedPersonPhone,
-            panNumber,
-            verificationStatus: 'PENDING'
-        });
+        try {
+            // Create Profile
+            await CompanyProfile.create({
+                userId: user._id,
+                companyName,
+                email: email.toLowerCase().trim(),
+                phone: phone.trim(),
+                address,
+                city,
+                state,
+                pincode,
+                businessType,
+                description,
+                gstNumber,
+                website,
+                authorizedPersonName,
+                authorizedPersonPhone,
+                panNumber,
+                verificationStatus: 'PENDING'
+            });
 
-        // Create Default Wallet
-        await CompanyWallet.create({
-            companyId: user._id,
-            availableBalancePaise: 0,
-            pendingAmountPaise: 0,
-            escrowAmountPaise: 0,
-            totalSpentPaise: 0
-        });
+            // Create Default Wallet
+            await CompanyWallet.create({
+                companyId: user._id,
+                availableBalancePaise: 0,
+                pendingAmountPaise: 0,
+                escrowAmountPaise: 0,
+                totalSpentPaise: 0
+            });
+        } catch (profileError) {
+            await User.deleteOne({ _id: user._id });
+            throw profileError;
+        }
 
         return res.status(201).json({
             success: true,

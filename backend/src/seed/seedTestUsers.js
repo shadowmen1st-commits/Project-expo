@@ -4,6 +4,9 @@ import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import WorkerProfile from '../models/WorkerProfile.js';
+import CompanyProfile from '../models/CompanyProfile.js';
+import CompanyWallet from '../models/CompanyWallet.js';
 
 // Resolve directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -67,11 +70,59 @@ const seed = async () => {
                 lockedUntil: null,
             };
 
-            await User.findOneAndUpdate(
+            const userRecord = await User.findOneAndUpdate(
                 { email: normalizedEmail },
                 { $set: updateData },
                 { upsert: true, new: true }
             );
+
+            // Create Profile based on role
+            if (user.role === 'WORKER') {
+                await WorkerProfile.findOneAndUpdate(
+                    { userId: userRecord._id },
+                    {
+                        $setOnInsert: {
+                            verificationStatus: 'INCOMPLETE_PROFILE',
+                            isPubliclyVisible: false,
+                            isOnline: false
+                        }
+                    },
+                    { upsert: true }
+                );
+            } else if (user.role === 'COMPANY') {
+                await CompanyProfile.findOneAndUpdate(
+                    { userId: userRecord._id },
+                    {
+                        $setOnInsert: {
+                            companyName: user.name,
+                            email: normalizedEmail,
+                            phone: '9999999999',
+                            address: 'Test Address',
+                            city: 'Test City',
+                            state: 'Test State',
+                            pincode: '110001',
+                            businessType: 'Test Business',
+                            description: 'Test Company Description',
+                            authorizedPersonName: user.name,
+                            authorizedPersonPhone: '9999999999',
+                            verificationStatus: 'PENDING'
+                        }
+                    },
+                    { upsert: true }
+                );
+                await CompanyWallet.findOneAndUpdate(
+                    { companyId: userRecord._id },
+                    {
+                        $setOnInsert: {
+                            availableBalancePaise: 1000000, // 10,000 INR for testing
+                            pendingAmountPaise: 0,
+                            escrowAmountPaise: 0,
+                            totalSpentPaise: 0
+                        }
+                    },
+                    { upsert: true }
+                );
+            }
         }
 
         console.log('\nSeed completed successfully.');
