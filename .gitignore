@@ -37,3 +37,12 @@ provider-payloads/
 *.pem
 *.key
 *.p12
+
+# Gradle & Android Build Outputs
+.gradle/
+**/android/.gradle_home/
+**/android/app/build/
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+

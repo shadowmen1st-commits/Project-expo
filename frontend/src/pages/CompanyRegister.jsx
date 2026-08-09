@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../config/api';
 import { ShieldCheck, Building2, User, Wrench } from 'lucide-react';
 
 export default function CompanyRegister() {
@@ -36,7 +36,7 @@ export default function CompanyRegister() {
         setLoading(true);
 
         try {
-            await axios.post('/api/company/register', {
+            const response = await api.post('/company/register', {
                 companyName,
                 email,
                 phone,
@@ -54,10 +54,11 @@ export default function CompanyRegister() {
                 authorizedPersonPhone,
                 panNumber
             });
-
+            console.log("COMPANY REGISTER SUCCESS:", response.data);
             setSuccess('Registration successful! Redirecting to login...');
             setTimeout(() => navigate('/login'), 2000);
         } catch (err) {
+            console.error("COMPANY REGISTER FAILED:", err.response?.data || err.message);
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);

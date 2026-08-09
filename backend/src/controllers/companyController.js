@@ -57,12 +57,12 @@ export const registerCompany = async (req, res, next) => {
 
         const emailExists = await User.exists({ email: email.toLowerCase().trim() });
         if (emailExists) {
-            return res.status(409).json({ success: false, message: 'This email is already registered.' });
+            return res.status(409).json({ success: false, errorCode: 'EMAIL_EXISTS', field: 'email', message: 'This email is already registered.' });
         }
 
         const phoneExists = await User.exists({ phone: phone.trim() });
         if (phoneExists) {
-            return res.status(409).json({ success: false, message: 'This phone number is already registered.' });
+            return res.status(409).json({ success: false, errorCode: 'PHONE_EXISTS', field: 'phone', message: 'This phone number is already registered.' });
         }
 
         // Create User

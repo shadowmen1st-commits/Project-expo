@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HyperLocal</string>
+    <string name="title_activity_main">HyperLocal</string>
+    <string name="package_name">com.hyperlocal.marketplace</string>
+    <string name="custom_url_scheme">com.hyperlocal.marketplace</string>
+</resources>

@@ -7,11 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
-    ,"test:startup-smoke": "node tests/startupSmoke.js",
+    "preview": "vite preview",
+    "test:startup-smoke": "node tests/startupSmoke.js",
     "test:e2e": "npm --prefix ../e2e test"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "axios": "^1.6.8",
     "date-fns": "^4.4.0",
     "framer-motion": "^11.1.7",

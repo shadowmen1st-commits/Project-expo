@@ -1,5 +1,6 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { App as CapacitorApp } from '@capacitor/app';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
 import PricingPage from './pages/PricingPage';
@@ -143,8 +144,30 @@ function AppRoutes() {
 export function App() {
     return (<AuthProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AppRoutes />
+        <AppContent />
       </BrowserRouter>
     </AuthProvider>);
+}
+
+function AppContent() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const backHandler = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+            if (canGoBack) {
+                window.history.back();
+            } else {
+                if (window.confirm("Do you want to exit the app?")) {
+                    CapacitorApp.exitApp();
+                }
+            }
+        });
+
+        return () => {
+            backHandler.then(h => h.remove());
+        };
+    }, []);
+
+    return <AppRoutes />;
 }
 export default App;

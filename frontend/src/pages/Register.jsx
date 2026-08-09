@@ -167,7 +167,7 @@ export const Register = () => {
                                 </button>
                                 <button 
                                     type="button" 
-                                    onClick={() => setRole('COMPANY')} 
+                                    onClick={() => navigate('/register/company')}
                                     className={`p-3 rounded-xl border flex items-center justify-center gap-2 cursor-pointer transition-all ${role === 'COMPANY' ? 'bg-[#FFEDD5] border-[#F97316] text-[#F97316] font-bold' : 'bg-white border-[#FEF3C7] text-[#4B5563] hover:border-[#FCD34D]'}`}
                                 >
                                     <Building2 className="w-4 h-4 text-[#F97316] flex-shrink-0" />
