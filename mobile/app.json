@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FAF6F0"
+      "backgroundColor": "#FFFBEB"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
-        "backgroundColor": "#FAF6F0"
+        "backgroundColor": "#FFFBEB"
       },
       "package": "com.hyperlocal.app"
     },

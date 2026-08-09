@@ -30,7 +30,7 @@ export const Button = ({ title, onPress, loading, variant = 'primary', style }) 
   );
 };
 
-export const Input = ({ label, value, onChangeText, placeholder, secureTextEntry, error, autoCapitalize = 'none' }) => {
+export const Input = ({ label, value, onChangeText, placeholder, secureTextEntry, error, autoCapitalize = 'none', keyboardType = 'default' }) => {
   const [isFocused, setIsFocused] = React.useState(false);
 
   return (
@@ -48,6 +48,7 @@ export const Input = ({ label, value, onChangeText, placeholder, secureTextEntry
         placeholderTextColor={Colors.textDim}
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
@@ -63,19 +64,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    shadowColor: Colors.primary,
+  },
+  buttonPrimary: {
+    backgroundColor: Colors.secondary,
+    shadowColor: Colors.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  buttonPrimary: {
-    backgroundColor: Colors.primary,
-  },
   buttonOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: Colors.border,
   },
   buttonText: {
     fontSize: 16,
@@ -86,14 +87,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   buttonTextOutline: {
-    color: Colors.primary,
+    color: Colors.textSecondary,
   },
   inputContainer: {
     marginBottom: Spacing.lg,
     width: '100%',
   },
   label: {
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     fontSize: 14,
     marginBottom: 8,
     fontWeight: '600',
@@ -105,13 +106,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     paddingHorizontal: 20,
     color: Colors.text,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.border,
     fontSize: 16,
   },
   inputFocused: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.surfaceLight,
+    borderColor: Colors.secondary,
+    backgroundColor: Colors.surface,
   },
   inputError: {
     borderColor: Colors.error,

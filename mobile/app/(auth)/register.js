@@ -4,17 +4,18 @@ import { useAuth } from '../../context/AuthContext';
 import { Colors, Spacing, BorderRadius } from '../../constants/Theme';
 import { Input, Button } from '../../components/UI';
 import { router } from 'expo-router';
-import api from '../../services/api';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { setUser } = useAuth();
+  const { register } = useAuth();
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -31,15 +32,14 @@ export default function RegisterScreen() {
     setError('');
 
     try {
-      const response = await api.post('/auth/register', { name, email, password });
-      // Depending on backend implementation, it might return a token or require login
-      if (response.data.success) {
-         router.replace('/(auth)/login');
+      const result = await register({ name, email, phone, password, role });
+      if (result.success) {
+         router.replace('/(tabs)');
       } else {
-        setError(response.data.message || 'Registration failed');
+        setError(result.message || 'Registration failed');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -89,6 +89,44 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
             />
+
+            <Input
+              label="Phone Number"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="1234567890"
+              keyboardType="phone-pad"
+            />
+
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>Register As</Text>
+              <View style={styles.roleSelector}>
+                <TouchableOpacity
+                  style={[styles.roleOption, role === 'CUSTOMER' && styles.roleOptionActive]}
+                  onPress={() => setRole('CUSTOMER')}
+                >
+                  <Text style={[styles.roleOptionText, role === 'CUSTOMER' && styles.roleOptionTextActive]}>
+                    Customer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.roleOption, role === 'WORKER' && styles.roleOptionActive]}
+                  onPress={() => setRole('WORKER')}
+                >
+                  <Text style={[styles.roleOptionText, role === 'WORKER' && styles.roleOptionTextActive]}>
+                    Provider
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.roleOption, role === 'COMPANY' && styles.roleOptionActive]}
+                  onPress={() => setRole('COMPANY')}
+                >
+                  <Text style={[styles.roleOptionText, role === 'COMPANY' && styles.roleOptionTextActive]}>
+                    Company
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             <Input
               label="Password"
@@ -221,5 +259,40 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  roleContainer: {
+    marginBottom: Spacing.md,
+  },
+  roleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  roleOption: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.sm + 4,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleOptionActive: {
+    borderColor: Colors.secondary,
+    backgroundColor: Colors.surfaceLight,
+  },
+  roleOptionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  roleOptionTextActive: {
+    color: Colors.secondary,
   },
 });

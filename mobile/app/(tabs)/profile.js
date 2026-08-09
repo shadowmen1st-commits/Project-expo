@@ -1,27 +1,16 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { Colors, Spacing, BorderRadius } from '../../constants/Theme';
-import { LogOut, ChevronRight, Settings, Shield, CreditCard } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { LogOut, ChevronRight, Settings, Shield, CreditCard, User, HelpCircle } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace('/(auth)/login');
-    } catch (err) {
-      console.log('Logout navigation error:', err);
-    }
-  };
-
-  const MenuItem = ({ icon: Icon, title, onPress }) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+  const MenuItem = ({ icon: Icon, title, onPress, showBorder = true }) => (
+    <TouchableOpacity style={[styles.menuItem, !showBorder && { borderBottomWidth: 0 }]} onPress={onPress}>
       <View style={styles.menuItemLeft}>
         <View style={styles.iconContainer}>
-          <Icon size={20} color={Colors.primary} />
+          <Icon size={20} color={Colors.secondary} />
         </View>
         <Text style={styles.menuTitle}>{title}</Text>
       </View>
@@ -30,7 +19,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.profileHeader}>
         <View style={styles.avatarLarge}>
           <Text style={styles.avatarTextLarge}>{user?.name?.charAt(0) || 'U'}</Text>
@@ -42,17 +31,21 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.menuSection}>
+      <View style={styles.menuCard}>
+        <MenuItem icon={User} title="Personal Information" />
         <MenuItem icon={CreditCard} title="Wallet & Payments" />
         <MenuItem icon={Shield} title="Privacy & Security" />
         <MenuItem icon={Settings} title="Settings" />
+        <MenuItem icon={HelpCircle} title="Help & Support" showBorder={false} />
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <LogOut size={20} color={Colors.error} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
-    </View>
+
+      <Text style={styles.version}>Version 1.0.0</Text>
+    </ScrollView>
   );
 }
 
@@ -63,26 +56,29 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: 'center',
-    padding: Spacing.xxl,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    padding: Spacing.xl,
+    paddingTop: Spacing.xxl,
   },
   avatarLarge: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: Colors.surfaceLight,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.primary,
+    shadowColor: Colors.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
   avatarTextLarge: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: 'bold',
-    color: Colors.primary,
+    color: Colors.secondary,
   },
   userName: {
     fontSize: 22,
@@ -91,15 +87,15 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 14,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     marginTop: 4,
   },
   editButton: {
     marginTop: Spacing.lg,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     borderRadius: BorderRadius.xxl,
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -108,15 +104,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  menuSection: {
-    marginTop: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+  menuCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   menuItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -126,30 +132,43 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(232, 122, 30, 0.1)',
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   menuTitle: {
     fontSize: 16,
     color: Colors.text,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-    marginTop: 'auto',
-    marginBottom: Spacing.xxl,
-    padding: Spacing.md,
+    marginTop: Spacing.xxl,
+    marginHorizontal: Spacing.lg,
+    padding: 16,
+    borderRadius: BorderRadius.xl,
+    backgroundColor: 'rgba(220, 38, 38, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(220, 38, 38, 0.1)',
   },
   logoutText: {
     color: Colors.error,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  version: {
+    textAlign: 'center',
+    color: Colors.textDim,
+    fontSize: 12,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
 });
