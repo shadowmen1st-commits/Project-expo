@@ -101,7 +101,8 @@ export const createApp = () => {
         message: { statusCode: 429, errorCode: 'TOO_MANY_REQUESTS', message: 'Too many health check requests.' }
     });
 
-    app.get('/ready', healthLimiter, async (_req,res) => { try { if(mongoose.connection.readyState!==1)return res.status(503).json({status:'NOT_READY',database:'DOWN'});await mongoose.connection.db.admin().ping();const deadLetters=await NotificationOutbox.countDocuments({status:'DEAD_LETTER'});res.status(200).json({status:'READY',database:'UP',outbox:{dispatcher:'AVAILABLE',deadLetters}});}catch{res.status(503).json({status:'NOT_READY',database:'DOWN'});} });
+    app.get('/health', healthLimiter, (_req, res) => { res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }); });
+    app.get('/ready', healthLimiter, async (_req, res) => { try { const isConnected = mongoose.connection.readyState === 1; res.status(isConnected ? 200 : 503).json({ status: isConnected ? 'READY' : 'NOT_READY', database: isConnected ? 'UP' : 'DOWN' }); } catch { res.status(503).json({ status: 'NOT_READY', database: 'DOWN' }); } });
     app.use(errorHandler);
     return app;
 };
