@@ -10,12 +10,16 @@ const companyVerificationDocumentSchema = new Schema(
                 'ADDRESS_PROOF',
                 'GST_CERTIFICATE',
                 'AUTHORIZED_PERSON_ID',
-                'COMPANY_PAN'
+                'COMPANY_PAN',
+                'OTHER_SUPPORTING_DOCUMENT'
             ],
             required: true
         },
         documentUrl: { type: String, required: true },
         storageKey: { type: String }, // For private storage
+        fileName: { type: String },
+        fileSize: { type: Number },
+        mimeType: { type: String },
         status: {
             type: String,
             enum: ['PENDING', 'APPROVED', 'REJECTED'],

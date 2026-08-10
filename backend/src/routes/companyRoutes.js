@@ -29,7 +29,10 @@ import {
     getCompanyNotifications,
     getCompanyDashboard,
     getCompanyVerification,
+    updateCompanyVerificationProfile,
+    updateCompanyVerificationDetails,
     uploadCompanyDocument,
+    deleteCompanyDocument,
     submitCompanyVerification
 } from '../controllers/companyController.js';
 import { requireVerifiedCompany } from '../middleware/requireVerifiedCompany.js';
@@ -100,7 +103,10 @@ router.get('/notifications', authMiddleware, requireCompanyRole, getCompanyNotif
 
 // Company KYC Verification
 router.get('/verification', authMiddleware, requireCompanyRole, getCompanyVerification);
+router.post('/verification/profile', authMiddleware, requireCompanyRole, updateCompanyVerificationProfile);
+router.post('/verification/details', authMiddleware, requireCompanyRole, updateCompanyVerificationDetails);
 router.post('/verification/submit', authMiddleware, requireCompanyRole, submitCompanyVerification);
 router.post('/verification/documents', authMiddleware, requireCompanyRole, upload.single('file'), uploadCompanyDocument);
+router.delete('/verification/documents/:id', authMiddleware, requireCompanyRole, deleteCompanyDocument);
 
 export default router;

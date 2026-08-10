@@ -18,10 +18,32 @@ const companyProfileSchema = new Schema(
         authorizedPersonName: { type: String, required: true, trim: true },
         authorizedPersonPhone: { type: String, required: true, trim: true },
         panNumber: { type: String, trim: true },
+        legalCompanyName: { type: String, trim: true },
+        tradeName: { type: String, trim: true },
+        companyType: { type: String, trim: true },
+        registrationNumber: { type: String, trim: true },
+        dateOfIncorporation: { type: Date },
+        numberOfEmployees: { type: String, trim: true },
+        industry: { type: String, trim: true },
+        registeredAddress: { type: String, trim: true },
+        operationalAddress: { type: String, trim: true },
+        country: { type: String, trim: true, default: 'India' },
+        completedSteps: [{ type: String }],
+        lastStep: { type: Number, default: 1 },
+        submittedAt: { type: Date },
+        submittedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        reviewHistory: [
+            {
+                action: { type: String },
+                reason: { type: String },
+                actor: { type: Schema.Types.ObjectId, ref: 'User' },
+                timestamp: { type: Date, default: Date.now }
+            }
+        ],
         verificationStatus: {
             type: String,
-            enum: ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'VERIFIED', 'REJECTED', 'SUSPENDED'],
-            default: 'PENDING'
+            enum: ['DRAFT', 'PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'RESUBMISSION_REQUIRED', 'APPROVED', 'VERIFIED', 'REJECTED', 'SUSPENDED'],
+            default: 'DRAFT'
         },
         rejectionReason: { type: String },
         needsInfoReason: { type: String },

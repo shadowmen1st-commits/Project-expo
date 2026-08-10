@@ -400,6 +400,31 @@ export const getCompanies = async (req, res, next) => {
     }
 };
 
+export const getCompanyVerificationsList = async (req, res, next) => {
+    try {
+        const { status } = req.query;
+        const query = {};
+        if (status) {
+            query.verificationStatus = status;
+        }
+        const profiles = await CompanyProfile.find(query).lean();
+        const results = [];
+        for (const profile of profiles) {
+            const user = await User.findById(profile.userId).select('name email phone status role').lean();
+            const docs = await CompanyVerificationDocument.find({ companyId: profile.userId }).lean();
+            results.push({
+                ...profile,
+                user,
+                documents: docs,
+                submittedAt: profile.submittedAt || profile.updatedAt
+            });
+        }
+        res.status(200).json({ success: true, verifications: results, data: results });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getCompanyVerificationAdmin = async (req, res, next) => {
     try {
         const { id } = req.params;

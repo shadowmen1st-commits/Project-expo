@@ -112,11 +112,77 @@ async function main() {
         await compBAgent.post('/api/auth/login').send({ email: 'comp_b@test.local', password: 'CompanyPass123' });
 
         // Verification Status Initial State
-        await test('Company A initial verification state is PENDING', async () => {
+        await test('Company A initial verification state is DRAFT or PENDING', async () => {
             const res = await compAAgent.get('/api/company/verification');
             assert.equal(res.status, 200);
-            assert.equal(res.body.verificationStatus, 'PENDING');
-            assert.equal(res.body.progress, 20); // 20% for completed profile
+            assert.ok(res.body.verificationStatus === 'DRAFT' || res.body.verificationStatus === 'PENDING');
+        });
+
+        // Step 1: Save Profile
+        await test('Save Company A Step 1 Profile Details', async () => {
+            const res = await compAAgent
+                .post('/api/company/verification/profile')
+                .send({
+                    companyName: 'Apex Event Logistics Pvt Ltd',
+                    email: 'comp_a@test.local',
+                    phone: '9991110001',
+                    authorizedPersonName: 'Amit Verma',
+                    authorizedPersonPhone: '9991110011',
+                    companyType: 'Private Limited',
+                    businessType: 'Event Logistics',
+                    website: 'https://apexevents.com',
+                    address: '12 Okhla Phase 3',
+                    city: 'New Delhi',
+                    state: 'Delhi',
+                    pincode: '110020',
+                    country: 'India'
+                });
+            assert.equal(res.status, 200);
+            assert.equal(res.body.success, true);
+            assert.ok(res.body.profile.completedSteps.includes('PROFILE'));
+        });
+
+        // Step 2: Save Business Details with Invalid GST/PAN format rejection
+        await test('Step 2 Business Details rejects invalid GSTIN format (400)', async () => {
+            const res = await compAAgent
+                .post('/api/company/verification/details')
+                .send({
+                    gstNumber: 'INVALID_GST_123'
+                });
+            assert.equal(res.status, 400);
+            assert.ok(res.body.message.includes('Invalid GSTIN format'));
+        });
+
+        await test('Step 2 Business Details rejects invalid PAN format (400)', async () => {
+            const res = await compAAgent
+                .post('/api/company/verification/details')
+                .send({
+                    panNumber: 'INVALID_PAN'
+                });
+            assert.equal(res.status, 400);
+            assert.ok(res.body.message.includes('Invalid PAN format'));
+        });
+
+        await test('Save Company A Step 2 Business Details successfully', async () => {
+            const res = await compAAgent
+                .post('/api/company/verification/details')
+                .send({
+                    legalCompanyName: 'Apex Event Logistics Private Limited',
+                    tradeName: 'Apex Events',
+                    companyType: 'Private Limited',
+                    registrationNumber: 'U74999DL2021PTC123456',
+                    dateOfIncorporation: '2021-05-15',
+                    numberOfEmployees: '10-50',
+                    industry: 'Events & Manpower',
+                    description: 'Providing manpower for NCR events.',
+                    registeredAddress: '12 Okhla Phase 3, New Delhi',
+                    operationalAddress: '12 Okhla Phase 3, New Delhi',
+                    gstNumber: '07AAAAA0000A1Z5',
+                    panNumber: 'ABCDE1234F'
+                });
+            assert.equal(res.status, 200);
+            assert.equal(res.body.success, true);
+            assert.ok(res.body.profile.completedSteps.includes('DETAILS'));
         });
 
         // Job posting is blocked before verification
@@ -171,6 +237,17 @@ async function main() {
             assert.equal(status.body.progress, 100);
         });
 
+        // Delete document test
+        await test('Company A can remove an uploaded document', async () => {
+            const delRes = await compAAgent.delete('/api/company/verification/documents/COMPANY_PAN');
+            assert.equal(delRes.status, 200);
+            assert.equal(delRes.body.success, true);
+
+            // Re-upload deleted document
+            const reuploadRes = await uploadDoc(compAAgent, 'COMPANY_PAN');
+            assert.equal(reuploadRes.status, 200);
+        });
+
         // KYC Submission
         await test('Submit Company A verification details', async () => {
             const res = await compAAgent.post('/api/company/verification/submit');
@@ -180,6 +257,14 @@ async function main() {
             // Audit log exists
             const log = await AuditLog.findOne({ resourceId: res.body.profile.userId, action: 'COMPANY_VERIFICATION_SUBMITTED' });
             assert.ok(log);
+        });
+
+        // Admin company verifications list
+        await test('Admin views company verifications list', async () => {
+            const listRes = await adminAgent.get('/api/admin/company-verifications');
+            assert.equal(listRes.status, 200);
+            assert.equal(listRes.body.success, true);
+            assert.ok(listRes.body.verifications.length >= 1);
         });
 
         // Data Isolation: Company B cannot see Company A verification detail

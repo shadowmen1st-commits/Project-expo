@@ -218,32 +218,32 @@ export default function AdminCompanyVerification() {
 
                 {/* Decision Actions bar */}
                 <div className="bg-white border border-[#E7E0D8] p-6 rounded-2xl flex flex-wrap gap-3 justify-end shadow-sm">
-                    {profile?.verificationStatus === 'UNDER_REVIEW' && (
+                    {profile?.verificationStatus !== 'VERIFIED' && profile?.verificationStatus !== 'APPROVED' && profile?.verificationStatus !== 'SUSPENDED' && (
                         <>
                             <button 
                                 onClick={handleApprove}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
                             >
-                                Approve Company
+                                Approve Company Verification
                             </button>
                             <button 
                                 onClick={() => { setActiveModal('info'); setError(''); }}
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
                             >
-                                Request Information
+                                Request Information / Resubmission
                             </button>
                             <button 
                                 onClick={() => { setActiveModal('reject'); setError(''); }}
-                                className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                                className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
                             >
                                 Reject Company
                             </button>
                         </>
                     )}
-                    {profile?.verificationStatus === 'VERIFIED' && (
+                    {(profile?.verificationStatus === 'VERIFIED' || profile?.verificationStatus === 'APPROVED') && (
                         <button 
                             onClick={() => { setActiveModal('suspend'); setError(''); }}
-                            className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                            className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
                         >
                             Suspend Company
                         </button>

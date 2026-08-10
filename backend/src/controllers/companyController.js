@@ -751,6 +751,7 @@ export const getCompanyVerification = async (req, res, next) => {
         let progress = 0;
         const checklist = {
             profile: !!(profile.companyName && profile.address && profile.businessType && profile.authorizedPersonName),
+            details: !!(profile.legalCompanyName || profile.registrationNumber || profile.gstNumber || profile.panNumber),
             businessRegistration: false,
             addressProof: false,
             authorizedPersonId: false,
@@ -758,6 +759,7 @@ export const getCompanyVerification = async (req, res, next) => {
         };
 
         if (checklist.profile) progress += 20;
+        if (checklist.details) progress += 20;
 
         documents.forEach(doc => {
             if (doc.status === 'APPROVED' || doc.status === 'PENDING') {
@@ -773,22 +775,154 @@ export const getCompanyVerification = async (req, res, next) => {
             }
         });
 
-        // Add 20% for each present/approved document
+        // Add 15% for each present/approved mandatory document
         const docs = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN'];
         docs.forEach(dtype => {
             const hasDoc = documents.find(d => d.documentType === dtype && (d.status === 'APPROVED' || d.status === 'PENDING'));
-            if (hasDoc) progress += 20;
+            if (hasDoc) progress += 15;
         });
+
+        if (progress > 100) progress = 100;
+        if (profile.verificationStatus === 'VERIFIED' || profile.verificationStatus === 'APPROVED') {
+            progress = 100;
+        }
 
         return res.status(200).json({
             success: true,
             verificationStatus: profile.verificationStatus,
             progress,
             checklist,
+            profile,
             documents,
+            completedSteps: profile.completedSteps || [],
+            lastStep: profile.lastStep || 1,
             needsInfoReason: profile.needsInfoReason,
             rejectionReason: profile.rejectionReason,
             suspensionReason: profile.suspensionReason
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateCompanyVerificationProfile = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const {
+            companyName,
+            email,
+            phone,
+            authorizedPersonName,
+            authorizedPersonPhone,
+            companyType,
+            businessType,
+            website,
+            address,
+            city,
+            state,
+            pincode,
+            country
+        } = req.body;
+
+        if (!companyName || !email || !phone || !authorizedPersonName || !authorizedPersonPhone || !address || !city || !state || !pincode) {
+            return res.status(400).json({ success: false, message: 'Please fill in all required profile fields.' });
+        }
+
+        const profile = await CompanyProfile.findOne({ userId: companyId });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        profile.companyName = companyName.trim();
+        profile.email = email.trim().toLowerCase();
+        profile.phone = phone.trim();
+        profile.authorizedPersonName = authorizedPersonName.trim();
+        profile.authorizedPersonPhone = authorizedPersonPhone.trim();
+        if (companyType || businessType) profile.businessType = (companyType || businessType).trim();
+        if (companyType) profile.companyType = companyType.trim();
+        if (website !== undefined) profile.website = website ? website.trim() : '';
+        profile.address = address.trim();
+        profile.city = city.trim();
+        profile.state = state.trim();
+        profile.pincode = pincode.trim();
+        if (country) profile.country = country.trim();
+
+        if (!profile.completedSteps.includes('PROFILE')) {
+            profile.completedSteps.push('PROFILE');
+        }
+        profile.lastStep = Math.max(profile.lastStep || 1, 2);
+
+        await profile.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Company profile updated successfully.',
+            profile
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateCompanyVerificationDetails = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const {
+            legalCompanyName,
+            tradeName,
+            companyType,
+            registrationNumber,
+            dateOfIncorporation,
+            numberOfEmployees,
+            industry,
+            description,
+            registeredAddress,
+            operationalAddress,
+            gstNumber,
+            panNumber
+        } = req.body;
+
+        // Validation for GSTIN & PAN formats if provided
+        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i;
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i;
+
+        if (gstNumber && !gstRegex.test(gstNumber.trim())) {
+            return res.status(400).json({ success: false, message: 'Invalid GSTIN format. Expected 15-character GSTIN (e.g. 22AAAAA0000A1Z5).' });
+        }
+
+        if (panNumber && !panRegex.test(panNumber.trim())) {
+            return res.status(400).json({ success: false, message: 'Invalid PAN format. Expected 10-character PAN (e.g. ABCDE1234F).' });
+        }
+
+        const profile = await CompanyProfile.findOne({ userId: companyId });
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Company profile not found.' });
+        }
+
+        if (legalCompanyName) profile.legalCompanyName = legalCompanyName.trim();
+        if (tradeName !== undefined) profile.tradeName = tradeName.trim();
+        if (companyType) profile.companyType = companyType.trim();
+        if (registrationNumber) profile.registrationNumber = registrationNumber.trim();
+        if (dateOfIncorporation) profile.dateOfIncorporation = new Date(dateOfIncorporation);
+        if (numberOfEmployees) profile.numberOfEmployees = numberOfEmployees.trim();
+        if (industry) profile.industry = industry.trim();
+        if (description) profile.description = description.trim();
+        if (registeredAddress) profile.registeredAddress = registeredAddress.trim();
+        if (operationalAddress) profile.operationalAddress = operationalAddress.trim();
+        if (gstNumber) profile.gstNumber = gstNumber.trim().toUpperCase();
+        if (panNumber) profile.panNumber = panNumber.trim().toUpperCase();
+
+        if (!profile.completedSteps.includes('DETAILS')) {
+            profile.completedSteps.push('DETAILS');
+        }
+        profile.lastStep = Math.max(profile.lastStep || 1, 3);
+
+        await profile.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Business details updated successfully.',
+            profile
         });
     } catch (error) {
         next(error);
@@ -824,13 +958,63 @@ export const uploadCompanyDocument = async (req, res, next) => {
             {
                 documentUrl: `/uploads/verification/${randomName}`,
                 storageKey: randomName,
+                fileName: req.file.originalname,
+                fileSize: req.file.size,
+                mimeType: req.file.mimetype,
                 status: 'PENDING',
                 rejectionReason: null
             },
             { upsert: true, new: true }
         );
 
+        // Check if mandatory documents are uploaded
+        const mandatoryDocs = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN'];
+        const allDocs = await CompanyVerificationDocument.find({ companyId });
+        const hasAllMandatory = mandatoryDocs.every(type => allDocs.some(d => d.documentType === type));
+
+        const profile = await CompanyProfile.findOne({ userId: companyId });
+        if (profile) {
+            if (hasAllMandatory && !profile.completedSteps.includes('DOCUMENTS')) {
+                profile.completedSteps.push('DOCUMENTS');
+            }
+            profile.lastStep = Math.max(profile.lastStep || 1, 3);
+            await profile.save();
+        }
+
         return res.status(200).json({ success: true, message: 'Document uploaded successfully.', document });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteCompanyDocument = async (req, res, next) => {
+    try {
+        const companyId = req.user.userId;
+        const { id } = req.params; // document ID or documentType
+
+        const query = { companyId };
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+            query._id = id;
+        } else {
+            query.documentType = id;
+        }
+
+        const document = await CompanyVerificationDocument.findOne(query);
+        if (!document) {
+            return res.status(404).json({ success: false, message: 'Document not found.' });
+        }
+
+        // Try deleting file from disk
+        if (document.storageKey) {
+            const filePath = path.resolve('uploads/verification', document.storageKey);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        await CompanyVerificationDocument.deleteOne({ _id: document._id });
+
+        return res.status(200).json({ success: true, message: 'Document removed successfully.' });
     } catch (error) {
         next(error);
     }
@@ -844,7 +1028,7 @@ export const submitCompanyVerification = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Company profile not found.' });
         }
 
-        // Validate completeness
+        // Validate completeness of documents
         const requiredDocs = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN'];
         const uploadedDocs = await CompanyVerificationDocument.find({ companyId });
 
@@ -860,6 +1044,19 @@ export const submitCompanyVerification = async (req, res, next) => {
 
         const beforeSnapshot = JSON.parse(JSON.stringify(profile));
         profile.verificationStatus = 'UNDER_REVIEW';
+        profile.submittedAt = new Date();
+        profile.submittedBy = companyId;
+        if (!profile.completedSteps.includes('REVIEW')) profile.completedSteps.push('REVIEW');
+        if (!profile.completedSteps.includes('VERIFICATION')) profile.completedSteps.push('VERIFICATION');
+        profile.lastStep = 5;
+
+        profile.reviewHistory.push({
+            action: 'SUBMITTED',
+            reason: 'KYC Verification application submitted by company.',
+            actor: companyId,
+            timestamp: new Date()
+        });
+
         await profile.save();
 
         // Audit Log
@@ -897,4 +1094,5 @@ export const submitCompanyVerification = async (req, res, next) => {
         next(error);
     }
 };
+
 

@@ -3,7 +3,7 @@ import {
     getPendingWorkers, verifyWorker, viewDocumentDetails,
     createCategory, getCategories, deleteCategory, createCommissionRule, getCommissionRules,
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
-    getCompanies, verifyCompany, rejectCompany, suspendCompany, activateCompany,
+    getCompanies, getCompanyVerificationsList, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
     getCompanyVerificationAdmin, requestInfoCompanyVerification,
 } from '../controllers/adminController.js';
@@ -104,6 +104,13 @@ router.post('/ledger/manual', requirePermission('payments.manage'), postManualJo
 
 // ── Company Administration ───────────────────────────────────────────────────
 router.get('/companies', requirePermission('users.read'), getCompanies);
+router.get('/company-verifications', requirePermission('users.read'), getCompanyVerificationsList);
+router.get('/company-verifications/:id', requirePermission('users.read'), getCompanyVerificationAdmin);
+router.post('/company-verifications/:id/approve', requirePermission('users.manage'), verifyCompany);
+router.post('/company-verifications/:id/reject', requirePermission('users.manage'), rejectCompany);
+router.post('/company-verifications/:id/request-information', requirePermission('users.manage'), requestInfoCompanyVerification);
+router.post('/company-verifications/:id/resubmission', requirePermission('users.manage'), requestInfoCompanyVerification);
+
 router.get('/companies/:id/verification', requirePermission('users.read'), getCompanyVerificationAdmin);
 router.patch('/companies/:id/verification/approve', requirePermission('users.manage'), verifyCompany);
 router.patch('/companies/:id/verification/request-information', requirePermission('users.manage'), requestInfoCompanyVerification);

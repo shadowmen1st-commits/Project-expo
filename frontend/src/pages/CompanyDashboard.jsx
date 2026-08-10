@@ -300,6 +300,38 @@ export default function CompanyDashboard() {
                     </div>
                 )}
 
+                {/* Verification Status Banner */}
+                {companyInfo && companyInfo.verificationStatus !== 'VERIFIED' && companyInfo.verificationStatus !== 'APPROVED' && (
+                    <div className="mb-6 bg-white border border-[#FFF7D6] rounded-2xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 bg-[#FFF7D6] text-[#F97316] rounded-xl flex-shrink-0">
+                                <Clock className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-sm text-[#171717]">
+                                    {companyInfo.verificationStatus === 'DRAFT' && 'Verification Incomplete'}
+                                    {(companyInfo.verificationStatus === 'PENDING' || companyInfo.verificationStatus === 'UNDER_REVIEW') && 'KYC Verification Under Review'}
+                                    {(companyInfo.verificationStatus === 'NEEDS_INFORMATION' || companyInfo.verificationStatus === 'RESUBMISSION_REQUIRED') && 'Action Required: Information Requested'}
+                                    {companyInfo.verificationStatus === 'REJECTED' && 'KYC Verification Rejected'}
+                                </h3>
+                                <p className="text-xs text-[#78716C] mt-0.5">
+                                    {(companyInfo.verificationStatus === 'DRAFT' || !companyInfo.verificationStatus) && 'Complete your 5-step company KYC verification to unlock job posting.'}
+                                    {(companyInfo.verificationStatus === 'PENDING' || companyInfo.verificationStatus === 'UNDER_REVIEW') && 'Your verification details have been submitted and are being reviewed by the compliance admin.'}
+                                    {(companyInfo.verificationStatus === 'NEEDS_INFORMATION' || companyInfo.verificationStatus === 'RESUBMISSION_REQUIRED') && (companyInfo.needsInfoReason || companyInfo.rejectionReason || 'Please provide additional details or document updates.')}
+                                    {companyInfo.verificationStatus === 'REJECTED' && (companyInfo.rejectionReason || 'Your application was rejected. Please review feedback.')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => navigate('/company/verification')}
+                            className="bg-[#F97316] hover:bg-orange-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl cursor-pointer shadow-sm transition-all whitespace-nowrap"
+                        >
+                            {companyInfo.verificationStatus === 'DRAFT' ? 'Start Verification' : 'View Verification Status'}
+                        </button>
+                    </div>
+                )}
+
                 {/* Dashboard Tab */}
                 {activeTab === 'dashboard' && stats && (
                     <div className="space-y-8">
