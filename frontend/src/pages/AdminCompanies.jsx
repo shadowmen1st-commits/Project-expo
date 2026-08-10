@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../config/api';
 import { ShieldCheck, XCircle, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +13,7 @@ export default function AdminCompanies() {
     const fetchCompanies = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('/api/admin/companies');
+            const res = await axios.get('/admin/companies');
             setCompanies(res.data.data);
         } catch (err) {
             setError('Failed to retrieve companies.');
@@ -28,7 +28,7 @@ export default function AdminCompanies() {
 
     const handleAction = async (id, action) => {
         try {
-            await axios.post(`/api/admin/companies/${id}/${action}`);
+            await axios.post(`/admin/companies/${id}/${action}`);
             setSuccess(`Company ${action} action executed successfully.`);
             fetchCompanies();
         } catch (err) {

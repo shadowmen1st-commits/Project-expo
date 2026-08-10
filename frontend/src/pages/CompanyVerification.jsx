@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../config/api';
 import { 
     ShieldCheck, 
     FileText, 
@@ -33,7 +33,7 @@ export default function CompanyVerification() {
 
     const fetchVerificationStatus = async () => {
         try {
-            const res = await axios.get('/api/company/verification');
+            const res = await axios.get('/company/verification');
             setStatusData(res.data);
         } catch (err) {
             setError('Failed to fetch verification status.');
@@ -83,7 +83,7 @@ export default function CompanyVerification() {
 
         try {
             setUploadProgress(prev => ({ ...prev, [type]: 50 }));
-            await axios.post('/api/company/verification/documents', formData, {
+            await axios.post('/company/verification/documents', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setUploadProgress(prev => ({ ...prev, [type]: 100 }));
@@ -105,7 +105,7 @@ export default function CompanyVerification() {
         setError('');
         setSuccess('');
         try {
-            await axios.post('/api/company/verification/submit');
+            await axios.post('/company/verification/submit');
             setSuccess('KYC Verification submitted successfully.');
             // Reload user session to update state in guard
             window.location.reload();

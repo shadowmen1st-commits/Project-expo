@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../config/api';
 import { 
     ArrowLeft, 
     CheckCircle2, 
@@ -30,7 +30,7 @@ export default function AdminCompanyVerification() {
 
     const fetchVerificationData = async () => {
         try {
-            const res = await axios.get(`/api/admin/companies/${id}/verification`);
+            const res = await axios.get(`/admin/companies/${id}/verification`);
             setProfile(res.data.profile);
             setDocuments(res.data.documents);
         } catch (err) {
@@ -48,7 +48,7 @@ export default function AdminCompanyVerification() {
         setError('');
         setSuccess('');
         try {
-            await axios.patch(`/api/admin/companies/${id}/verification/approve`);
+            await axios.patch(`/admin/companies/${id}/verification/approve`);
             setSuccess('Company verified successfully.');
             fetchVerificationData();
         } catch (err) {
@@ -67,18 +67,18 @@ export default function AdminCompanyVerification() {
         setSuccess('');
         try {
             if (activeModal === 'info') {
-                await axios.patch(`/api/admin/companies/${id}/verification/request-information`, {
+                await axios.patch(`/admin/companies/${id}/verification/request-information`, {
                     reason: modalReason,
                     rejectedDocuments: selectedDocIds
                 });
                 setSuccess('Request for information sent.');
             } else if (activeModal === 'reject') {
-                await axios.patch(`/api/admin/companies/${id}/verification/reject`, {
+                await axios.patch(`/admin/companies/${id}/verification/reject`, {
                     reason: modalReason
                 });
                 setSuccess('Company KYC verification rejected.');
             } else if (activeModal === 'suspend') {
-                await axios.patch(`/api/admin/companies/${id}/suspend`, {
+                await axios.patch(`/admin/companies/${id}/suspend`, {
                     reason: modalReason
                 });
                 setSuccess('Company account suspended.');

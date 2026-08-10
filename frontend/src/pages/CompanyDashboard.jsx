@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import CompanySidebar from '../components/CompanySidebar';
 import { 
@@ -91,17 +91,17 @@ export default function CompanyDashboard() {
         setLoading(true);
         try {
             const [meRes, dashRes, jobsRes, appRes, workerRes, teamRes, attendRes, walletRes, payRes, repRes, notifRes] = await Promise.all([
-                axios.get('/api/company/me'),
-                axios.get('/api/company/dashboard'),
-                axios.get('/api/company/jobs'),
-                axios.get('/api/company/applications'),
-                axios.get('/api/company/workers'),
-                axios.get('/api/company/teams'),
-                axios.get('/api/company/attendance'),
-                axios.get('/api/company/wallet'),
-                axios.get('/api/company/payments'),
-                axios.get('/api/company/reports'),
-                axios.get('/api/company/notifications')
+                axios.get('/company/me'),
+                axios.get('/company/dashboard'),
+                axios.get('/company/jobs'),
+                axios.get('/company/applications'),
+                axios.get('/company/workers'),
+                axios.get('/company/teams'),
+                axios.get('/company/attendance'),
+                axios.get('/company/wallet'),
+                axios.get('/company/payments'),
+                axios.get('/company/reports'),
+                axios.get('/company/notifications')
             ]);
 
             setCompanyInfo(meRes.data.profile);
@@ -148,7 +148,7 @@ export default function CompanyDashboard() {
                 requiredSkills: newJob.requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
                 applicationDeadline: newJob.workingDate // simple default
             };
-            await axios.post('/api/company/jobs', data);
+            await axios.post('/company/jobs', data);
             setSuccess('Job created successfully.');
             setActiveTab('jobs');
         } catch (err) {
@@ -164,7 +164,7 @@ export default function CompanyDashboard() {
                 leaderId: newTeam.leaderId || undefined,
                 members: newTeam.members.split(',').map(m => m.trim()).filter(Boolean)
             };
-            await axios.post('/api/company/teams', data);
+            await axios.post('/company/teams', data);
             setSuccess('Team created successfully.');
             setActiveTab('teams');
         } catch (err) {
@@ -180,7 +180,7 @@ export default function CompanyDashboard() {
                 workerIds: newAssignment.workerIds ? newAssignment.workerIds.split(',').map(id => id.trim()).filter(Boolean) : undefined,
                 teamId: newAssignment.teamId || undefined
             };
-            await axios.post('/api/company/assignments', data);
+            await axios.post('/company/assignments', data);
             setSuccess('Workers assigned successfully.');
             setActiveTab('workers');
         } catch (err) {
@@ -191,7 +191,7 @@ export default function CompanyDashboard() {
     const handleAttendanceSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/company/attendance', newAttendance);
+            await axios.post('/company/attendance', newAttendance);
             setSuccess('Attendance recorded successfully.');
             setActiveTab('attendance');
         } catch (err) {
@@ -203,7 +203,7 @@ export default function CompanyDashboard() {
         e.preventDefault();
         try {
             const amount = Number(depositAmount) * 100; // to paise
-            await axios.post('/api/company/wallet/add', { amount });
+            await axios.post('/company/wallet/add', { amount });
             setSuccess('Money deposited successfully.');
             setDepositAmount('');
             fetchData();
@@ -214,7 +214,7 @@ export default function CompanyDashboard() {
 
     const handleApplicationAction = async (id, action) => {
         try {
-            await axios.patch(`/api/company/applications/${id}/${action}`);
+            await axios.patch(`/company/applications/${id}/${action}`);
             setSuccess(`Application ${action}ed successfully.`);
             fetchData();
         } catch (err) {
@@ -224,7 +224,7 @@ export default function CompanyDashboard() {
 
     const handleReleasePayment = async (assignmentId) => {
         try {
-            await axios.post('/api/company/payments/release', { assignmentId });
+            await axios.post('/company/payments/release', { assignmentId });
             setSuccess('Payment released successfully.');
             fetchData();
         } catch (err) {
