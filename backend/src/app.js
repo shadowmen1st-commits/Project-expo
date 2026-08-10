@@ -36,7 +36,10 @@ export const createApp = () => {
     
     // Structured JSON Logging
     app.use(pinoHttp({ logger }));
-    
+
+    // Health Check (Public - before any middleware)
+    app.get('/health', (_req, res) => res.status(200).json({ status: 'ok', service: 'project-expo-api', timestamp: new Date().toISOString() }));
+
     app.use(helmet());
     const isOriginAllowed = (origin) => {
         if (!origin) return true;
@@ -98,7 +101,6 @@ export const createApp = () => {
         message: { statusCode: 429, errorCode: 'TOO_MANY_REQUESTS', message: 'Too many health check requests.' }
     });
 
-    app.get('/health', healthLimiter, (_req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
     app.get('/ready', healthLimiter, async (_req,res) => { try { if(mongoose.connection.readyState!==1)return res.status(503).json({status:'NOT_READY',database:'DOWN'});await mongoose.connection.db.admin().ping();const deadLetters=await NotificationOutbox.countDocuments({status:'DEAD_LETTER'});res.status(200).json({status:'READY',database:'UP',outbox:{dispatcher:'AVAILABLE',deadLetters}});}catch{res.status(503).json({status:'NOT_READY',database:'DOWN'});} });
     app.use(errorHandler);
     return app;

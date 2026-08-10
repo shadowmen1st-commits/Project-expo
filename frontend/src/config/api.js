@@ -24,14 +24,7 @@ api.interceptors.request.use(config => {
 let refreshPromise = null;
 api.interceptors.response.use(response => response, async error => {
     const request = error.config;
-    console.log("API ERROR:", {
-        url: request?.url,
-        method: request?.method,
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-        headers: request?.headers
-    });
+    console.log(`API ERROR: url=${request?.url} method=${request?.method} status=${error.response?.status} data=${JSON.stringify(error.response?.data)} message=${error.message}`);
     const isAuthRequest = ['/auth/login','/auth/register','/auth/refresh'].some(path => request?.url?.includes(path));
     if (error.response?.status === 401 && request && !request._retry && !isAuthRequest) {
         request._retry = true;

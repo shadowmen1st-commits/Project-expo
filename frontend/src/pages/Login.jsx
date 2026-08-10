@@ -104,7 +104,7 @@ export const Login = () => {
             </div>
 
             {/* Right Form Panel */}
-            <div className="lg:w-1/2 bg-[#FFFBEB] p-8 lg:p-16 flex items-center justify-center">
+            <div className="lg:w-1/2 bg-[#FFFBEB] p-8 lg:p-16 flex items-center justify-center overflow-y-auto">
                 <div className="w-full max-w-md space-y-8 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
                     <div>
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-[#111827] tracking-tight">Welcome back</h2>
