@@ -26,13 +26,13 @@ const testUsers = [
     {
         name: 'System Admin',
         email: 'admin@test.com',
-        password: 'Admin@12345',
+        password: 'Admin@012345',
         role: 'ADMIN',
     },
     {
         name: 'Test Worker',
         email: 'worker@test.com',
-        password: 'Worker@12345',
+        password: 'Worker@012345',
         role: 'WORKER',
     },
     {
@@ -44,7 +44,7 @@ const testUsers = [
     {
         name: 'Test Company',
         email: 'company@test.com',
-        password: 'Company@12345',
+        password: 'Company@012345',
         role: 'COMPANY',
     }
 ];

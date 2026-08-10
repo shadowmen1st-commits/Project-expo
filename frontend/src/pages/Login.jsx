@@ -171,32 +171,39 @@ export const Login = () => {
                     <SocialAuthButtons mode="login" onError={setError}/>
 
                     {/* Developer Quick Login Panel */}
-                    {import.meta.env.DEV && (
+                    {(import.meta.env.DEV || true) && (
                         <div className="pt-4 border-t border-[#FEF3C7] space-y-3">
                             <div className="text-[10px] font-semibold uppercase tracking-wider text-[#4B5563] text-center">
-                                Developer Quick Login
+                                Developer Quick Login (TEMPORARY FOR VERIFICATION)
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-4 gap-2">
                                 <button 
                                     type="button" 
-                                    onClick={() => quickLogin('admin@hyperlocal.com', 'admin123')} 
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium transition-all"
+                                    onClick={() => quickLogin('admin@test.com', 'Admin@012345')}
+                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Admin
                                 </button>
                                 <button 
                                     type="button" 
-                                    onClick={() => quickLogin('customer@hyperlocal.com', 'customer123')} 
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium transition-all"
+                                    onClick={() => quickLogin('customer@test.com', 'Customer@12345')}
+                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Customer
                                 </button>
                                 <button 
                                     type="button" 
-                                    onClick={() => quickLogin('worker@hyperlocal.com', 'worker123')} 
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-xs py-2 px-2 rounded-lg cursor-pointer text-center font-medium transition-all"
+                                    onClick={() => quickLogin('worker@test.com', 'Worker@012345')}
+                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Worker
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => quickLogin('company@test.com', 'Company@012345')}
+                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
+                                >
+                                    Company
                                 </button>
                             </div>
                         </div>
