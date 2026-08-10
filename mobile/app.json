@@ -22,7 +22,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "backgroundColor": "#FFFBEB"
       },
-      "package": "com.hyperlocal.app"
+      "package": "com.hyperlocal.app",
+      "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"]
     },
     "plugins": [
       "expo-router",
@@ -31,6 +32,9 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://project-expo-md70.onrender.com/api"
     }
   }
 }

@@ -126,10 +126,10 @@ const seed = async () => {
         }
 
         console.log('\nSeed completed successfully.');
-        console.log('ADMIN    admin@test.com / Admin@12345');
-        console.log('WORKER   worker@test.com / Worker@12345');
+        console.log('ADMIN    admin@test.com / Admin@012345');
+        console.log('WORKER   worker@test.com / Worker@012345');
         console.log('CUSTOMER customer@test.com / Customer@12345');
-        console.log('COMPANY  company@test.com / Company@12345');
+        console.log('COMPANY  company@test.com / Company@012345');
 
         process.exit(0);
     } catch (error) {
