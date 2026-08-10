@@ -16,6 +16,15 @@ const users = [
         phoneVerified: true
     },
     {
+        name: "Test Customer User",
+        email: "user@test.com",
+        password: "Customer@12345",
+        role: "CUSTOMER",
+        status: "ACTIVE",
+        emailVerified: true,
+        phoneVerified: true
+    },
+    {
         name: "Test Customer",
         email: "customer@test.com",
         password: "Customer@12345",
