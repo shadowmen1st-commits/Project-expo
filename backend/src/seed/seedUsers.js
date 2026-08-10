@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import WorkerProfile from "../models/WorkerProfile.js";
+import WorkerWallet from "../models/WorkerWallet.js";
 import CompanyProfile from "../models/CompanyProfile.js";
 import CompanyWallet from "../models/CompanyWallet.js";
 
@@ -12,7 +13,7 @@ const users = [
     {
         name: "Test Customer",
         email: "user@test.com",
-        phone: "+15550001001",
+        phone: "9990001001",
         password: "Customer@12345",
         role: "CUSTOMER",
         status: "ACTIVE",
@@ -24,7 +25,7 @@ const users = [
     {
         name: "Test Customer Legacy",
         email: "customer@test.com",
-        phone: "+15550001005",
+        phone: "9990001005",
         password: "Customer@12345",
         role: "CUSTOMER",
         status: "ACTIVE",
@@ -36,7 +37,7 @@ const users = [
     {
         name: "Test Worker",
         email: "worker@test.com",
-        phone: "+15550001002",
+        phone: "9990001002",
         password: "Worker@12345",
         role: "WORKER",
         status: "ACTIVE",
@@ -48,7 +49,7 @@ const users = [
     {
         name: "Test Company",
         email: "company@test.com",
-        phone: "+15550001003",
+        phone: "9990001003",
         password: "Company@12345",
         role: "COMPANY",
         status: "ACTIVE",
@@ -60,7 +61,7 @@ const users = [
     {
         name: "Test Admin",
         email: "admin@test.com",
-        phone: "+15550001004",
+        phone: "9990001004",
         password: "Admin@12345",
         role: "ADMIN",
         status: "ACTIVE",
@@ -130,6 +131,14 @@ async function seedUsers() {
                         isPubliclyVisible: true,
                         skills: ['Home Cleaning', 'Plumbing'],
                         hourlyRate: 50
+                    });
+                }
+                const ww = await WorkerWallet.findOne({ workerId: userDoc._id });
+                if (!ww) {
+                    await WorkerWallet.create({
+                        workerId: userDoc._id,
+                        availableBalancePaise: 500000,
+                        pendingBalancePaise: 0
                     });
                 }
             } else if (u.role === 'COMPANY') {
