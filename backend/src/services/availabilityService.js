@@ -74,8 +74,56 @@ export class AvailabilityService {
             throw error;
         }
 
-        // 5. Working Hours & Days Check
-        const dayOfWeek = startDate.getDay(); // 0 (Sun) - 6 (Sat)
+        // 5. Working Hours & Days Check (Timezone-Aware)
+        const WEEKDAYS = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        const targetTimeZone = workerProfile.timezone || 'Asia/Kolkata';
+
+        const getZonedParts = (date, timeZone) => {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+                weekday: 'short',
+            });
+            const parts = {};
+            formatter.formatToParts(date).forEach((p) => {
+                if (p.type !== 'literal') parts[p.type] = p.value;
+            });
+            return parts;
+        };
+
+        const getUtcDateForZoneTime = (year, month, day, hour, minute, second = 0, timeZone = 'Asia/Kolkata') => {
+            const pad = (n) => String(n).padStart(2, '0');
+            const approx = new Date(`${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:${pad(second)}.000Z`);
+            const p = getZonedParts(approx, timeZone);
+            const targetWallMs = Date.UTC(
+                Number(p.year),
+                Number(p.month) - 1,
+                Number(p.day),
+                Number(p.hour) % 24,
+                Number(p.minute),
+                Number(p.second)
+            );
+            const approxMs = approx.getTime();
+            const offsetMs = targetWallMs - approxMs;
+            const desiredWallMs = Date.UTC(
+                Number(year),
+                Number(month) - 1,
+                Number(day),
+                Number(hour),
+                Number(minute),
+                Number(second)
+            );
+            return new Date(desiredWallMs - offsetMs);
+        };
+
+        const startParts = getZonedParts(startDate, targetTimeZone);
+        const dayOfWeek = WEEKDAYS[startParts.weekday];
         const daySchedule = (workerProfile.availability || []).find((s) => s.day === dayOfWeek);
 
         if (daySchedule && !daySchedule.isWorking) {
@@ -89,13 +137,14 @@ export class AvailabilityService {
             const [startHour, startMin] = daySchedule.start.split(':').map(Number);
             const [endHour, endMin] = daySchedule.end.split(':').map(Number);
 
-            const workStart = new Date(startDate);
-            workStart.setHours(startHour, startMin, 0, 0);
+            const year = Number(startParts.year);
+            const month = Number(startParts.month);
+            const day = Number(startParts.day);
 
-            const workEnd = new Date(startDate);
-            workEnd.setHours(endHour, endMin, 0, 0);
+            const workStartUtc = getUtcDateForZoneTime(year, month, day, startHour, startMin, 0, targetTimeZone);
+            const workEndUtc = getUtcDateForZoneTime(year, month, day, endHour, endMin, 0, targetTimeZone);
 
-            if (startDate.getTime() < workStart.getTime() || endDate.getTime() > workEnd.getTime()) {
+            if (startDate.getTime() < workStartUtc.getTime() || endDate.getTime() > workEndUtc.getTime()) {
                 const error = new Error(`Worker operates between ${daySchedule.start} and ${daySchedule.end}.`);
                 error.statusCode = 409;
                 error.errorCode = 'WORKER_TIME_SLOT_UNAVAILABLE';
@@ -103,10 +152,11 @@ export class AvailabilityService {
             }
         }
 
-        // 6. Leave Dates Check
-        const startDateStr = startDate.toISOString().split('T')[0];
+        // 6. Leave Dates Check (Timezone-Aware)
+        const startDateStr = `${startParts.year}-${startParts.month}-${startParts.day}`;
         const hasLeave = (workerProfile.leaveDates || []).some((ld) => {
-            const leaveStr = new Date(ld).toISOString().split('T')[0];
+            const leaveParts = getZonedParts(new Date(ld), targetTimeZone);
+            const leaveStr = `${leaveParts.year}-${leaveParts.month}-${leaveParts.day}`;
             return leaveStr === startDateStr;
         });
 
