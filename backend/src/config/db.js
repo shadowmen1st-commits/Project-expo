@@ -17,19 +17,21 @@ export const connectDB = async () => {
             console.log('MongoDB Memory ReplSet successfully connected for testing.');
         } else {
             try {
-                await mongoose.connect(config.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-                console.log('MongoDB successfully connected to primary MONGODB_URI.');
+                const dbName = process.env.DB_NAME || 'hyperlocal';
+                await mongoose.connect(config.MONGODB_URI, { dbName, serverSelectionTimeoutMS: 5000 });
+                const host = mongoose.connection.host || 'MongoDB Atlas';
+                console.log(`✅ MongoDB Connected to database: ${mongoose.connection.name} (host: ${host}, NODE_ENV: ${process.env.NODE_ENV || 'development'})`);
             } catch (err) {
                 console.warn('⚠️ Primary MongoDB connection failed:', err.message);
                 try {
-                    await mongoose.connect('mongodb://127.0.0.1:27017/marketplace', { serverSelectionTimeoutMS: 3000 });
-                    console.log('MongoDB connected to local fallback database (mongodb://127.0.0.1:27017/marketplace).');
+                    await mongoose.connect('mongodb://127.0.0.1:27017/hyperlocal', { dbName: 'hyperlocal', serverSelectionTimeoutMS: 3000 });
+                    console.log(`MongoDB connected to local fallback database (hyperlocal).`);
                 } catch {
                     console.log('Starting MongoMemoryReplSet as fallback for database resilience...');
                     const { MongoMemoryReplSet } = await import('mongodb-memory-server');
                     mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
                     const uri = mongoServer.getUri();
-                    await mongoose.connect(uri);
+                    await mongoose.connect(uri, { dbName: 'hyperlocal' });
                     await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
                     console.log('MongoDB Memory ReplSet fallback successfully connected.');
                 }

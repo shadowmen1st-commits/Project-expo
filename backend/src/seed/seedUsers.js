@@ -81,11 +81,11 @@ async function seedUsers() {
         }
         
         try {
-            await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
-            console.log("MongoDB Connected to MONGODB_URI");
+            await mongoose.connect(uri, { dbName: 'hyperlocal', serverSelectionTimeoutMS: 5000 });
+            console.log(`MongoDB Connected to database: ${mongoose.connection.name}`);
         } catch (err) {
-            console.warn("⚠️ MONGODB_URI failed, connecting to local fallback mongodb://127.0.0.1:27017/marketplace...");
-            await mongoose.connect('mongodb://127.0.0.1:27017/marketplace');
+            console.warn("⚠️ MONGODB_URI failed, connecting to local fallback mongodb://127.0.0.1:27017/hyperlocal...");
+            await mongoose.connect('mongodb://127.0.0.1:27017/hyperlocal', { dbName: 'hyperlocal' });
         }
 
         for (const u of users) {
