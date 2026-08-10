@@ -179,7 +179,7 @@ export const Login = () => {
                             <div className="grid grid-cols-4 gap-2">
                                 <button 
                                     type="button" 
-                                    onClick={() => quickLogin('admin@test.com', 'Admin@012345')}
+                                    onClick={() => quickLogin('admin@test.com', 'Admin@12345')}
                                     className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Admin
@@ -193,14 +193,14 @@ export const Login = () => {
                                 </button>
                                 <button 
                                     type="button" 
-                                    onClick={() => quickLogin('worker@test.com', 'Worker@012345')}
+                                    onClick={() => quickLogin('worker@test.com', 'Worker@12345')}
                                     className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Worker
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => quickLogin('company@test.com', 'Company@012345')}
+                                    onClick={() => quickLogin('company@test.com', 'Company@12345')}
                                     className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
                                 >
                                     Company
