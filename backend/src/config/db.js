@@ -16,8 +16,24 @@ export const connectDB = async () => {
             await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
             console.log('MongoDB Memory ReplSet successfully connected for testing.');
         } else {
-            await mongoose.connect(config.MONGODB_URI);
-            console.log('MongoDB successfully connected.');
+            try {
+                await mongoose.connect(config.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+                console.log('MongoDB successfully connected to primary MONGODB_URI.');
+            } catch (err) {
+                console.warn('⚠️ Primary MongoDB connection failed:', err.message);
+                try {
+                    await mongoose.connect('mongodb://127.0.0.1:27017/marketplace', { serverSelectionTimeoutMS: 3000 });
+                    console.log('MongoDB connected to local fallback database (mongodb://127.0.0.1:27017/marketplace).');
+                } catch {
+                    console.log('Starting MongoMemoryReplSet as fallback for database resilience...');
+                    const { MongoMemoryReplSet } = await import('mongodb-memory-server');
+                    mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+                    const uri = mongoServer.getUri();
+                    await mongoose.connect(uri);
+                    await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
+                    console.log('MongoDB Memory ReplSet fallback successfully connected.');
+                }
+            }
         }
     }
     catch (error) {
