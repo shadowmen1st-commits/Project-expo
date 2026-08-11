@@ -4,13 +4,14 @@ import api from '../utils/api';
 import {
     Search, Star, AlertCircle, ShoppingBag, X, Car, Home, Heart, Activity,
     Smile, Utensils, Leaf, Sparkles, Wrench, Zap, Sparkle, Clock, CheckCircle2,
-    Calendar, ShieldAlert, User
+    Calendar, ShieldAlert, User, Eye
 } from 'lucide-react';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
 import CustomerReviewCard from '../components/CustomerReviewCard';
 import Chat from '../components/chat/Chat';
 import UserProfileModal from '../components/UserProfileModal';
+import { WorkerAvatar } from '../components/WorkerAvatar';
 
 const getCategoryIcon = (name) => {
     const n = (name || '').toLowerCase();
@@ -116,7 +117,8 @@ export const CustomerHome = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [chatBooking,setChatBooking]=useState(null);
+    const [chatBooking, setChatBooking] = useState(null);
+    const [viewingProfileWorker, setViewingProfileWorker] = useState(null);
 
     useEffect(() => {
         fetchCategories();
@@ -550,27 +552,15 @@ export const CustomerHome = () => {
                                     <div key={worker.workerId} className="bg-white border border-[#FEF3C7] hover:border-[#F97316]/50 rounded-2xl p-5 flex flex-col justify-between transition-all shadow-md hover:shadow-orange-100/40 hover:-translate-y-0.5 duration-300">
                                         <div>
                                             <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-11 h-11 rounded-xl bg-[#FFEDD5] border border-[#FED7AA] flex items-center justify-center font-bold text-[#F97316] text-sm overflow-hidden flex-shrink-0 relative shadow-sm">
-                                                        {worker.profileImage ? (
-                                                            <img
-                                                                src={worker.profileImage}
-                                                                alt={worker.name}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => {
-                                                                    e.target.style.display = 'none';
-                                                                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                                                                }}
-                                                            />
-                                                        ) : null}
-                                                        <span className={worker.profileImage ? 'hidden flex items-center justify-center w-full h-full' : 'flex items-center justify-center w-full h-full'}>
-                                                            {worker.name ? worker.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'W'}
-                                                        </span>
-                                                    </div>
+                                                <div
+                                                    className="flex items-center gap-3 cursor-pointer group"
+                                                    onClick={() => setViewingProfileWorker(worker)}
+                                                >
+                                                    <WorkerAvatar worker={worker} size="lg" showBadge />
                                                     <div>
                                                         <div className="flex items-center gap-1.5">
-                                                            <h3 className="font-bold text-[#111827] text-sm">{worker.name}</h3>
-                                                            {worker.verificationBadge && (
+                                                            <h3 className="font-bold text-[#111827] text-sm group-hover:text-[#F97316] transition-colors">{worker.name}</h3>
+                                                            {(worker.verificationBadge || worker.verificationStatus === 'APPROVED') && (
                                                                 <span className="bg-[#F0FDF4] text-[#16A34A] text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border border-[#86EFAC] shadow-sm">
                                                                     Verified
                                                                 </span>
@@ -584,17 +574,26 @@ export const CustomerHome = () => {
                                                     {worker.averageRating > 0 ? worker.averageRating.toFixed(1) : 'N/A'}
                                                 </div>
                                             </div>
-                                            <p className="text-[#78716C] text-xs line-clamp-2 mb-4 leading-relaxed">{worker.bio}</p>
+                                            <p className="text-[#78716C] text-xs line-clamp-2 mb-4 leading-relaxed">{worker.bio || 'Verified professional service provider.'}</p>
                                         </div>
 
                                         <div className="pt-3 border-t border-[#FEF3C7] flex items-center justify-between mt-auto">
                                             <div>
                                                 <span className="block text-[9px] text-[#9CA3AF] font-semibold uppercase">Hourly Rate</span>
-                                                <span className="text-sm font-extrabold text-[#F97316]">₹{(worker.hourlyRate / 100).toFixed(0)} <span className="text-[10px] font-normal text-[#4B5563]">/hr</span></span>
+                                                <span className="text-sm font-extrabold text-[#F97316]">₹{((worker.hourlyRate || 0) / 100).toFixed(0)} <span className="text-[10px] font-normal text-[#4B5563]">/hr</span></span>
                                             </div>
-                                            <button onClick={() => handleBookingPrepare(worker)} className="btn-primary-gradient font-bold text-xs py-2 px-4 rounded-xl cursor-pointer">
-                                                Book Worker
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setViewingProfileWorker(worker)}
+                                                    className="px-3 py-1.5 border border-[#FED7AA] bg-[#FFFDF5] hover:bg-[#FFEDD5] text-[#F97316] font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Profile</span>
+                                                </button>
+                                                <button onClick={() => handleBookingPrepare(worker)} className="btn-primary-gradient font-bold text-xs py-2 px-4 rounded-xl cursor-pointer shadow-sm">
+                                                    Book Worker
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -645,11 +644,16 @@ export const CustomerHome = () => {
                                             </span>
                                         </div>
 
-                                        <div className="text-xs space-y-0.5">
-                                            <div className="font-bold text-[#111827]">Worker: {b.worker?.name || 'Assigned Professional'}</div>
-                                            <div className="text-[#4B5563] text-[10px]">{b.category?.name || 'Service'}</div>
-                                            <div className="text-[#9CA3AF] text-[10px]">Start: {new Date(b.scheduledStart).toLocaleString()}</div>
-                                            <div className="text-[#F97316] font-bold text-[11px] pt-1">Total: ₹{(b.totalAmount / 100).toFixed(2)}</div>
+                                        <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-[#FEF3C7]">
+                                            <WorkerAvatar worker={b.worker} size="md" showBadge />
+                                            <div className="text-xs space-y-0.5">
+                                                <div className="font-bold text-[#111827] flex items-center gap-1.5">
+                                                    <span>{b.worker?.name || 'Assigned Professional'}</span>
+                                                </div>
+                                                <div className="text-[#4B5563] text-[10px]">{b.category?.name || 'Service'}</div>
+                                                <div className="text-[#9CA3AF] text-[10px]">Start: {new Date(b.scheduledStart).toLocaleString()}</div>
+                                                <div className="text-[#F97316] font-bold text-[11px]">Total: ₹{(b.totalAmount / 100).toFixed(2)}</div>
+                                            </div>
                                         </div>
 
                                         {b.bookingStatus === 'PAYMENT_PENDING' && (
@@ -766,12 +770,15 @@ export const CustomerHome = () => {
                         <div className="fixed inset-0 lg:relative z-50 lg:z-0 bg-black/50 lg:bg-transparent flex items-end sm:items-center lg:items-stretch justify-center lg:justify-start p-4 lg:p-0">
                             <div className="bg-white border border-[#FEF3C7] rounded-3xl p-6 space-y-4 shadow-xl lg:shadow-md shadow-orange-50/50 w-full max-w-lg lg:max-w-none max-h-[90vh] lg:max-h-none overflow-y-auto lg:overflow-visible animate-in fade-in slide-in-from-bottom-4 lg:animate-none duration-300">
                                 <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-3">
-                                <div>
-                                    <h3 className="font-bold text-[#111827] text-sm">Booking: {selectedWorker.name}</h3>
-                                    <span className="text-[10px] text-[#78716C]">Step {bookingStep} of 2: {bookingStep === 1 ? 'Service Details & Address' : 'Review & Confirm'}</span>
+                                    <div className="flex items-center gap-3">
+                                        <WorkerAvatar worker={selectedWorker} size="md" showBadge />
+                                        <div>
+                                            <h3 className="font-bold text-[#111827] text-sm">{selectedWorker.name}</h3>
+                                            <span className="text-[10px] text-[#78716C]">Step {bookingStep} of 2: {bookingStep === 1 ? 'Service Details & Address' : 'Review & Confirm'}</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setSelectedWorker(null); setBookingStep(1); }} className="text-[#4B5563] hover:text-[#111827] cursor-pointer"><X className="w-4 h-4"/></button>
                                 </div>
-                                <button onClick={() => { setSelectedWorker(null); setBookingStep(1); }} className="text-[#4B5563] hover:text-[#111827] cursor-pointer"><X className="w-4 h-4"/></button>
-                            </div>
 
                             {bookingStep === 1 ? (
                                 <div className="space-y-3">
@@ -925,10 +932,8 @@ export const CustomerHome = () => {
                                     {/* Step 2: Booking Review */}
                                     <div className="bg-[#FFFDF5] border border-[#FEF3C7] rounded-2xl p-4 space-y-3">
                                         <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-lg bg-[#FFEDD5] text-[#F97316] font-bold text-xs flex items-center justify-center">
-                                                    {selectedWorker.name ? selectedWorker.name[0] : 'W'}
-                                                </div>
+                                            <div className="flex items-center gap-3">
+                                                <WorkerAvatar worker={selectedWorker} size="md" showBadge />
                                                 <div>
                                                     <h4 className="font-bold text-xs text-[#111827]">{selectedWorker.name}</h4>
                                                     <span className="text-[10px] text-[#78716C]">{categories.find(c => c._id === selectedBookingCategory)?.name || 'Service'}</span>
@@ -1013,7 +1018,113 @@ export const CustomerHome = () => {
                     )}
                 </div>
             </div>
-            {chatBooking&&<div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4"><div className="w-full max-w-xl h-[70vh]"><Chat bookingId={chatBooking.id} participantName={chatBooking.worker?.name||'Assigned Worker'} onClose={()=>setChatBooking(null)}/></div></div>}
+            {/* Worker Profile Detail Modal */}
+            {viewingProfileWorker && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#FEF3C7] rounded-3xl p-6 space-y-5 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-3">
+                            <h3 className="font-bold text-[#111827] text-base">Worker Profile</h3>
+                            <button
+                                onClick={() => setViewingProfileWorker(null)}
+                                className="text-[#4B5563] hover:text-[#111827] cursor-pointer p-1 rounded-lg hover:bg-gray-100"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Profile Header */}
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left bg-[#FFFDF5] border border-[#FEF3C7] p-4 rounded-2xl">
+                            <WorkerAvatar worker={viewingProfileWorker} size="2xl" showBadge />
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-center sm:justify-start gap-2">
+                                    <h2 className="text-lg font-extrabold text-[#111827]">{viewingProfileWorker.name}</h2>
+                                    {(viewingProfileWorker.verificationBadge || viewingProfileWorker.verificationStatus === 'APPROVED') && (
+                                        <span className="bg-[#F0FDF4] text-[#16A34A] text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-[#86EFAC]">
+                                            ✓ Verified
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-center sm:justify-start gap-3 text-xs text-[#6B7280]">
+                                    <span className="flex items-center gap-1 font-bold text-[#EA580C]">
+                                        <Star className="w-3.5 h-3.5 fill-current" />
+                                        {viewingProfileWorker.averageRating > 0 ? viewingProfileWorker.averageRating.toFixed(1) : 'New'}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{viewingProfileWorker.experienceYears || 0} Years Experience</span>
+                                </div>
+                                <p className="text-xs text-[#F97316] font-bold">
+                                    ₹{((viewingProfileWorker.hourlyRate || 0) / 100).toFixed(0)} <span className="font-normal text-[#6B7280]">/ hour</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Bio / Description */}
+                        {viewingProfileWorker.bio && (
+                            <div>
+                                <h4 className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-1">About Worker</h4>
+                                <p className="text-xs text-[#4B5563] leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    {viewingProfileWorker.bio}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Skills */}
+                        {viewingProfileWorker.skills && viewingProfileWorker.skills.length > 0 && (
+                            <div>
+                                <h4 className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-2">Skills & Specializations</h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {viewingProfileWorker.skills.map((s, i) => (
+                                        <span key={i} className="text-xs bg-[#FFEDD5] text-[#F97316] font-semibold px-2.5 py-1 rounded-xl border border-[#FED7AA]">
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Languages */}
+                        {viewingProfileWorker.languages && viewingProfileWorker.languages.length > 0 && (
+                            <div>
+                                <h4 className="text-xs font-bold text-[#374151] uppercase tracking-wider mb-1">Languages Spoken</h4>
+                                <p className="text-xs text-[#4B5563]">{viewingProfileWorker.languages.join(', ')}</p>
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="pt-3 border-t border-[#FEF3C7] flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => setViewingProfileWorker(null)}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 font-bold text-xs rounded-xl hover:bg-gray-50 cursor-pointer"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const target = viewingProfileWorker;
+                                    setViewingProfileWorker(null);
+                                    handleBookingPrepare(target);
+                                }}
+                                className="btn-primary-gradient font-bold text-xs py-2 px-5 rounded-xl cursor-pointer shadow-md"
+                            >
+                                Book This Worker
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {chatBooking && (
+                <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
+                    <div className="w-full max-w-xl h-[70vh]">
+                        <Chat
+                            bookingId={chatBooking.id}
+                            worker={chatBooking.worker}
+                            participantName={chatBooking.worker?.name || 'Assigned Worker'}
+                            onClose={() => setChatBooking(null)}
+                        />
+                    </div>
+                </div>
+            )}
             <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );

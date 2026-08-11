@@ -445,7 +445,18 @@ export const WorkerDashboard = () => {
                     <WorkerReviewsPanel />
                 </div>
             </div>
-            {chatBooking&&<div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4"><div className="w-full max-w-xl h-[70vh]"><Chat bookingId={chatBooking.id} participantName={chatBooking.customer?.name||'Customer'} onClose={()=>setChatBooking(null)}/></div></div>}
+            {chatBooking && (
+                <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
+                    <div className="w-full max-w-xl h-[70vh]">
+                        <Chat
+                            bookingId={chatBooking.id}
+                            worker={chatBooking.customer}
+                            participantName={chatBooking.customer?.name || 'Customer'}
+                            onClose={() => setChatBooking(null)}
+                        />
+                    </div>
+                </div>
+            )}
             <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );

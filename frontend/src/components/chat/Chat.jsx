@@ -3,11 +3,12 @@ import { io } from 'socket.io-client';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Send, X, Paperclip, AlertCircle, Loader } from 'lucide-react';
+import { WorkerAvatar } from '../WorkerAvatar';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '');
 if (!SOCKET_URL) throw new Error('VITE_SOCKET_URL or VITE_API_URL is required.');
 
-export const Chat = ({ bookingId, participantName, onClose }) => {
+export const Chat = ({ bookingId, worker, participantName, onClose }) => {
     const { user } = useAuth();
     const [socket, setSocket] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -156,13 +157,16 @@ export const Chat = ({ bookingId, participantName, onClose }) => {
         <div className="flex flex-col h-full bg-white rounded-xl shadow-lg border border-[#E7E0D8] overflow-hidden relative">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E7E0D8] bg-[#FFFBF7]">
-                <div>
-                    <h3 className="font-semibold text-[#1C1917]">{participantName || 'Chat'}</h3>
-                    <p className="text-xs text-[#78716C]">Booking #{bookingId.substring(bookingId.length - 6)}</p>
+                <div className="flex items-center gap-2.5">
+                    <WorkerAvatar worker={worker || { name: participantName }} size="sm" showBadge />
+                    <div>
+                        <h3 className="font-semibold text-[#1C1917] text-xs sm:text-sm">{participantName || 'Chat'}</h3>
+                        <p className="text-[10px] text-[#78716C]">Booking #{bookingId.substring(bookingId.length - 6)}</p>
+                    </div>
                 </div>
                 {onClose && (
-                    <button onClick={onClose} className="p-2 hover:bg-[#F4EFE6] rounded-full text-[#44403C] transition-colors">
-                        <X size={20} />
+                    <button onClick={onClose} className="p-2 hover:bg-[#F4EFE6] rounded-full text-[#44403C] transition-colors cursor-pointer">
+                        <X size={18} />
                     </button>
                 )}
             </div>
