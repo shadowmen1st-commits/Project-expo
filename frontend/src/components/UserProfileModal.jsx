@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import {
     X, User, Phone, Mail, Lock, Eye, EyeOff, CheckCircle2,
-    AlertCircle, Globe, Bell, ShieldCheck, Camera, Sparkles, KeyRound, Settings
+    AlertCircle, Globe, Bell, ShieldCheck, Camera, Sparkles, KeyRound, Settings,
+    Trash2, RefreshCw, UploadCloud
 } from 'lucide-react';
 
 export const UserProfileModal = ({ isOpen, onClose }) => {
     const { user, updateUser, restoreSession } = useAuth();
     const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'security' | 'preferences'
+    const fileInputRef = useRef(null);
 
     // Profile state
     const [name, setName] = useState('');
@@ -18,6 +20,13 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSuccess, setProfileSuccess] = useState('');
     const [profileError, setProfileError] = useState('');
+
+    // Photo Upload Drag & Drop State
+    const [isDragging, setIsDragging] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const [uploadSuccess, setUploadSuccess] = useState('');
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
     // Password state
     const [currentPassword, setCurrentPassword] = useState('');
@@ -46,6 +55,104 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
     }, [user, isOpen]);
 
     if (!isOpen || !user) return null;
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+            processAndUploadFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleFileSelect = (e) => {
+        if (e.target?.files && e.target.files.length > 0) {
+            processAndUploadFile(e.target.files[0]);
+        }
+    };
+
+    const processAndUploadFile = async (file) => {
+        setUploadError('');
+        setUploadSuccess('');
+
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            setUploadError('Image must be smaller than 5 MB.');
+            return;
+        }
+
+        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+        const fileName = file.name || '';
+        const fileExt = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : '';
+
+        if (!allowedMimes.includes(file.type.toLowerCase()) && !allowedExts.includes(fileExt)) {
+            setUploadError('Please upload a JPG, PNG, or WEBP image.');
+            return;
+        }
+
+        setUploading(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await api.post('/auth/profile-image', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            if (res.data.success && res.data.profileImage) {
+                const newPhotoUrl = res.data.profileImage;
+                setProfileImage(newPhotoUrl);
+                updateUser({ profileImage: newPhotoUrl });
+                setUploadSuccess('Profile photo uploaded successfully.');
+                setTimeout(() => setUploadSuccess(''), 4000);
+            }
+        } catch (err) {
+            setUploadError(err.response?.data?.message || 'Unable to upload profile photo. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleRemovePhoto = async () => {
+        setUploading(true);
+        setUploadError('');
+        setUploadSuccess('');
+        try {
+            const res = await api.delete('/auth/profile-image');
+            if (res.data.success) {
+                setProfileImage('');
+                updateUser({ profileImage: null });
+                setShowRemoveConfirm(false);
+                setUploadSuccess('Profile photo removed successfully.');
+                setTimeout(() => setUploadSuccess(''), 4000);
+            }
+        } catch (err) {
+            setUploadError(err.response?.data?.message || 'Failed to remove profile photo.');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
@@ -274,19 +381,133 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-1">
-                                    Profile Image URL
+                                <label className="block text-[11px] font-bold text-[#374151] uppercase tracking-wider mb-2">
+                                    Profile Photo
                                 </label>
-                                <div className="relative">
-                                    <Camera className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-2.5" />
+
+                                {/* Drag and Drop Dropzone Container */}
+                                <div
+                                    onDragEnter={handleDragEnter}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                                    tabIndex={0}
+                                    role="button"
+                                    aria-label="Upload profile photo dropzone"
+                                    className={`relative border-2 border-dashed rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                                        isDragging
+                                            ? 'border-[#F97316] bg-[#FFF7D6]/60 shadow-md scale-[1.01]'
+                                            : 'border-[#FED7AA] bg-[#FFFDF5] hover:border-[#F97316] hover:bg-[#FFF7ED]'
+                                    }`}
+                                >
                                     <input
-                                        type="url"
-                                        value={profileImage}
-                                        placeholder="https://example.com/photo.jpg"
-                                        onChange={(e) => setProfileImage(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 text-xs border border-[#FEF3C7] rounded-xl bg-[#FFFDF5] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 outline-none transition-all text-[#111827]"
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                        aria-label="Upload profile photo input"
                                     />
+
+                                    {/* Circular Preview Container */}
+                                    <div className="relative mb-3 group">
+                                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#F97316] to-[#EAB308] text-white flex items-center justify-center font-black text-2xl shadow-md border-4 border-white overflow-hidden">
+                                            {profileImage ? (
+                                                <img
+                                                    src={profileImage}
+                                                    alt={user.name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                            ) : null}
+                                            <span className={profileImage ? 'hidden' : 'block'}>
+                                                {user.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'U'}
+                                            </span>
+                                        </div>
+                                        {uploading && (
+                                            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white">
+                                                <RefreshCw className="w-6 h-6 animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {uploading ? (
+                                        <p className="text-xs font-bold text-[#F97316] animate-pulse">Uploading photo...</p>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs font-bold text-[#111827]">
+                                                Drag & drop your photo here <span className="font-normal text-[#6B7280]">or</span> <span className="text-[#F97316] underline">Click to upload</span>
+                                            </p>
+                                            <p className="text-[10px] text-[#9CA3AF] mt-1">
+                                                JPG, PNG, WEBP • Max 5 MB
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
+
+                                {/* Photo Action Buttons */}
+                                <div className="flex items-center justify-center gap-3 mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploading}
+                                        className="px-3.5 py-1.5 rounded-xl border border-[#FED7AA] bg-white hover:bg-[#FFF7D6] text-[#F97316] text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                                    >
+                                        <Camera className="w-3.5 h-3.5" />
+                                        <span>{profileImage ? 'Change Photo' : 'Upload Photo'}</span>
+                                    </button>
+
+                                    {profileImage && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRemoveConfirm(true)}
+                                            disabled={uploading}
+                                            className="px-3.5 py-1.5 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <span>Remove Photo</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Remove Confirmation Banner */}
+                                {showRemoveConfirm && (
+                                    <div className="mt-3 bg-red-50 border border-red-200 p-3 rounded-xl text-xs text-red-700 flex items-center justify-between gap-2 animate-in fade-in duration-150">
+                                        <span>Are you sure you want to remove your profile photo?</span>
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            <button
+                                                type="button"
+                                                onClick={handleRemovePhoto}
+                                                className="bg-red-600 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-red-700 cursor-pointer"
+                                            >
+                                                Confirm
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowRemoveConfirm(false)}
+                                                className="bg-white border border-gray-300 text-gray-700 px-2.5 py-1 rounded-lg font-bold text-[11px] hover:bg-gray-100 cursor-pointer"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {uploadSuccess && (
+                                    <div className="mt-2 bg-[#F0FDF4] border border-[#86EFAC] p-2.5 rounded-xl text-xs text-[#16A34A] flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                                        <span>{uploadSuccess}</span>
+                                    </div>
+                                )}
+
+                                {uploadError && (
+                                    <div className="mt-2 bg-[#FEF2F2] border border-[#FCA5A5] p-2.5 rounded-xl text-xs text-[#DC2626] flex items-center gap-2">
+                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                        <span>{uploadError}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div>

@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import RefreshToken from '../models/RefreshToken.js';
@@ -7,6 +9,7 @@ import CompanyProfile from '../models/CompanyProfile.js';
 import CompanyWallet from '../models/CompanyWallet.js';
 import { registerSchema, loginSchema } from '../utils/validation.js';
 import { hashPassword, comparePassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/authUtils.js';
+import { validateFileBuffer } from '../utils/fileValidator.js';
 
 const ACCESS_COOKIE='access_token', REFRESH_COOKIE='refreshToken';
 const hashToken = token => crypto.createHash('sha256').update(token).digest('hex');
@@ -31,3 +34,110 @@ export const me=async(req,res,next)=>{try{const user=await User.findById(req.use
 export const updateProfile=async(req,res,next)=>{try{const userId=req.user.userId;const {name,phone,profileImage,preferredLanguage}=req.body;const user=await User.findById(userId);if(!user)return res.status(404).json({success:false,message:'User not found.'});if(name!==undefined&&name.trim())user.name=name.trim();if(phone!==undefined)user.phone=phone.trim()||undefined;if(profileImage!==undefined)user.profileImage=profileImage;if(preferredLanguage!==undefined)user.preferredLanguage=preferredLanguage;await user.save();await audit(user,'AUTH_PROFILE_UPDATED',req,{name:user.name,phone:user.phone});return res.status(200).json({success:true,message:'Profile updated successfully.',user:safeUser(user)});}catch(error){if(error?.code===11000){return res.status(409).json({success:false,errorCode:'PHONE_EXISTS',message:'This phone number is already in use by another account.'});}next(error);}};
 
 export const changePassword=async(req,res,next)=>{try{const userId=req.user.userId;const {currentPassword,newPassword}=req.body;if(!currentPassword||!newPassword){return res.status(400).json({success:false,message:'Both current password and new password are required.'});}if(newPassword.length<6){return res.status(400).json({success:false,message:'New password must be at least 6 characters.'});}const user=await User.findById(userId).select('+passwordHash');if(!user)return res.status(404).json({success:false,message:'User not found.'});if(user.passwordHash){const isMatch=await comparePassword(currentPassword,user.passwordHash);if(!isMatch){return res.status(400).json({success:false,errorCode:'INVALID_CURRENT_PASSWORD',message:'Current password is incorrect.'});}}user.passwordHash=await hashPassword(newPassword);await user.save();await audit(user,'AUTH_PASSWORD_CHANGED',req);return res.status(200).json({success:true,message:'Password changed successfully.'});}catch(error){next(error);}};
+
+export const uploadProfileImage=async(req,res,next)=>{
+    try {
+        const userId = req.user.userId;
+
+        if (!req.file) {
+            return res.status(400).json({
+                statusCode: 400,
+                errorCode: 'FILE_REQUIRED',
+                message: 'No profile photo file uploaded.'
+            });
+        }
+
+        try {
+            validateFileBuffer(req.file.buffer, req.file.originalname, req.file.mimetype, 5 * 1024 * 1024);
+        } catch (fErr) {
+            let msg = 'File security or type check failed.';
+            if (fErr.message === 'FILE_TOO_LARGE') msg = 'Image must be smaller than 5 MB.';
+            else if (['FILE_EXTENSION_NOT_ALLOWED', 'FILE_MIME_NOT_ALLOWED', 'FILE_SIGNATURE_MISMATCH'].includes(fErr.message)) {
+                msg = 'Please upload a JPG, PNG, or WEBP image.';
+            }
+            return res.status(400).json({
+                statusCode: 400,
+                errorCode: fErr.message,
+                message: msg
+            });
+        }
+
+        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedMimes.includes(req.file.mimetype.toLowerCase())) {
+            return res.status(400).json({
+                statusCode: 400,
+                errorCode: 'INVALID_FILE_TYPE',
+                message: 'Please upload a JPG, PNG, or WEBP image.'
+            });
+        }
+
+        const PHOTO_DIR = path.resolve('uploads/profile-photos');
+        if (!fs.existsSync(PHOTO_DIR)) {
+            fs.mkdirSync(PHOTO_DIR, { recursive: true });
+        }
+
+        const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const randomName = `${crypto.randomUUID()}${ext}`;
+        const filePath = path.join(PHOTO_DIR, randomName);
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        const photoUrl = `/api/v1/worker/verification/profile-photo/file/${randomName}`;
+        
+        const user = await User.findByIdAndUpdate(userId, { profileImage: photoUrl }, { new: true });
+        if (!user) {
+            return res.status(404).json({ statusCode: 404, errorCode: 'USER_NOT_FOUND', message: 'User not found.' });
+        }
+
+        if (user.role === 'WORKER') {
+            await WorkerProfile.findOneAndUpdate({ userId }, { profilePhotoId: photoUrl });
+        }
+
+        await audit(user, 'AUTH_PROFILE_IMAGE_UPDATED', req, { profileImage: photoUrl });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Profile photo uploaded successfully.',
+            profileImage: photoUrl,
+            user: safeUser(user)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteProfileImage=async(req,res,next)=>{
+    try {
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ statusCode: 404, errorCode: 'USER_NOT_FOUND', message: 'User not found.' });
+        }
+
+        if (user.profileImage && user.profileImage.includes('/file/')) {
+            const filename = path.basename(user.profileImage);
+            const filePath = path.join(path.resolve('uploads/profile-photos'), filename);
+            if (fs.existsSync(filePath)) {
+                try { fs.unlinkSync(filePath); } catch (e) { console.error('Failed deleting photo file:', e); }
+            }
+        }
+
+        user.profileImage = null;
+        await user.save();
+
+        if (user.role === 'WORKER') {
+            await WorkerProfile.findOneAndUpdate({ userId }, { profilePhotoId: null });
+        }
+
+        await audit(user, 'AUTH_PROFILE_IMAGE_REMOVED', req);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Profile photo removed successfully.',
+            profileImage: null,
+            user: safeUser(user)
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

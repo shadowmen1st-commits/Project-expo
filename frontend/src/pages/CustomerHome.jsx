@@ -413,6 +413,13 @@ export const CustomerHome = () => {
                         <div className="text-sm font-extrabold text-[#F97316]">₹{(walletBalance / 100).toFixed(2)}</div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F97316] to-[#EAB308] text-white flex items-center justify-center font-extrabold text-xs shadow-xs overflow-hidden shrink-0 border border-[#FED7AA]">
+                            {user?.profileImage ? (
+                                <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                            ) : (
+                                <span>{user?.name ? user.name.charAt(0).toUpperCase() : 'C'}</span>
+                            )}
+                        </div>
                         <span className="text-xs sm:text-sm font-semibold text-[#111827] max-w-[80px] sm:max-w-[150px] truncate">{user?.name}</span>
                         <button
                             onClick={() => setIsProfileModalOpen(true)}
