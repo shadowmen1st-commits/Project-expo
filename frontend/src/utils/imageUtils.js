@@ -55,7 +55,14 @@ export const getProfileImageUrl = (userOrUrl) => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const hostOrigin = apiUrl.replace(/\/api(\/v\d+)?\/?$/, '');
 
-    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    let cleanPath = trimmed;
+    if (!trimmed.startsWith('/') && !trimmed.includes('/')) {
+        // Filename only -> construct full relative API route
+        cleanPath = `/api/v1/worker/verification/profile-photo/file/${trimmed}`;
+    } else {
+        cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    }
+
     return `${hostOrigin}${cleanPath}`;
 };
 
