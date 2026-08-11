@@ -3,8 +3,31 @@ import api from '../config/api';
 const AuthContext=createContext(undefined);
 export const AuthProvider=({children})=>{
  const [user,setUser]=useState(null);const [loading,setLoading]=useState(true);
- const restoreSession=useCallback(async()=>{try{const response=await api.get('/auth/me');setUser(response.data.user);}catch{setUser(null);}finally{setLoading(false);}},[]);
- useEffect(()=>{restoreSession();const expired=()=>setUser(null);window.addEventListener('auth:expired',expired);return()=>window.removeEventListener('auth:expired',expired);},[restoreSession]);
+  const restoreSession = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await api.get('/auth/me');
+      setUser(response.data.user);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    restoreSession();
+    const expired = () => {
+      localStorage.removeItem('accessToken');
+      setUser(null);
+    };
+    window.addEventListener('auth:expired', expired);
+    return () => window.removeEventListener('auth:expired', expired);
+  }, [restoreSession]);
   const login=async(email,password)=>{setLoading(true);try{const response=await api.post('/auth/login',{email:email.trim().toLowerCase(),password});if(response.data.accessToken)localStorage.setItem('accessToken',response.data.accessToken);setUser(response.data.user);return response.data.user;}finally{setLoading(false);}};
   const registerUser=async data=>{
     const finalUrl = `${api.defaults.baseURL || ''}/auth/register`;
