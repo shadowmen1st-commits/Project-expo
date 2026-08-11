@@ -13,8 +13,12 @@ import Notification from '../models/Notification.js';
 import { validateFileBuffer } from '../utils/fileValidator.js';
 import { encryptText, maskDocumentNumber } from '../utils/crypto.js';
 
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 // Setup private storage directory
-const STORAGE_DIR = path.resolve('uploads/verification');
+const STORAGE_DIR = path.resolve(__dirname, '../../../uploads/verification');
 if (!fs.existsSync(STORAGE_DIR)) {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
 }
@@ -765,7 +769,7 @@ export const uploadProfilePhoto = async (req, res, next) => {
         }
 
         // Create Private File Storage directory if it doesn't exist
-        const PHOTO_DIR = path.resolve('uploads/profile-photos');
+        const PHOTO_DIR = path.resolve(__dirname, '../../../uploads/profile-photos');
         if (!fs.existsSync(PHOTO_DIR)) {
             fs.mkdirSync(PHOTO_DIR, { recursive: true });
         }
@@ -827,7 +831,7 @@ export const serveProfilePhoto = async (req, res, next) => {
     try {
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         const { filename } = req.params;
-        const filePath = path.join(path.resolve('uploads/profile-photos'), filename);
+        const filePath = path.join(path.resolve(__dirname, '../../../uploads/profile-photos'), filename);
         if (!fs.existsSync(filePath)) {
             res.status(404);
             res.setHeader('Content-Type', 'image/png');
