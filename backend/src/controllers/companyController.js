@@ -424,12 +424,17 @@ export const updateApplicationStatus = async (req, res, next) => {
 
         // If SELECTED, auto create assignment
         if (app.status === 'SELECTED') {
-            await WorkerAssignment.create({
-                jobId: app.jobId._id,
-                workerId: app.workerId,
-                assignedBy: req.user.userId,
-                status: 'ASSIGNED'
-            });
+            const exists = await WorkerAssignment.exists({ jobId: app.jobId._id, workerId: app.workerId });
+            if (!exists) {
+                await WorkerAssignment.create({
+                    jobId: app.jobId._id,
+                    workerId: app.workerId,
+                    companyId: req.user.userId,
+                    assignedBy: req.user.userId,
+                    status: 'ASSIGNED',
+                    paymentStatus: 'PENDING'
+                });
+            }
 
             // Dispatch notification
             await Notification.create({
@@ -898,8 +903,10 @@ export const assignWorkers = async (req, res, next) => {
                 const assign = await WorkerAssignment.create({
                     jobId,
                     workerId: workerIdStr,
+                    companyId: req.user.userId,   // denormalised for direct ownership checks
                     assignedBy: req.user.userId,
-                    status: 'ASSIGNED'
+                    status: 'ASSIGNED',
+                    paymentStatus: 'PENDING'
                 });
                 created.push(assign);
 
@@ -924,6 +931,57 @@ export const assignWorkers = async (req, res, next) => {
         }
 
         return res.status(200).json({ success: true, message: `Assigned ${created.length} workers successfully.`, assignments: created });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// GET all assignments for authenticated company — fully populated
+export const getCompanyAssignments = async (req, res, next) => {
+    try {
+        // Support both companyId field (new) and assignedBy field (legacy)
+        const assignments = await WorkerAssignment.find({
+            $or: [
+                { companyId: req.user.userId },
+                { assignedBy: req.user.userId }
+            ]
+        })
+            .populate('jobId', 'title category payRate paymentType workingDate startTime endTime location address description')
+            .populate('workerId', 'name email phone status profileImage')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ success: true, assignments });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// GET single assignment by ID — company-scoped
+export const getCompanyAssignmentById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ASSIGNMENT_ID', message: 'Invalid assignment ID.' });
+        }
+
+        const assignment = await WorkerAssignment.findById(id)
+            .populate('jobId', 'title category payRate paymentType workingDate startTime endTime location address description')
+            .populate('workerId', 'name email phone status profileImage');
+
+        if (!assignment) {
+            return res.status(404).json({ success: false, errorCode: 'ASSIGNMENT_NOT_FOUND', message: 'Assignment not found.' });
+        }
+
+        // Authorization: check companyId (new) or assignedBy (legacy) or job.companyId
+        const ownerCompanyId = assignment.companyId?.toString() ||
+            assignment.assignedBy?.toString() ||
+            assignment.jobId?.companyId?.toString();
+
+        if (ownerCompanyId !== req.user.userId) {
+            return res.status(403).json({ success: false, errorCode: 'FORBIDDEN', message: 'Unauthorized access to this assignment.' });
+        }
+
+        return res.status(200).json({ success: true, assignment });
     } catch (error) {
         next(error);
     }
@@ -1054,25 +1112,55 @@ export const addWalletMoney = async (req, res, next) => {
 export const releaseEscrowPayment = async (req, res, next) => {
     try {
         const { assignmentId } = req.body;
+
+        // 1. Validate ObjectId
         if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
-            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid assignment ID.' });
+            return res.status(400).json({
+                success: false,
+                errorCode: 'INVALID_ASSIGNMENT_ID',
+                message: 'Invalid assignment ID.'
+            });
         }
 
+        // 2. Find the assignment
         const assign = await WorkerAssignment.findById(assignmentId).populate('jobId');
-        if (!assign || assign.jobId.companyId.toString() !== req.user.userId) {
-            return res.status(404).json({ success: false, message: 'Assignment not found.' });
+        if (!assign) {
+            return res.status(404).json({
+                success: false,
+                errorCode: 'ASSIGNMENT_NOT_FOUND',
+                message: 'Assignment not found.'
+            });
         }
 
-        if (assign.status === 'COMPLETED') {
-            return res.status(400).json({ success: false, message: 'Payment already released.' });
+        // 3. Authorize — check companyId (new field) or assignedBy (legacy) or job owner
+        const ownerCompanyId = assign.companyId?.toString() ||
+            assign.assignedBy?.toString() ||
+            assign.jobId?.companyId?.toString();
+
+        if (ownerCompanyId !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                errorCode: 'FORBIDDEN',
+                message: 'You are not authorized to release payment for this assignment.'
+            });
         }
 
+        // 4. Prevent double-payment
+        if (assign.paymentStatus === 'RELEASED' || assign.status === 'COMPLETED') {
+            return res.status(409).json({
+                success: false,
+                errorCode: 'PAYMENT_ALREADY_RELEASED',
+                message: 'Payment has already been released for this assignment.'
+            });
+        }
+
+        // 5. Calculate amounts
         const totalPay = assign.jobId.payRate || 0;
-        const totalPayPaise = totalPay * 100;
-        const commissionPaise = Math.round(totalPayPaise * 0.1); // 10% Platform fee
+        const totalPayPaise = totalPay;
+        const commissionPaise = Math.round(totalPayPaise * 0.1); // 10% platform fee
         const workerEarningPaise = totalPayPaise - commissionPaise;
 
-        // Verify Company Wallet balance
+        // 6. Verify Company Wallet balance
         let wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
         if (!wallet) {
             wallet = await CompanyWallet.create({
@@ -1089,10 +1177,11 @@ export const releaseEscrowPayment = async (req, res, next) => {
             return res.status(400).json({
                 success: false,
                 errorCode: 'INSUFFICIENT_FUNDS',
-                message: 'Insufficient wallet balance.'
+                message: 'Insufficient wallet balance. Please deposit funds first.'
             });
         }
 
+        // 7. Debit company wallet
         if (wallet.escrowAmountPaise >= totalPayPaise) {
             wallet.escrowAmountPaise -= totalPayPaise;
         } else {
@@ -1104,11 +1193,19 @@ export const releaseEscrowPayment = async (req, res, next) => {
         wallet.transactionHistory.push({
             amountPaise: totalPayPaise,
             type: 'DEBIT',
-            description: `Payment released for job ${assign.jobId.title}`
+            description: `Payment released for job "${assign.jobId.title}" (assignment: ${assign._id})`
         });
         await wallet.save();
 
-        // Create Payment record
+        // 8. Credit worker wallet
+        let workerWallet = await mongoose.model('WorkerWallet').findOne({ workerId: assign.workerId });
+        if (workerWallet) {
+            workerWallet.availableBalancePaise += workerEarningPaise;
+            workerWallet.totalEarnedPaise += workerEarningPaise;
+            await workerWallet.save();
+        }
+
+        // 9. Create payment record
         await CompanyPayment.create({
             companyId: req.user.userId,
             jobId: assign.jobId._id,
@@ -1119,9 +1216,12 @@ export const releaseEscrowPayment = async (req, res, next) => {
             status: 'RELEASED'
         });
 
+        // 10. Mark assignment complete
         assign.status = 'COMPLETED';
+        assign.paymentStatus = 'RELEASED';
         await assign.save();
 
+        // 11. Audit log
         await new AuditLog({
             actor: req.user.userId,
             action: 'COMPANY_PAYMENT_RELEASED',
@@ -1129,17 +1229,23 @@ export const releaseEscrowPayment = async (req, res, next) => {
             resourceId: assign._id.toString()
         }).save();
 
+        // 12. Notify worker
+        const payInRupees = (totalPayPaise / 100).toFixed(2);
         await Notification.create({
             recipientId: assign.workerId,
             type: 'PAYMENT_RECEIVED',
             category: 'PAYMENT',
             title: 'Payment Received',
-            messageSafe: `Payment of ₹${totalPay} for job "${assign.jobId.title}" has been released.`,
+            messageSafe: `Payment of ₹${payInRupees} for job "${assign.jobId.title}" has been released.`,
             entityType: 'WorkerAssignment',
             entityId: assign._id
         });
 
-        return res.status(200).json({ success: true, message: 'Payment released to worker successfully.' });
+        return res.status(200).json({
+            success: true,
+            message: `Payment of ₹${payInRupees} released to worker successfully.`,
+            assignmentId: assign._id
+        });
     } catch (error) {
         next(error);
     }

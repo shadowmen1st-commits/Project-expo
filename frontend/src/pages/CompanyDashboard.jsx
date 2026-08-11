@@ -38,6 +38,7 @@ export default function CompanyDashboard() {
     const [jobs, setJobs] = useState([]);
     const [applications, setApplications] = useState([]);
     const [workers, setWorkers] = useState([]);
+    const [assignments, setAssignments] = useState([]);
     const [teams, setTeams] = useState([]);
     const [attendance, setAttendance] = useState([]);
     const [wallet, setWallet] = useState(null);
@@ -104,12 +105,13 @@ export default function CompanyDashboard() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [meRes, dashRes, jobsRes, appRes, workerRes, teamRes, attendRes, walletRes, payRes, repRes, notifRes] = await Promise.all([
+            const [meRes, dashRes, jobsRes, appRes, workerRes, assignRes, teamRes, attendRes, walletRes, payRes, repRes, notifRes] = await Promise.all([
                 axios.get('/company/me'),
                 axios.get('/company/dashboard'),
                 axios.get('/company/jobs'),
                 axios.get('/company/applications'),
                 axios.get('/company/workers'),
+                axios.get('/company/assignments'),
                 axios.get('/company/teams'),
                 axios.get('/company/attendance'),
                 axios.get('/company/wallet'),
@@ -123,6 +125,7 @@ export default function CompanyDashboard() {
             setJobs(jobsRes.data.jobs);
             setApplications(appRes.data.applications);
             setWorkers(workerRes.data.workers);
+            setAssignments(assignRes.data.assignments || []);
             setTeams(teamRes.data.teams);
             setAttendance(attendRes.data.attendance);
             setWallet(walletRes.data.wallet);
@@ -396,13 +399,32 @@ export default function CompanyDashboard() {
         }
     };
 
+    // Safe currency formatter — never shows NaN
+    const formatPaise = (value) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 'N/A';
+        return `₹${(n / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
+    };
+
     const handleReleasePayment = async (assignmentId) => {
+        if (!assignmentId) {
+            setError('Invalid assignment information. Please refresh and try again.');
+            return;
+        }
         try {
             await axios.post('/company/payments/release', { assignmentId });
-            setSuccess('Payment released successfully.');
+            setSuccess('Payment released successfully to the worker.');
             fetchData();
         } catch (err) {
-            setError('Release failed. Insufficient funds or invalid assignment.');
+            const code = err.response?.data?.errorCode;
+            const msgMap = {
+                ASSIGNMENT_NOT_FOUND: 'This assignment no longer exists.',
+                INVALID_ASSIGNMENT_ID: 'Invalid assignment information.',
+                INSUFFICIENT_FUNDS: 'Insufficient company wallet balance. Please deposit funds.',
+                PAYMENT_ALREADY_RELEASED: 'Payment has already been released for this assignment.',
+                FORBIDDEN: 'You are not authorized to release this payment.',
+            };
+            setError(msgMap[code] || err.response?.data?.message || 'Payment release failed. Please try again.');
         }
     };
 
@@ -1045,43 +1067,111 @@ export default function CompanyDashboard() {
                     </div>
                 )}
 
-                {/* Workers Tab */}
+                {/* Workers Tab — Assigned Workforce */}
                 {activeTab === 'workers' && (
                     <div className="space-y-6">
-                        <h2 className="text-2xl font-extrabold text-[#111827]">Assigned Workforce</h2>
-                        {workers.length === 0 ? (
-                            <p className="text-sm text-[#4B5563] italic">No workers currently assigned.</p>
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-extrabold text-[#111827]">Assigned Workforce</h2>
+                                <p className="text-sm text-[#4B5563] mt-0.5">
+                                    {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} found
+                                </p>
+                            </div>
+                        </div>
+
+                        {assignments.length === 0 ? (
+                            <div className="bg-white border border-[#FEF3C7] rounded-2xl p-12 text-center">
+                                <div className="text-4xl mb-3">👷</div>
+                                <p className="text-sm font-semibold text-[#4B5563]">No workers assigned yet.</p>
+                                <p className="text-xs text-[#9CA3AF] mt-1">Assign workers to a job from the Assign Workers tab.</p>
+                            </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {workers.map(w => (
-                                    <div key={w._id} className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="font-extrabold text-base text-[#111827]">{w.workerId?.name}</h3>
-                                                <p className="text-xs text-[#4B5563]">{w.workerId?.email} | {w.workerId?.phone}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                {assignments.map(a => {
+                                    const workerName   = a.workerId?.name  || 'Unknown Worker';
+                                    const workerEmail  = a.workerId?.email || '';
+                                    const workerPhone  = a.workerId?.phone || '';
+                                    const jobTitle     = a.jobId?.title    || 'Untitled Job';
+                                    const jobCategory  = a.jobId?.category || '';
+                                    const jobLocation  = a.jobId?.location || '';
+                                    const payDisplay   = formatPaise(a.jobId?.payRate);
+                                    const payType      = a.jobId?.paymentType === 'HOURLY' ? '/hr' : '/day';
+                                    const workDate     = a.jobId?.workingDate
+                                        ? new Date(a.jobId.workingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                                        : 'Date TBD';
+                                    const timeRange    = (a.jobId?.startTime && a.jobId?.endTime)
+                                        ? `${a.jobId.startTime} – ${a.jobId.endTime}`
+                                        : '';
+
+                                    const isCompleted  = a.status === 'COMPLETED' || a.paymentStatus === 'RELEASED';
+
+                                    const statusStyle = isCompleted
+                                        ? 'bg-green-50 border-green-200 text-green-700'
+                                        : a.status === 'WORKING'
+                                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                            : a.status === 'ABSENT'
+                                                ? 'bg-red-50 border-red-200 text-red-700'
+                                                : 'bg-orange-50 border-orange-200 text-orange-700';
+
+                                    return (
+                                        <div key={a._id} className="bg-white border border-[#FEF3C7] p-5 rounded-2xl shadow-sm flex flex-col gap-4">
+                                            {/* Worker header */}
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div className="min-w-0">
+                                                    <h3 className="font-extrabold text-sm text-[#111827] truncate">{workerName}</h3>
+                                                    {workerEmail && (
+                                                        <p className="text-xs text-[#6B7280] truncate">{workerEmail}</p>
+                                                    )}
+                                                    {workerPhone && (
+                                                        <p className="text-xs text-[#6B7280]">{workerPhone}</p>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusStyle}`}>
+                                                        {a.status}
+                                                    </span>
+                                                    {a.paymentStatus === 'RELEASED' && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700">
+                                                            PAID
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                                w.status === 'COMPLETED' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'
-                                            }`}>
-                                                {w.status}
-                                            </span>
-                                        </div>
 
-                                        <div className="bg-[#FFFBEB] p-3 rounded-xl border border-[#FEF3C7] text-xs">
-                                            <p className="font-bold text-[#111827]">Assigned Job: {w.jobId?.title}</p>
-                                            <p className="text-[#4B5563] mt-0.5">Pay Rate: ₹{w.jobId?.payRate/100} ({w.jobId?.location})</p>
-                                        </div>
+                                            {/* Job details panel */}
+                                            <div className="bg-[#FFFBEB] p-3 rounded-xl border border-[#FEF3C7] text-xs space-y-1">
+                                                <p className="font-bold text-[#111827] truncate">{jobTitle}</p>
+                                                {jobCategory && (
+                                                    <p className="text-[#9CA3AF] uppercase tracking-wide text-[10px]">{jobCategory}</p>
+                                                )}
+                                                <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                                                    <span className="font-semibold text-[#F97316]">{payDisplay}{payType}</span>
+                                                    {jobLocation && (
+                                                        <span className="text-[#6B7280]">📍 {jobLocation}</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[#6B7280]">
+                                                    📅 {workDate}{timeRange ? ` · ⏰ ${timeRange}` : ''}
+                                                </p>
+                                            </div>
 
-                                        {w.status !== 'COMPLETED' && (
-                                            <button 
-                                                onClick={() => handleReleasePayment(w._id)}
-                                                className="w-full text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl transition-all cursor-pointer"
-                                            >
-                                                Approve Work & Release Payment
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                            {/* Action button */}
+                                            {!isCompleted ? (
+                                                <button
+                                                    onClick={() => handleReleasePayment(a._id)}
+                                                    className="w-full text-xs bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-2.5 rounded-xl transition-all cursor-pointer"
+                                                >
+                                                    ✓ Approve Work &amp; Release Payment
+                                                </button>
+                                            ) : (
+                                                <div className="w-full text-xs text-center text-green-700 font-bold py-2 bg-green-50 border border-green-200 rounded-xl">
+                                                    ✓ Payment Released
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

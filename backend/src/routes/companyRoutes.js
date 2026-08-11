@@ -20,6 +20,8 @@ import {
     updateCompanyTeam,
     deleteCompanyTeam,
     assignWorkers,
+    getCompanyAssignments,
+    getCompanyAssignmentById,
     getCompanyAttendance,
     postAttendance,
     getCompanyPayments,
@@ -88,6 +90,8 @@ router.put('/teams/:id', authMiddleware, requireCompanyRole, requireVerifiedComp
 router.delete('/teams/:id', authMiddleware, requireCompanyRole, requireVerifiedCompany, deleteCompanyTeam);
 
 // Assignments
+router.get('/assignments', authMiddleware, requireCompanyRole, getCompanyAssignments);
+router.get('/assignments/:id', authMiddleware, requireCompanyRole, getCompanyAssignmentById);
 router.post('/assignments', authMiddleware, requireCompanyRole, requireVerifiedCompany, assignWorkers);
 
 // Attendance
