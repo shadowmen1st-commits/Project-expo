@@ -381,29 +381,31 @@ export const CustomerHome = () => {
     });
 
     return (
-        <div className="min-h-screen bg-[#FFFBEB] text-[#111827] font-sans">
+        <div className="min-h-screen bg-[#FFFBEB] text-[#111827] font-sans w-full overflow-x-hidden">
             {/* Top Navigation */}
-            <nav className="border-b border-[#FEF3C7] bg-[#FFFBEB]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
-                        H
+            <nav className="border-b border-[#FEF3C7] bg-[#FFFBEB]/95 backdrop-blur-md sticky top-0 z-45 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex items-center justify-between w-full sm:w-auto">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
+                            H
+                        </div>
+                        <span className="font-extrabold text-[#111827] text-xl tracking-tight">HyperLocal<span className="text-[#F97316]">.</span></span>
+                        <span className="bg-[#FFEDD5] text-[#F97316] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FED7AA] shadow-sm">
+                            Customer
+                        </span>
                     </div>
-                    <span className="font-extrabold text-[#111827] text-xl tracking-tight">HyperLocal<span className="text-[#F97316]">.</span></span>
-                    <span className="bg-[#FFEDD5] text-[#F97316] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FED7AA] shadow-sm">
-                        Customer
-                    </span>
                 </div>
 
-                <div className="flex items-center gap-6">
-                    <div className="text-right">
+                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-[#FEF3C7] sm:border-0 pt-2.5 sm:pt-0">
+                    <div className="text-left sm:text-right">
                         <div className="text-[10px] text-[#4B5563] font-semibold uppercase">Wallet Balance</div>
                         <div className="text-sm font-extrabold text-[#F97316]">₹{(walletBalance / 100).toFixed(2)}</div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-[#111827]">{user?.name}</span>
+                        <span className="text-xs sm:text-sm font-semibold text-[#111827] max-w-[80px] sm:max-w-[150px] truncate">{user?.name}</span>
                         <button
                             onClick={logout}
-                            className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                            className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap"
                         >
                             Sign Out
                         </button>
@@ -414,7 +416,7 @@ export const CustomerHome = () => {
             <UserCategoryBanner />
 
             {/* Dashboard Container */}
-            <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     <div>
@@ -736,8 +738,9 @@ export const CustomerHome = () => {
 
                     {/* Booking Modal */}
                     {selectedWorker && (
-                        <div className="bg-white border border-[#FEF3C7] rounded-3xl p-6 space-y-4 shadow-md shadow-orange-50/50">
-                            <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-3">
+                        <div className="fixed inset-0 lg:relative z-50 lg:z-0 bg-black/50 lg:bg-transparent flex items-end sm:items-center lg:items-stretch justify-center lg:justify-start p-4 lg:p-0">
+                            <div className="bg-white border border-[#FEF3C7] rounded-3xl p-6 space-y-4 shadow-xl lg:shadow-md shadow-orange-50/50 w-full max-w-lg lg:max-w-none max-h-[90vh] lg:max-h-none overflow-y-auto lg:overflow-visible animate-in fade-in slide-in-from-bottom-4 lg:animate-none duration-300">
+                                <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-3">
                                 <div>
                                     <h3 className="font-bold text-[#111827] text-sm">Booking: {selectedWorker.name}</h3>
                                     <span className="text-[10px] text-[#78716C]">Step {bookingStep} of 2: {bookingStep === 1 ? 'Service Details & Address' : 'Review & Confirm'}</span>
@@ -967,6 +970,7 @@ export const CustomerHome = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
                     )}
                 </div>
             </div>
