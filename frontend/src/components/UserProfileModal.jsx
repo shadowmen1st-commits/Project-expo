@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import { getProfileImageUrl } from '../utils/imageUtils';
+import ProfileAvatar from './ProfileAvatar';
 import {
     X, User, Phone, Mail, Lock, Eye, EyeOff, CheckCircle2,
     AlertCircle, Globe, Bell, ShieldCheck, Camera, Sparkles, KeyRound, Settings,
@@ -16,6 +18,7 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [profileImage, setProfileImage] = useState('');
+    const [previewUrl, setPreviewUrl] = useState('');
     const [preferredLanguage, setPreferredLanguage] = useState('en');
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSuccess, setProfileSuccess] = useState('');
@@ -51,6 +54,7 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
             setPhone(user.phone || '');
             setProfileImage(user.profileImage || '');
             setPreferredLanguage(user.preferredLanguage || 'en');
+            setPreviewUrl('');
         }
     }, [user, isOpen]);
 
@@ -110,6 +114,8 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
             return;
         }
 
+        const localUrl = URL.createObjectURL(file);
+        setPreviewUrl(localUrl);
         setUploading(true);
 
         try {
@@ -123,12 +129,18 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
             if (res.data.success && res.data.profileImage) {
                 const newPhotoUrl = res.data.profileImage;
                 setProfileImage(newPhotoUrl);
-                updateUser({ profileImage: newPhotoUrl });
-                setUploadSuccess('Profile photo uploaded successfully.');
+                setPreviewUrl('');
+                if (res.data.user) {
+                    updateUser(res.data.user);
+                } else {
+                    updateUser({ profileImage: newPhotoUrl });
+                }
+                setUploadSuccess('Profile photo uploaded and saved successfully.');
                 setTimeout(() => setUploadSuccess(''), 4000);
             }
         } catch (err) {
             setUploadError(err.response?.data?.message || 'Unable to upload profile photo. Please try again.');
+            setPreviewUrl('');
         } finally {
             setUploading(false);
         }
@@ -142,7 +154,12 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
             const res = await api.delete('/auth/profile-image');
             if (res.data.success) {
                 setProfileImage('');
-                updateUser({ profileImage: null });
+                setPreviewUrl('');
+                if (res.data.user) {
+                    updateUser(res.data.user);
+                } else {
+                    updateUser({ profileImage: null });
+                }
                 setShowRemoveConfirm(false);
                 setUploadSuccess('Profile photo removed successfully.');
                 setTimeout(() => setUploadSuccess(''), 4000);
@@ -168,6 +185,7 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
             });
             if (res.data.success) {
                 updateUser(res.data.user);
+                await restoreSession();
                 setProfileSuccess('Profile updated successfully!');
                 setTimeout(() => setProfileSuccess(''), 4000);
             }
@@ -244,14 +262,7 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-[#FFFDF5] to-[#FFF7ED] border-b border-[#FEF3C7] p-6 relative flex items-start justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#F97316] to-[#EAB308] text-white flex items-center justify-center font-black text-xl shadow-md overflow-hidden relative group">
-                            {profileImage ? (
-                                <img src={profileImage} alt={user.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                            ) : null}
-                            <span className={profileImage ? 'hidden' : 'block'}>
-                                {user.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'U'}
-                            </span>
-                        </div>
+                        <ProfileAvatar src={previewUrl || profileImage} user={user} size="xl" />
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg font-extrabold text-[#111827]">{user.name}</h2>
@@ -413,19 +424,7 @@ export const UserProfileModal = ({ isOpen, onClose }) => {
 
                                     {/* Circular Preview Container */}
                                     <div className="relative mb-3 group">
-                                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#F97316] to-[#EAB308] text-white flex items-center justify-center font-black text-2xl shadow-md border-4 border-white overflow-hidden">
-                                            {profileImage ? (
-                                                <img
-                                                    src={profileImage}
-                                                    alt={user.name}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                                />
-                                            ) : null}
-                                            <span className={profileImage ? 'hidden' : 'block'}>
-                                                {user.name ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'U'}
-                                            </span>
-                                        </div>
+                                        <ProfileAvatar src={previewUrl || profileImage} user={user} size="2xl" />
                                         {uploading && (
                                             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white">
                                                 <RefreshCw className="w-6 h-6 animate-spin" />

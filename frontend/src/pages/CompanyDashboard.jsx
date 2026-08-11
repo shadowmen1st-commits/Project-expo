@@ -4,6 +4,7 @@ import axios from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import CompanySidebar from '../components/CompanySidebar';
 import WorkerMultiSelect from '../components/WorkerMultiSelect';
+import ProfileAvatar from '../components/ProfileAvatar';
 import { 
     TrendingUp, 
     Users, 
@@ -502,13 +503,7 @@ export default function CompanyDashboard() {
                                 <Bell className="w-5 h-5" />
                             </button>
                             <button onClick={() => setIsProfileModalOpen(true)} className="bg-[#FFFDF5] border border-[#FED7AA] px-3 py-1.5 rounded-xl text-xs font-bold text-[#F97316] hover:bg-[#FFEDD5] cursor-pointer flex items-center gap-2 shadow-sm">
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FBBF24] to-[#F97316] text-white flex items-center justify-center font-bold text-[10px] shadow-xs overflow-hidden shrink-0">
-                                    {user?.profileImage ? (
-                                        <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                                    ) : (
-                                        <span>{user?.name ? user.name.charAt(0).toUpperCase() : 'C'}</span>
-                                    )}
-                                </div>
+                                <ProfileAvatar user={user} size="xs" />
                                 <span>Profile & Settings</span>
                             </button>
                         </div>

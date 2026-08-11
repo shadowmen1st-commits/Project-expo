@@ -7,6 +7,7 @@ import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import WorkerReviewsPanel from '../components/WorkerReviewsPanel';
 import Chat from '../components/chat/Chat';
 import UserProfileModal from '../components/UserProfileModal';
+import ProfileAvatar from '../components/ProfileAvatar';
 
 export const WorkerDashboard = () => {
     const { user, logout } = useAuth();
@@ -153,13 +154,7 @@ export const WorkerDashboard = () => {
                         onClick={() => setIsProfileModalOpen(true)}
                         className="bg-white hover:bg-[#FEFCE8] text-[#D97706] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-2 shadow-sm"
                     >
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#EAB308] to-[#F97316] text-white flex items-center justify-center font-bold text-[10px] shadow-xs overflow-hidden shrink-0">
-                            {user?.profileImage ? (
-                                <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                            ) : (
-                                <span>{user?.name ? user.name.charAt(0).toUpperCase() : 'W'}</span>
-                            )}
-                        </div>
+                        <ProfileAvatar user={user} size="xs" />
                         <span>Profile & Settings</span>
                     </button>
                     <button onClick={logout} className="bg-white hover:bg-[#FEFCE8] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
