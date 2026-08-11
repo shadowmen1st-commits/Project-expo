@@ -25,12 +25,12 @@ import {
     Filter, 
     X, 
     Search,
-    Menu
+    Menu,
+    User
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import { CATEGORY_LIST, getJobTitlesForCategory, isValidCategoryAndTitle } from '../config/jobCategories';
 import UserProfileModal from '../components/UserProfileModal';
-import { User } from 'lucide-react';
 
 export default function CompanyDashboard() {
     const { logout } = useAuth();

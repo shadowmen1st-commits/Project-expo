@@ -4,7 +4,7 @@ import api from '../utils/api';
 import {
     Search, Star, AlertCircle, ShoppingBag, X, Car, Home, Heart, Activity,
     Smile, Utensils, Leaf, Sparkles, Wrench, Zap, Sparkle, Clock, CheckCircle2,
-    Calendar, ShieldAlert
+    Calendar, ShieldAlert, User
 } from 'lucide-react';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
