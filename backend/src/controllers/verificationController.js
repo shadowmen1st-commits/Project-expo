@@ -829,7 +829,10 @@ export const serveProfilePhoto = async (req, res, next) => {
         const { filename } = req.params;
         const filePath = path.join(path.resolve('uploads/profile-photos'), filename);
         if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ success: false, message: 'Profile photo not found.' });
+            res.status(404);
+            res.setHeader('Content-Type', 'image/png');
+            const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+            return res.send(transparentPng);
         }
         
         let contentType = 'image/jpeg';
