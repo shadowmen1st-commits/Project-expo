@@ -89,6 +89,7 @@ export const CustomerHome = () => {
     const [bookingDuration, setBookingDuration] = useState(2);
     const [pricingType] = useState('HOURLY');
     const [notes, setNotes] = useState('');
+    const [selectedBookingCategory, setSelectedBookingCategory] = useState('');
     // Service Address fields & Booking Step
     const [houseNumber, setHouseNumber] = useState('Flat 402, Sunshine Apts');
     const [street, setStreet] = useState('123 Tech Park Road');
