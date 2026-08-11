@@ -19,7 +19,8 @@ export const AuthProvider=({children})=>{
     }
   };
   const logout=async()=>{try{await api.post('/auth/logout');}finally{localStorage.removeItem('accessToken');setUser(null);}};
- return <AuthContext.Provider value={{user,token:null,loading,login,registerUser,logout,restoreSession}}>{children}</AuthContext.Provider>;
+  const updateUser = (data) => setUser(prev => prev ? { ...prev, ...data } : data);
+  return <AuthContext.Provider value={{user,setUser,updateUser,token:null,loading,login,registerUser,logout,restoreSession}}>{children}</AuthContext.Provider>;
 };
 export const useAuth=()=>{const value=useContext(AuthContext);if(!value)throw new Error('useAuth must be used within an AuthProvider');return value;};
 export default AuthContext;

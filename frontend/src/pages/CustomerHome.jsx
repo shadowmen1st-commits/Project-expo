@@ -10,6 +10,7 @@ import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
 import CustomerReviewCard from '../components/CustomerReviewCard';
 import Chat from '../components/chat/Chat';
+import UserProfileModal from '../components/UserProfileModal';
 
 const getCategoryIcon = (name) => {
     const n = (name || '').toLowerCase();
@@ -28,6 +29,7 @@ const getCategoryIcon = (name) => {
 
 export const CustomerHome = () => {
     const { user, logout } = useAuth();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [categories, setCategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
     const [categoriesError, setCategoriesError] = useState('');
@@ -410,8 +412,15 @@ export const CustomerHome = () => {
                         <div className="text-[10px] text-[#4B5563] font-semibold uppercase">Wallet Balance</div>
                         <div className="text-sm font-extrabold text-[#F97316]">₹{(walletBalance / 100).toFixed(2)}</div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <span className="text-xs sm:text-sm font-semibold text-[#111827] max-w-[80px] sm:max-w-[150px] truncate">{user?.name}</span>
+                        <button
+                            onClick={() => setIsProfileModalOpen(true)}
+                            className="bg-[#FFFDF5] hover:bg-[#FFEDD5] text-[#F97316] border border-[#FED7AA] px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                        >
+                            <User className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Profile & Settings</span>
+                        </button>
                         <button
                             onClick={logout}
                             className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap"
@@ -998,6 +1007,7 @@ export const CustomerHome = () => {
                 </div>
             </div>
             {chatBooking&&<div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4"><div className="w-full max-w-xl h-[70vh]"><Chat bookingId={chatBooking.id} participantName={chatBooking.worker?.name||'Assigned Worker'} onClose={()=>setChatBooking(null)}/></div></div>}
+            <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );
 };

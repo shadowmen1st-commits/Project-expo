@@ -38,7 +38,7 @@ const MENU_ITEMS = [
     { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export default function CompanySidebar({ activeTab, setActiveTab, onLogout, companyName, verificationStatus, onLockedClick, mobileOpen, setMobileOpen }) {
+export default function CompanySidebar({ activeTab, setActiveTab, onLogout, companyName, verificationStatus, onLockedClick, mobileOpen, setMobileOpen, onOpenProfileModal }) {
     const isVerified = verificationStatus === 'VERIFIED';
 
     const renderNavContent = (isMobile = false) => (
@@ -88,7 +88,9 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
                             <button
                                 key={item.id}
                                 onClick={() => {
-                                    if (isItemLocked) {
+                                    if (item.id === 'settings') {
+                                        onOpenProfileModal?.();
+                                    } else if (isItemLocked) {
                                         onLockedClick?.(item.label);
                                     } else {
                                         setActiveTab(item.id);

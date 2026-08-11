@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { register, login, refresh, logout, me } from '../controllers/authController.js';
+import { register, login, refresh, logout, me, updateProfile, changePassword } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/auth.js';
 import oauthRoutes from './oauthRoutes.js';
 const router = Router();
@@ -10,5 +10,7 @@ router.post('/login', limiter(10), login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authMiddleware, me);
+router.put('/profile', authMiddleware, updateProfile);
+router.put('/change-password', authMiddleware, changePassword);
 router.use('/oauth', oauthRoutes);
 export default router;

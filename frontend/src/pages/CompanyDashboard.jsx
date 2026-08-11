@@ -29,10 +29,13 @@ import {
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import { CATEGORY_LIST, getJobTitlesForCategory, isValidCategoryAndTitle } from '../config/jobCategories';
+import UserProfileModal from '../components/UserProfileModal';
+import { User } from 'lucide-react';
 
 export default function CompanyDashboard() {
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [companyInfo, setCompanyInfo] = useState(null);
     const [stats, setStats] = useState(null);
@@ -452,6 +455,7 @@ export default function CompanyDashboard() {
                 onLockedClick={(name) => { setLockedFeatureName(name); setShowLockModal(true); }}
                 mobileOpen={mobileOpen}
                 setMobileOpen={setMobileOpen}
+                onOpenProfileModal={() => setIsProfileModalOpen(true)}
             />
 
             <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto lg:max-h-screen w-full max-w-full">
@@ -497,8 +501,9 @@ export default function CompanyDashboard() {
                                 {notifications.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-orange-600 rounded-full"></span>}
                                 <Bell className="w-5 h-5" />
                             </button>
-                            <button onClick={() => setActiveTab('profile')} className="font-bold text-xs sm:text-sm text-[#F97316] hover:underline cursor-pointer">
-                                Profile
+                            <button onClick={() => setIsProfileModalOpen(true)} className="bg-[#FFFDF5] border border-[#FED7AA] px-3 py-1.5 rounded-xl text-xs font-bold text-[#F97316] hover:bg-[#FFEDD5] cursor-pointer flex items-center gap-1.5 shadow-sm">
+                                <User className="w-3.5 h-3.5" />
+                                <span>Profile & Settings</span>
                             </button>
                         </div>
                     </div>
@@ -1992,6 +1997,7 @@ export default function CompanyDashboard() {
                     </div>
                 </div>
             )}
+            <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );
 }

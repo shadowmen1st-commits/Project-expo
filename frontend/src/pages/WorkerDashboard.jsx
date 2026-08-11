@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { CheckCircle2, Clock, AlertCircle, RefreshCw, Power, ArrowUpRight, Wallet, MapPin, Navigation } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, RefreshCw, Power, ArrowUpRight, Wallet, MapPin, Navigation, User } from 'lucide-react';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import WorkerReviewsPanel from '../components/WorkerReviewsPanel';
 import Chat from '../components/chat/Chat';
+import UserProfileModal from '../components/UserProfileModal';
 
 export const WorkerDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [profile, setProfile] = useState(null);
     const [bookings, setBookings] = useState([]);
     const [wallet, setWallet] = useState(null);
@@ -147,6 +149,13 @@ export const WorkerDashboard = () => {
                             {profile.isOnline ? 'ONLINE' : 'OFFLINE'}
                         </button>
                     )}
+                    <button
+                        onClick={() => setIsProfileModalOpen(true)}
+                        className="bg-white hover:bg-[#FEFCE8] text-[#D97706] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                        <User className="w-3.5 h-3.5" />
+                        <span>Profile & Settings</span>
+                    </button>
                     <button onClick={logout} className="bg-white hover:bg-[#FEFCE8] text-[#44403C] border border-[#E7E0D8] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
                         Sign Out
                     </button>
@@ -431,6 +440,7 @@ export const WorkerDashboard = () => {
                 </div>
             </div>
             {chatBooking&&<div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4"><div className="w-full max-w-xl h-[70vh]"><Chat bookingId={chatBooking.id} participantName={chatBooking.customer?.name||'Customer'} onClose={()=>setChatBooking(null)}/></div></div>}
+            <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );
 };

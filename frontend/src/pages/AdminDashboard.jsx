@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2, Trash2 } from 'lucide-react';
+import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2, Trash2, User } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
 import AdminSupportPanel from '../components/AdminSupportPanel';import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
 import AdminCompanies from './AdminCompanies';
+import UserProfileModal from '../components/UserProfileModal';
 
 export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const { logout } = useAuth();
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [activeSection, setActiveSection] = useState(initialSection);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -523,9 +525,15 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     </nav>
                 </div>
 
-                <button onClick={logout} className="bg-[#FAF6F0] hover:bg-[#FEFCE8] border border-[#E7E0D8] rounded-xl py-2 px-4 text-[#44403C] text-xs font-semibold cursor-pointer">
-                    Sign Out Dashboard
-                </button>
+                <div className="space-y-2">
+                    <button onClick={() => setIsProfileModalOpen(true)} className="w-full bg-[#FFFDF5] hover:bg-[#FEFCE8] border border-[#FED7AA] text-[#F97316] rounded-xl py-2 px-4 text-xs font-bold cursor-pointer flex items-center justify-center gap-2 shadow-sm">
+                        <User className="w-4 h-4" />
+                        <span>Profile & Settings</span>
+                    </button>
+                    <button onClick={logout} className="w-full bg-[#FAF6F0] hover:bg-[#FEFCE8] border border-[#E7E0D8] rounded-xl py-2 px-4 text-[#44403C] text-xs font-semibold cursor-pointer">
+                        Sign Out Dashboard
+                    </button>
+                </div>
             </aside>
 
             {/* Main Body */}
@@ -1406,6 +1414,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     {toast.message}
                 </div>
             )}
+            <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
         </div>
     );
 };
