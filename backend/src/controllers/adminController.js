@@ -195,8 +195,9 @@ export const getCategories = async (req, res, next) => {
     try {
         // Customer / Public service listing returns ONLY ACTIVE services
         const categories = await ServiceCategory.find({
-            status: 'ACTIVE',
-            isActive: { $ne: false }
+            isActive: { $ne: false },
+            status: { $nin: ['DRAFT', 'INACTIVE', 'ARCHIVED'] },
+            deletedAt: null
         }).sort({ sortOrder: 1, name: 1 });
         res.status(200).json({ success: true, categories });
     }

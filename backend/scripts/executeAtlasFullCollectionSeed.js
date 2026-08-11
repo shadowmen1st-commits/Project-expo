@@ -109,31 +109,31 @@ async function executeAtlasFullCollectionSeed() {
     // STEP 4: SERVICE CATEGORIES
     const catCleaning = await ServiceCategory.findOneAndUpdate(
         { slug: 'home-cleaning' },
-        { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Professional home cleaning services', icon: 'sparkles', basePricePaise: 50000, isActive: true },
+        { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Professional home cleaning services', icon: 'sparkles', basePricePaise: 50000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 
     const catPlumbing = await ServiceCategory.findOneAndUpdate(
         { slug: 'plumbing' },
-        { name: 'Plumbing', slug: 'plumbing', description: 'Expert plumbing repairs and installation', icon: 'wrench', basePricePaise: 60000, isActive: true },
+        { name: 'Plumbing', slug: 'plumbing', description: 'Expert plumbing repairs and installation', icon: 'wrench', basePricePaise: 60000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 
     const catElectrical = await ServiceCategory.findOneAndUpdate(
         { slug: 'electrical' },
-        { name: 'Electrical', slug: 'electrical', description: 'Certified electrician services', icon: 'zap', basePricePaise: 70000, isActive: true },
+        { name: 'Electrical', slug: 'electrical', description: 'Certified electrician services', icon: 'zap', basePricePaise: 70000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 
     const catEvent = await ServiceCategory.findOneAndUpdate(
         { slug: 'event-staffing' },
-        { name: 'Event Staffing', slug: 'event-staffing', description: 'Professional staffing for events', icon: 'users', basePricePaise: 80000, isActive: true },
+        { name: 'Event Staffing', slug: 'event-staffing', description: 'Professional staffing for events', icon: 'users', basePricePaise: 80000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 
     const catSecurity = await ServiceCategory.findOneAndUpdate(
         { slug: 'security' },
-        { name: 'Security Services', slug: 'security', description: 'Licensed security guards', icon: 'shield', basePricePaise: 90000, isActive: true },
+        { name: 'Security Services', slug: 'security', description: 'Licensed security guards', icon: 'shield', basePricePaise: 90000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 

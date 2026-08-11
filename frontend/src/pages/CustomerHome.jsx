@@ -776,16 +776,29 @@ export const CustomerHome = () => {
                                                 <p className="text-[10px] text-[#DC2626]">{categoriesError}</p>
                                                 <button onClick={fetchCategories} className="text-[10px] text-[#F97316] hover:underline font-semibold cursor-pointer">Retry</button>
                                             </div>
-                                        ) : categories.length === 0 ? (
-                                            <p className="text-[10px] text-[#78716C] mt-1">No services are currently available.</p>
                                         ) : (() => {
+                                            const combinedCategories = [...categories];
+                                            if (selectedWorker?.serviceCategoryIds?.length > 0) {
+                                                selectedWorker.serviceCategoryIds.forEach(cat => {
+                                                    if (typeof cat === 'object' && cat?._id && cat?.name) {
+                                                        if (!combinedCategories.some(c => (c._id || c)?.toString() === (cat._id || cat)?.toString())) {
+                                                            combinedCategories.push(cat);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            if (combinedCategories.length === 0) {
+                                                return <p className="text-[10px] text-[#78716C] mt-1">No services are currently available.</p>;
+                                            }
+
                                             const workerCatIds = new Set(
-                                                (selectedWorker.serviceCategoryIds || []).map(id =>
+                                                (selectedWorker?.serviceCategoryIds || []).map(id =>
                                                     typeof id === 'object' ? (id?._id || id)?.toString() : id?.toString()
                                                 ).filter(Boolean)
                                             );
-                                            const workerCats  = categories.filter(c => workerCatIds.has(c._id?.toString()));
-                                            const otherCats   = categories.filter(c => !workerCatIds.has(c._id?.toString()));
+                                            const workerCats  = combinedCategories.filter(c => workerCatIds.has((c._id || c)?.toString()));
+                                            const otherCats   = combinedCategories.filter(c => !workerCatIds.has((c._id || c)?.toString()));
+
                                             return (
                                                 <select
                                                     value={selectedBookingCategory}

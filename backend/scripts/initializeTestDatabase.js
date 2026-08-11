@@ -161,7 +161,7 @@ async function initializeTestDatabase() {
     // STEP 9: SEED RELATED DOMAIN TEST DATA IN test DATABASE
     const catCleaning = await ServiceCategory.findOneAndUpdate(
         { slug: 'home-cleaning' },
-        { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Professional home cleaning services', icon: 'sparkles', basePricePaise: 50000, isActive: true },
+        { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Professional home cleaning services', icon: 'sparkles', basePricePaise: 50000, isActive: true, status: 'ACTIVE' },
         { upsert: true, new: true }
     );
 
