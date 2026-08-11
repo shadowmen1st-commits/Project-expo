@@ -31,6 +31,9 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const [catDesc, setCatDesc] = useState('');
     const [catIcon] = useState('Zap');
     const [catCommission, setCatCommission] = useState(10);
+    const [catPrice, setCatPrice] = useState(499);
+    const [catDuration, setCatDuration] = useState(2);
+    const [catStatus, setCatStatus] = useState('ACTIVE');
 
     const [ruleScope, setRuleScope] = useState('GLOBAL');
     const [ruleName, setRuleName] = useState('');
