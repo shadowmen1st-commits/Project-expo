@@ -19,14 +19,19 @@ export const getProfileImageUrl = (userOrUrl) => {
         rawUrl =
             userOrUrl.profileImage ||
             userOrUrl.profileImageUrl ||
+            userOrUrl.profilePhotoId ||
             userOrUrl.user?.profileImage ||
             userOrUrl.user?.profileImageUrl ||
+            userOrUrl.user?.profilePhotoId ||
             userOrUrl.userId?.profileImage ||
             userOrUrl.userId?.profileImageUrl ||
+            userOrUrl.userId?.profilePhotoId ||
             userOrUrl.workerProfile?.profileImage ||
             userOrUrl.workerProfile?.profileImageUrl ||
+            userOrUrl.workerProfile?.profilePhotoId ||
             userOrUrl.worker?.profileImage ||
             userOrUrl.worker?.profileImageUrl ||
+            userOrUrl.worker?.profilePhotoId ||
             null;
     }
 

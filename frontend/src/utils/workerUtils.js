@@ -15,14 +15,19 @@ export const getWorkerImageUrl = (worker) => {
     const rawUrl =
         worker.profileImage ||
         worker.profileImageUrl ||
+        worker.profilePhotoId ||
         worker.user?.profileImage ||
         worker.user?.profileImageUrl ||
+        worker.user?.profilePhotoId ||
         worker.userId?.profileImage ||
         worker.userId?.profileImageUrl ||
+        worker.userId?.profilePhotoId ||
         worker.workerProfile?.profileImage ||
         worker.workerProfile?.profileImageUrl ||
+        worker.workerProfile?.profilePhotoId ||
         worker.worker?.profileImage ||
         worker.worker?.profileImageUrl ||
+        worker.worker?.profilePhotoId ||
         null;
 
     if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.trim()) {

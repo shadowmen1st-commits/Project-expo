@@ -178,7 +178,7 @@ export const searchWorkers = async (req, res, next) => {
         const dtos = profiles.map((p) => ({
             workerId: p.userId?._id,
             name: p.userId?.name,
-            profileImage: p.userId?.profileImage,
+            profileImage: p.userId?.profileImage || p.profilePhotoId,
             serviceCategoryIds: p.serviceCategoryIds,
             skills: p.skills,
             experienceYears: p.experienceYears,
