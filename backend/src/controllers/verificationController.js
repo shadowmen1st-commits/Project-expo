@@ -830,7 +830,14 @@ export const serveProfilePhoto = async (req, res, next) => {
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ success: false, message: 'Profile photo not found.' });
         }
-        res.setHeader('Content-Type', filename.endsWith('.png') ? 'image/png' : 'image/jpeg');
+        
+        let contentType = 'image/jpeg';
+        const ext = path.extname(filename).toLowerCase();
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.webp') contentType = 'image/webp';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         fs.createReadStream(filePath).pipe(res);
     } catch (error) {
         next(error);
