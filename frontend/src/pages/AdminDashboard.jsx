@@ -8,9 +8,10 @@ import AdminReviewsPanel from '../components/AdminReviewsPanel';
 import AdminSupportPanel from '../components/AdminSupportPanel';import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
 import AdminCompanies from './AdminCompanies';
 import UserProfileModal from '../components/UserProfileModal';
+import ProfileAvatar from '../components/ProfileAvatar';
 
 export const AdminDashboard = ({ initialSection = 'analytics' }) => {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [activeSection, setActiveSection] = useState(initialSection);
     const [loading, setLoading] = useState(true);
@@ -527,7 +528,7 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
 
                 <div className="space-y-2">
                     <button onClick={() => setIsProfileModalOpen(true)} className="w-full bg-[#FFFDF5] hover:bg-[#FEFCE8] border border-[#FED7AA] text-[#F97316] rounded-xl py-2 px-4 text-xs font-bold cursor-pointer flex items-center justify-center gap-2 shadow-sm">
-                        <User className="w-4 h-4" />
+                        <ProfileAvatar user={user} size="xs" />
                         <span>Profile & Settings</span>
                     </button>
                     <button onClick={logout} className="w-full bg-[#FAF6F0] hover:bg-[#FEFCE8] border border-[#E7E0D8] rounded-xl py-2 px-4 text-[#44403C] text-xs font-semibold cursor-pointer">

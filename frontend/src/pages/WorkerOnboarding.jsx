@@ -6,6 +6,7 @@ import {
     ShieldCheck, Calendar, MapPin, User, Briefcase, Languages, 
     AlertCircle, FileCheck, Info, X, Clock, HelpCircle, CheckCircle2
 } from 'lucide-react';
+import { getProfileImageUrl } from '../utils/imageUtils';
 
 export const WorkerOnboarding = () => {
     const navigate = useNavigate();
@@ -210,9 +211,9 @@ export const WorkerOnboarding = () => {
             return;
         }
 
-        const allowedExts = ['image/jpeg', 'image/png'];
-        if (!allowedExts.includes(file.type)) {
-            setError('Only JPEG and PNG image formats are permitted for profile photos.');
+        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedMimes.includes(file.type.toLowerCase())) {
+            setError('Only JPEG, JPG, PNG and WEBP image formats are permitted for profile photos.');
             return;
         }
 
@@ -587,7 +588,7 @@ export const WorkerOnboarding = () => {
                                 <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#FAF6F0] p-4 border border-[#E7E0D8] rounded-2xl">
                                     <div className="w-20 h-20 rounded-full border-2 border-[#E7E0D8] bg-white overflow-hidden flex items-center justify-center shrink-0">
                                         {profilePhotoUrl ? (
-                                            <img src={profilePhotoUrl} alt="Profile Preview" className="w-full h-full object-cover"/>
+                                            <img src={getProfileImageUrl(profilePhotoUrl)} alt="Profile Preview" className="w-full h-full object-cover"/>
                                         ) : (
                                             <User className="w-8 h-8 text-[#A8A29E]"/>
                                         )}
@@ -596,12 +597,12 @@ export const WorkerOnboarding = () => {
                                     <div className="flex-grow space-y-2 w-full">
                                         <input 
                                             type="file" 
-                                            accept="image/jpeg,image/png"
+                                            accept="image/jpeg,image/png,image/jpg,image/webp"
                                             onChange={handleProfilePhotoChange}
                                             className="w-full text-xs text-[#57534E] file:mr-4 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FEFCE8] file:text-[#EAB308] file:hover:bg-[#FEF9C3] cursor-pointer"
                                             disabled={verificationStatus === 'PENDING_APPROVAL'}
                                         />
-                                        <p className="text-[10px] text-[#78716C]">Upload a formal headshot. Max 5MB (JPEG or PNG only).</p>
+                                        <p className="text-[10px] text-[#78716C]">Upload a formal headshot. Max 5MB (JPEG, JPG, PNG or WEBP only).</p>
                                     </div>
                                 </div>
                             </div>
