@@ -24,7 +24,7 @@ export const ProfileAvatar = ({
 }) => {
     const [imgError, setImgError] = useState(false);
 
-    const imageUrl = src || getProfileImageUrl(user);
+    const imageUrl = getProfileImageUrl(src || user);
     const name = nameProp || getUserName(user);
     const initials = getUserInitials(name);
 
