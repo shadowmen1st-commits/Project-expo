@@ -825,6 +825,7 @@ export const deleteProfilePhoto = async (req, res, next) => {
 
 export const serveProfilePhoto = async (req, res, next) => {
     try {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         const { filename } = req.params;
         const filePath = path.join(path.resolve('uploads/profile-photos'), filename);
         if (!fs.existsSync(filePath)) {
