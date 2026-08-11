@@ -22,9 +22,10 @@ import {
     Bell,
     Wallet,
     Edit3,
-    Filter,
-    X,
-    Search
+    Filter, 
+    X, 
+    Search,
+    Menu
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import { CATEGORY_LIST, getJobTitlesForCategory, isValidCategoryAndTitle } from '../config/jobCategories';
@@ -50,6 +51,7 @@ export default function CompanyDashboard() {
     const [success, setSuccess] = useState('');
     const [showLockModal, setShowLockModal] = useState(false);
     const [lockedFeatureName, setLockedFeatureName] = useState('');
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     // Form & Filter states
     const [editingJob, setEditingJob] = useState(null);
@@ -440,7 +442,7 @@ export default function CompanyDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FFFCF5] text-[#171717] flex font-sans">
+        <div className="min-h-screen bg-[#FFFCF5] text-[#171717] flex flex-col lg:flex-row font-sans w-full max-w-full overflow-x-hidden">
             <CompanySidebar 
                 activeTab={activeTab} 
                 setActiveTab={setActiveTab} 
@@ -448,36 +450,57 @@ export default function CompanyDashboard() {
                 companyName={companyInfo?.companyName} 
                 verificationStatus={companyInfo?.verificationStatus}
                 onLockedClick={(name) => { setLockedFeatureName(name); setShowLockModal(true); }}
+                mobileOpen={mobileOpen}
+                setMobileOpen={setMobileOpen}
             />
 
-            <main className="flex-1 p-8 overflow-y-auto max-h-screen">
-                {/* Header Bar */}
-                <div className="flex justify-between items-center border-b border-[#FFF7D6] pb-4 mb-6 text-sm">
-                    <div className="flex items-center gap-3">
-                        {companyInfo?.verificationStatus === 'VERIFIED' ? (
-                            <span className="bg-green-50 border border-green-200 text-green-700 font-extrabold text-[10px] uppercase px-3 py-1 rounded-full flex items-center gap-1">
-                                <span>✓</span> VERIFIED COMPANY
-                            </span>
-                        ) : (
-                            <span className="bg-yellow-50 border border-yellow-200 text-yellow-700 font-extrabold text-[10px] uppercase px-3 py-1 rounded-full">
-                                {companyInfo?.verificationStatus || 'PENDING'}
-                            </span>
-                        )}
-                        <span className="font-bold text-[#171717]">{companyInfo?.companyName}</span>
+            <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto lg:max-h-screen w-full max-w-full">
+                {/* Responsive Header Bar */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#FFF7D6] pb-4 mb-6 text-sm gap-3 w-full min-w-0">
+                    <div className="flex items-center justify-between w-full sm:w-auto gap-3 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <button 
+                                onClick={() => setMobileOpen(true)}
+                                className="lg:hidden p-2 text-[#171717] hover:bg-[#FFF7D6] rounded-xl transition-colors shrink-0 cursor-pointer"
+                                aria-label="Open sidebar"
+                            >
+                                <Menu className="w-6 h-6" />
+                            </button>
+                            <div className="lg:hidden flex items-center gap-2 shrink-0">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FBBF24] to-[#F97316] flex items-center justify-center shadow-xs">
+                                    <span className="text-[#171717] text-base font-black">H</span>
+                                </div>
+                                <span className="text-sm font-bold tracking-tight text-[#171717]">
+                                    HyperLocal<span className="text-[#F97316]">.</span>
+                                </span>
+                            </div>
+                            {companyInfo?.verificationStatus === 'VERIFIED' ? (
+                                <span className="bg-green-50 border border-green-200 text-green-700 font-extrabold text-[9px] sm:text-[10px] uppercase px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0">
+                                    <span>✓</span> VERIFIED
+                                </span>
+                            ) : (
+                                <span className="bg-yellow-50 border border-yellow-200 text-yellow-700 font-extrabold text-[9px] sm:text-[10px] uppercase px-2.5 py-1 rounded-full shrink-0">
+                                    {companyInfo?.verificationStatus || 'PENDING'}
+                                </span>
+                            )}
+                            <span className="hidden sm:inline font-bold text-[#171717] truncate">{companyInfo?.companyName}</span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-6 font-semibold">
-                        <div className="flex items-center gap-1.5 text-[#171717]">
-                            <span className="text-[#A8A29E] text-xs uppercase font-bold">Wallet:</span>
-                            <span>₹{((wallet?.availableBalancePaise || stats?.walletBalance || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 font-semibold w-full sm:w-auto border-t sm:border-t-0 border-[#FFF7D6] pt-2 sm:pt-0">
+                        <div className="flex items-center gap-1 text-[#171717] text-xs sm:text-sm">
+                            <span className="text-[#A8A29E] text-[10px] sm:text-xs uppercase font-bold">Wallet:</span>
+                            <span className="font-bold">₹{((wallet?.availableBalancePaise || stats?.walletBalance || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                        <button onClick={() => setActiveTab('notifications')} className="relative p-1 text-[#78716C] hover:text-[#171717] cursor-pointer">
-                            {notifications.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-orange-600 rounded-full"></span>}
-                            <Bell className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => setActiveTab('profile')} className="font-bold text-sm text-[#F97316] hover:underline cursor-pointer">
-                            Profile
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setActiveTab('notifications')} className="relative p-1 text-[#78716C] hover:text-[#171717] cursor-pointer">
+                                {notifications.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-orange-600 rounded-full"></span>}
+                                <Bell className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => setActiveTab('profile')} className="font-bold text-xs sm:text-sm text-[#F97316] hover:underline cursor-pointer">
+                                Profile
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {/* Status messages */}
@@ -537,8 +560,8 @@ export default function CompanyDashboard() {
                         </div>
 
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm w-full min-w-0">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-xs text-[#4B5563] uppercase tracking-wider font-semibold">Active Jobs</p>
@@ -547,7 +570,7 @@ export default function CompanyDashboard() {
                                     <div className="p-3 bg-orange-50 rounded-xl text-[#F97316]"><Briefcase className="w-5 h-5" /></div>
                                 </div>
                             </div>
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm">
+                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm w-full min-w-0">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-xs text-[#4B5563] uppercase tracking-wider font-semibold">Workers Hired</p>
@@ -556,7 +579,7 @@ export default function CompanyDashboard() {
                                     <div className="p-3 bg-yellow-50 rounded-xl text-[#EAB308]"><Users className="w-5 h-5" /></div>
                                 </div>
                             </div>
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm">
+                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm w-full min-w-0">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-xs text-[#4B5563] uppercase tracking-wider font-semibold">Available Wallet</p>
@@ -565,7 +588,7 @@ export default function CompanyDashboard() {
                                     <div className="p-3 bg-green-50 rounded-xl text-green-600"><Wallet className="w-5 h-5" /></div>
                                 </div>
                             </div>
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm">
+                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm w-full min-w-0">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-xs text-[#4B5563] uppercase tracking-wider font-semibold">Total Spent</p>
@@ -577,7 +600,7 @@ export default function CompanyDashboard() {
                         </div>
 
                         {/* Recent Activity lists */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                             <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm">
                                 <h3 className="text-lg font-bold mb-4">My Event Postings</h3>
                                 {stats.recentJobs.length === 0 ? (
@@ -622,54 +645,54 @@ export default function CompanyDashboard() {
 
                 {/* Company Profile Tab */}
                 {activeTab === 'profile' && companyInfo && (
-                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl max-w-2xl shadow-sm space-y-6">
+                    <div className="bg-white border border-[#FEF3C7] p-5 sm:p-8 rounded-3xl w-full max-w-2xl shadow-sm space-y-6">
                         <div>
                             <h2 className="text-2xl font-extrabold text-[#111827]">Company Profile</h2>
                             <p className="text-sm text-[#4B5563] mt-1">Official organisation details & verification status.</p>
                         </div>
 
                         <div className="flex items-center gap-4 pb-4 border-b border-[#FEF3C7]">
-                            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center text-[#F97316] font-bold text-2xl">
+                            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center text-[#F97316] font-bold text-2xl shrink-0">
                                 {companyInfo.companyName[0]}
                             </div>
-                            <div>
-                                <h3 className="font-bold text-lg">{companyInfo.companyName}</h3>
+                            <div className="min-w-0">
+                                <h3 className="font-bold text-lg truncate">{companyInfo.companyName}</h3>
                                 {companyInfo.verificationStatus === 'VERIFIED' ? (
-                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-green-50 border-green-200 text-green-700">
+                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-green-50 border-green-200 text-green-700 inline-block">
                                         ✓ VERIFIED COMPANY
                                     </span>
                                 ) : (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-yellow-50 border-yellow-200 text-yellow-700">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-yellow-50 border-yellow-200 text-yellow-700 inline-block">
                                         {companyInfo.verificationStatus || 'PENDING'}
                                     </span>
                                 )}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Email</p>
-                                <p className="text-sm font-semibold">{companyInfo.email}</p>
+                                <p className="text-sm font-semibold break-words">{companyInfo.email}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Phone</p>
-                                <p className="text-sm font-semibold">{companyInfo.phone}</p>
+                                <p className="text-sm font-semibold break-words">{companyInfo.phone}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Business Type</p>
-                                <p className="text-sm font-semibold">{companyInfo.businessType}</p>
+                                <p className="text-sm font-semibold break-words">{companyInfo.businessType}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Website</p>
-                                <p className="text-sm font-semibold">{companyInfo.website || 'Not specified'}</p>
+                                <p className="text-sm font-semibold break-words">{companyInfo.website || 'Not specified'}</p>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1 sm:col-span-2">
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Address</p>
-                                <p className="text-sm font-semibold">{companyInfo.address}, {companyInfo.city}, {companyInfo.state} - {companyInfo.pincode}</p>
+                                <p className="text-sm font-semibold break-words">{companyInfo.address}, {companyInfo.city}, {companyInfo.state} - {companyInfo.pincode}</p>
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1 sm:col-span-2">
                                 <p className="text-xs text-[#9CA3AF] uppercase font-bold">Description</p>
-                                <p className="text-sm font-semibold text-[#4B5563] mt-1">{companyInfo.description}</p>
+                                <p className="text-sm font-semibold text-[#4B5563] mt-1 break-words">{companyInfo.description}</p>
                             </div>
                         </div>
                     </div>
@@ -677,14 +700,14 @@ export default function CompanyDashboard() {
 
                 {/* Post Job Tab */}
                 {activeTab === 'post-job' && (
-                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl max-w-2xl shadow-sm space-y-6">
+                    <div className="bg-white border border-[#FEF3C7] p-5 sm:p-8 rounded-3xl w-full max-w-2xl shadow-sm space-y-6">
                         <div>
                             <h2 className="text-2xl font-extrabold text-[#111827]">Post a New Job</h2>
                             <p className="text-sm text-[#4B5563] mt-1">Select a category and dependent job title for your hiring request.</p>
                         </div>
 
                         <form onSubmit={handleCreateJob} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <SearchableSelect 
                                     label="Category"
                                     required
@@ -705,7 +728,7 @@ export default function CompanyDashboard() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Workers Required</label>
                                     <input 
@@ -730,7 +753,7 @@ export default function CompanyDashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Type</label>
                                     <select 
@@ -754,7 +777,7 @@ export default function CompanyDashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Location / Area</label>
                                     <input 
@@ -779,7 +802,7 @@ export default function CompanyDashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Start Time</label>
                                     <input 
@@ -1004,8 +1027,8 @@ export default function CompanyDashboard() {
                         {applications.length === 0 ? (
                             <p className="text-sm text-[#4B5563] italic">No worker applications received yet.</p>
                         ) : (
-                            <div className="bg-white border border-[#FEF3C7] rounded-2xl overflow-hidden shadow-sm">
-                                <table className="w-full text-left border-collapse">
+                            <div className="w-full overflow-x-auto bg-white border border-[#FEF3C7] rounded-2xl shadow-sm">
+                                <table className="w-full min-w-[640px] text-left border-collapse">
                                     <thead>
                                         <tr className="bg-[#FFFBEB] text-[#4B5563] text-xs uppercase border-b border-[#FEF3C7]">
                                             <th className="p-4">Worker</th>
@@ -1187,9 +1210,9 @@ export default function CompanyDashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Create Team Form Card */}
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4 h-fit">
+                            <div className="bg-white border border-[#FEF3C7] p-4 sm:p-6 rounded-2xl shadow-sm space-y-4 h-fit w-full">
                                 <h3 className="font-bold text-sm text-[#111827] uppercase tracking-wider">Create New Team</h3>
                                 <form onSubmit={handleCreateTeam} className="space-y-4">
                                     <div>
@@ -1253,9 +1276,9 @@ export default function CompanyDashboard() {
                             </div>
 
                             {/* Teams list */}
-                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {teams.length === 0 ? (
-                                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-2xl col-span-2 text-center space-y-2">
+                                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-2xl col-span-1 sm:col-span-2 text-center space-y-2">
                                         <p className="text-sm text-[#4B5563] italic">No teams created yet.</p>
                                         <p className="text-xs text-[#9CA3AF]">Select a leader and workers above to create your first team.</p>
                                     </div>
@@ -1318,7 +1341,7 @@ export default function CompanyDashboard() {
 
                 {/* Assign Tab */}
                 {activeTab === 'assign' && (
-                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl max-w-lg shadow-sm space-y-6">
+                    <div className="bg-white border border-[#FEF3C7] p-5 sm:p-8 rounded-3xl w-full sm:max-w-lg shadow-sm space-y-6">
                         <div>
                             <h2 className="text-2xl font-extrabold text-[#111827]">Direct Worker Assignment</h2>
                             <p className="text-sm text-[#4B5563] mt-1">Directly assign individual workers or predefined teams to a posted event job.</p>
@@ -1388,9 +1411,9 @@ export default function CompanyDashboard() {
                     <div className="space-y-6">
                         <h2 className="text-2xl font-extrabold text-[#111827]">Attendance Log</h2>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Record Attendance Form Card */}
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4 h-fit">
+                            <div className="bg-white border border-[#FEF3C7] p-4 sm:p-6 rounded-2xl shadow-sm space-y-4 h-fit w-full">
                                 <h3 className="font-bold text-sm text-[#111827] uppercase tracking-wider">Log Worker Attendance</h3>
                                 <form onSubmit={handleAttendanceSubmit} className="space-y-3">
                                     <div>
@@ -1462,11 +1485,11 @@ export default function CompanyDashboard() {
                             </div>
 
                             {/* Attendance Table */}
-                            <div className="bg-white border border-[#FEF3C7] rounded-2xl overflow-hidden shadow-sm col-span-2">
+                            <div className="w-full overflow-x-auto bg-white border border-[#FEF3C7] rounded-2xl shadow-sm lg:col-span-2">
                                 {attendance.length === 0 ? (
                                     <div className="p-6 text-sm text-[#4B5563] italic">No attendance marked yet.</div>
                                 ) : (
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full min-w-[640px] text-left border-collapse">
                                         <thead>
                                             <tr className="bg-[#FFFBEB] text-[#4B5563] text-xs uppercase border-b border-[#FEF3C7]">
                                                 <th className="p-4">Worker</th>
@@ -1500,8 +1523,8 @@ export default function CompanyDashboard() {
 
                 {/* Wallet & Payments Tab */}
                 {activeTab === 'wallet' && wallet && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl shadow-sm space-y-6 h-fit">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                        <div className="bg-white border border-[#FEF3C7] p-5 sm:p-8 rounded-3xl shadow-sm space-y-6 h-fit">
                             <div>
                                 <h2 className="text-xl font-extrabold">Company Wallet</h2>
                                 <p className="text-xs text-[#4B5563] mt-1">Pre-fund your balance to cover event marshals & escrow charges.</p>
@@ -1544,7 +1567,7 @@ export default function CompanyDashboard() {
                         </div>
 
                         {/* Transaction history */}
-                        <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl shadow-sm col-span-2">
+                        <div className="bg-white border border-[#FEF3C7] p-5 sm:p-8 rounded-3xl shadow-sm lg:col-span-2">
                             <h3 className="font-bold text-lg mb-4">Transaction Ledger</h3>
                             {(!wallet?.transactionHistory || wallet.transactionHistory.length === 0) ? (
                                 <p className="text-xs text-[#4B5563] italic">No transaction history.</p>
@@ -1574,8 +1597,8 @@ export default function CompanyDashboard() {
                         {payments.length === 0 ? (
                             <p className="text-sm text-[#4B5563] italic">No payments recorded yet.</p>
                         ) : (
-                            <div className="bg-white border border-[#FEF3C7] rounded-2xl overflow-hidden shadow-sm">
-                                <table className="w-full text-left border-collapse">
+                            <div className="w-full overflow-x-auto bg-white border border-[#FEF3C7] rounded-2xl shadow-sm">
+                                <table className="w-full min-w-[640px] text-left border-collapse">
                                     <thead>
                                         <tr className="bg-[#FFFBEB] text-[#4B5563] text-xs uppercase border-b border-[#FEF3C7]">
                                             <th className="p-4">Worker</th>
@@ -1614,7 +1637,7 @@ export default function CompanyDashboard() {
                             <p className="text-sm text-[#4B5563] mt-1">Aggregated statistics and workforce metrics.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                             <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm text-center">
                                 <FileText className="w-8 h-8 text-[#F97316] mx-auto mb-2" />
                                 <h3 className="text-xs text-[#4B5563] uppercase tracking-wider font-semibold">Total Jobs Posted</h3>
@@ -1703,8 +1726,8 @@ export default function CompanyDashboard() {
             {/* Lock feature modal */}
             {/* Edit Job Modal */}
             {editingJob && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white border border-[#FEF3C7] rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white border border-[#FEF3C7] rounded-3xl w-[calc(100%-2rem)] sm:max-w-xl p-4 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto my-auto">
                         <div className="flex justify-between items-center pb-3 border-b border-[#FEF3C7]">
                             <div>
                                 <h3 className="text-xl font-extrabold text-[#111827]">Edit Job Posting</h3>
@@ -1719,7 +1742,7 @@ export default function CompanyDashboard() {
                         </div>
 
                         <form onSubmit={handleUpdateJob} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <SearchableSelect 
                                     label="Category"
                                     required
@@ -1740,7 +1763,7 @@ export default function CompanyDashboard() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Workers Required</label>
                                     <input 
@@ -1764,7 +1787,7 @@ export default function CompanyDashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Type</label>
                                     <select 
@@ -1788,7 +1811,7 @@ export default function CompanyDashboard() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Start Time</label>
                                     <input 
@@ -1833,17 +1856,17 @@ export default function CompanyDashboard() {
                                 />
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setEditingJob(null)}
-                                    className="w-1/2 py-2.5 rounded-xl border border-gray-300 font-bold text-xs hover:bg-gray-50 cursor-pointer"
+                                    className="w-full sm:w-1/2 py-2.5 rounded-xl border border-gray-300 font-bold text-xs hover:bg-gray-50 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white font-bold text-xs hover:bg-[#EA580C] cursor-pointer"
+                                    className="w-full sm:w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white font-bold text-xs hover:bg-[#EA580C] cursor-pointer"
                                 >
                                     Save Changes
                                 </button>
@@ -1855,8 +1878,8 @@ export default function CompanyDashboard() {
 
             {/* Edit Team Modal */}
             {editingTeam && (
-                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#FEF3C7] shadow-2xl">
+                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 space-y-4 border border-[#FEF3C7] shadow-2xl max-h-[90vh] overflow-y-auto my-auto">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-extrabold text-[#111827]">Edit Team</h3>
                             <button 
@@ -1917,17 +1940,17 @@ export default function CompanyDashboard() {
                                     placeholder="Select workers ▼"
                                 />
                             </div>
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <button
                                     type="button"
                                     onClick={() => setEditingTeam(null)}
-                                    className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                                    className="w-full sm:w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold hover:bg-gray-50 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white text-xs font-bold hover:bg-orange-600 cursor-pointer"
+                                    className="w-full sm:w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white text-xs font-bold hover:bg-orange-600 cursor-pointer"
                                 >
                                     Save Changes
                                 </button>
@@ -1938,8 +1961,8 @@ export default function CompanyDashboard() {
             )}
 
             {showLockModal && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-3xl border border-[#FFF7D6] p-8 max-w-sm w-full text-center space-y-6">
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+                    <div className="bg-white rounded-3xl border border-[#FFF7D6] p-6 sm:p-8 w-[calc(100%-2rem)] sm:max-w-sm text-center space-y-6 my-auto">
                         <div className="w-16 h-16 bg-[#FFF7D6] text-[#F97316] rounded-full flex items-center justify-center mx-auto">
                             <Lock className="w-8 h-8" />
                         </div>
@@ -1949,10 +1972,10 @@ export default function CompanyDashboard() {
                                 Company verification is required to access this feature.
                             </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <button 
                                 onClick={() => setShowLockModal(false)}
-                                className="bg-[#FFFCF5] hover:bg-[#FFF7D6] border border-[#FFF7D6] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer flex-1"
+                                className="bg-[#FFFCF5] hover:bg-[#FFF7D6] border border-[#FFF7D6] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer w-full sm:flex-1"
                             >
                                 Close
                             </button>
@@ -1961,7 +1984,7 @@ export default function CompanyDashboard() {
                                     setShowLockModal(false);
                                     navigate('/company/verification');
                                 }}
-                                className="bg-[#F97316] hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer flex-1"
+                                className="bg-[#F97316] hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer w-full sm:flex-1"
                             >
                                 Complete Verification
                             </button>

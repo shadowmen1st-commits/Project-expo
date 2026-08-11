@@ -347,7 +347,7 @@ export default function CompanyVerification() {
                         <div className="bg-[#F97316] h-full transition-all duration-500" style={{ width: `${progress || 0}%` }}></div>
                     </div>
 
-                    <div className="grid grid-cols-5 gap-2 text-center text-[10px] md:text-xs font-bold text-[#78716C] pt-2">
+                    <div className="flex overflow-x-auto gap-1.5 sm:grid sm:grid-cols-5 sm:gap-2 text-center text-[10px] sm:text-xs font-bold text-[#78716C] pt-2 scrollbar-none pb-1">
                         {[
                             { num: 1, label: 'Profile' },
                             { num: 2, label: 'Business Details' },
@@ -361,13 +361,13 @@ export default function CompanyVerification() {
                                 <button
                                     key={step.num}
                                     onClick={() => setCurrentStep(step.num)}
-                                    className={`py-2 px-1 rounded-xl transition-all border flex flex-col md:flex-row items-center justify-center gap-1.5 cursor-pointer ${
+                                    className={`py-2 px-2.5 sm:px-1 rounded-xl transition-all border flex flex-row items-center justify-center gap-1.5 cursor-pointer shrink-0 sm:shrink ${
                                         isActive ? 'bg-[#F97316] text-white border-[#F97316] shadow-sm' :
                                         isDone ? 'bg-[#FFFBEB] text-[#F97316] border-[#FFF7D6]' :
                                         'bg-white text-[#A8A29E] border-gray-100 hover:border-gray-200'
                                     }`}
                                 >
-                                    <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-black ${
+                                    <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-black shrink-0 ${
                                         isActive ? 'bg-white text-[#F97316]' : isDone ? 'bg-[#F97316] text-white' : 'bg-gray-100 text-gray-400'
                                     }`}>
                                         {isDone ? '✓' : step.num}
@@ -529,7 +529,7 @@ export default function CompanyVerification() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-[#78716C] mb-1">City *</label>
                                     <input 
@@ -569,7 +569,7 @@ export default function CompanyVerification() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center gap-2 shadow-sm transition-all"
+                                    className="w-full sm:w-auto bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
                                 >
                                     <span>{saving ? 'Saving...' : 'Save & Continue to Step 2'}</span>
                                     <ArrowRight className="w-4 h-4" />
@@ -723,11 +723,11 @@ export default function CompanyVerification() {
                                 />
                             </div>
 
-                            <div className="pt-4 flex justify-between">
+                            <div className="pt-4 flex flex-col sm:flex-row justify-between gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setCurrentStep(1)}
-                                    className="bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-1.5"
+                                    className="w-full sm:w-auto bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                     <span>Back</span>
@@ -735,7 +735,7 @@ export default function CompanyVerification() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center gap-2 shadow-sm transition-all"
+                                    className="w-full sm:w-auto bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
                                 >
                                     <span>{saving ? 'Saving...' : 'Save & Continue to Step 3'}</span>
                                     <ArrowRight className="w-4 h-4" />
@@ -874,11 +874,11 @@ export default function CompanyVerification() {
                             })}
                         </div>
 
-                        <div className="pt-4 flex justify-between border-t border-[#FFF7D6]">
+                        <div className="pt-4 flex flex-col sm:flex-row justify-between gap-3 border-t border-[#FFF7D6]">
                             <button
                                 type="button"
                                 onClick={() => setCurrentStep(2)}
-                                className="bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-1.5"
+                                className="w-full sm:w-auto bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center justify-center gap-1.5"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 <span>Back</span>
@@ -887,7 +887,7 @@ export default function CompanyVerification() {
                                 type="button"
                                 onClick={() => setCurrentStep(4)}
                                 disabled={!mandatoryComplete}
-                                className="bg-[#F97316] hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center gap-2 shadow-sm transition-all"
+                                className="w-full sm:w-auto bg-[#F97316] hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
                             >
                                 <span>Continue to Step 4 Review</span>
                                 <ArrowRight className="w-4 h-4" />
@@ -1043,11 +1043,11 @@ export default function CompanyVerification() {
                             </label>
                         </div>
 
-                        <div className="pt-4 flex justify-between border-t border-[#FFF7D6]">
+                        <div className="pt-4 flex flex-col sm:flex-row justify-between gap-3 border-t border-[#FFF7D6]">
                             <button
                                 type="button"
                                 onClick={() => setCurrentStep(3)}
-                                className="bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center gap-1.5"
+                                className="w-full sm:w-auto bg-white border border-[#FFF7D6] hover:bg-[#FFFCF5] text-xs font-bold px-6 py-3 rounded-2xl cursor-pointer flex items-center justify-center gap-1.5"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 <span>Back</span>
@@ -1056,7 +1056,7 @@ export default function CompanyVerification() {
                                 type="button"
                                 onClick={handleSubmitKYC}
                                 disabled={saving || !confirmedDeclaration || !mandatoryComplete}
-                                className="bg-[#F97316] hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs shadow-sm transition-all flex items-center gap-2"
+                                className="w-full sm:w-auto bg-[#F97316] hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-2xl cursor-pointer text-xs shadow-sm transition-all flex items-center justify-center gap-2"
                             >
                                 <span>{saving ? 'Submitting Application...' : 'Submit For Verification'}</span>
                                 <ArrowRight className="w-4 h-4" />

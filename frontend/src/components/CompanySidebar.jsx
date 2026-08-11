@@ -16,7 +16,8 @@ import {
     Settings, 
     LogOut,
     ShieldCheck,
-    Lock
+    Lock,
+    X
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -37,22 +38,33 @@ const MENU_ITEMS = [
     { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export default function CompanySidebar({ activeTab, setActiveTab, onLogout, companyName, verificationStatus, onLockedClick }) {
+export default function CompanySidebar({ activeTab, setActiveTab, onLogout, companyName, verificationStatus, onLockedClick, mobileOpen, setMobileOpen }) {
     const isVerified = verificationStatus === 'VERIFIED';
 
-    return (
-        <aside className="w-64 bg-white border-r border-[#FFF7D6] flex flex-col justify-between h-screen sticky top-0">
-            <div className="p-6">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FBBF24] to-[#F97316] flex items-center justify-center shadow-sm">
-                        <span className="text-[#171717] text-xl font-black">H</span>
+    const renderNavContent = (isMobile = false) => (
+        <div className="flex flex-col justify-between h-full p-4 sm:p-6">
+            <div>
+                <div className="flex items-center justify-between mb-6 lg:mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FBBF24] to-[#F97316] flex items-center justify-center shadow-xs">
+                            <span className="text-[#171717] text-xl font-black">H</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-bold tracking-tight text-[#171717]">
+                                HyperLocal<span className="text-[#F97316]">.</span>
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wider text-[#F97316] font-extrabold">COMPANY</span>
+                        </div>
                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold tracking-tight text-[#171717]">
-                            HyperLocal<span className="text-[#F97316]">.</span>
-                        </span>
-                        <span className="text-[10px] uppercase tracking-wider text-[#F97316] font-extrabold">COMPANY</span>
-                    </div>
+                    {isMobile && (
+                        <button 
+                            onClick={() => setMobileOpen?.(false)} 
+                            className="p-2 text-[#78716C] hover:text-[#171717] rounded-xl hover:bg-[#FFF7D6] cursor-pointer"
+                            aria-label="Close menu"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
 
                 <div className="mb-4 px-3 py-2 bg-[#FFFCF5] rounded-xl border border-[#FFF7D6] flex justify-between items-center">
@@ -61,13 +73,13 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
                         <p className="text-xs font-bold text-[#171717] truncate">{companyName || 'Apex Events'}</p>
                     </div>
                     {isVerified && (
-                        <span className="text-[8px] bg-green-50 text-green-700 font-extrabold px-1.5 py-0.5 rounded-full border border-green-200 flex-shrink-0">
+                        <span className="text-[8px] bg-green-50 text-green-700 font-extrabold px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
                             ✓ Verified
                         </span>
                     )}
                 </div>
 
-                <nav className="space-y-1 overflow-y-auto max-h-[60vh] pr-2">
+                <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-260px)] pr-1">
                     {MENU_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const isItemLocked = item.locked && !isVerified;
@@ -81,19 +93,22 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
                                     } else {
                                         setActiveTab(item.id);
                                     }
+                                    if (isMobile) {
+                                        setMobileOpen?.(false);
+                                    }
                                 }}
-                                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-all cursor-pointer ${
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                                     activeTab === item.id 
                                         ? 'bg-[#FFF7D6] text-[#F97316] font-bold border-l-4 border-[#F97316]' 
                                         : 'text-[#78716C] hover:bg-[#FFFCF5] hover:text-[#171717]'
                                 }`}
                             >
-                                <div className="flex items-center gap-3">
-                                    <Icon className={`w-4 h-4 ${activeTab === item.id ? 'text-[#F97316]' : 'text-[#A8A29E]'}`} />
-                                    <span>{item.label}</span>
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Icon className={`w-4 h-4 shrink-0 ${activeTab === item.id ? 'text-[#F97316]' : 'text-[#A8A29E]'}`} />
+                                    <span className="truncate">{item.label}</span>
                                 </div>
                                 {isItemLocked && (
-                                    <Lock className="w-3.5 h-3.5 text-[#A8A29E]" />
+                                    <Lock className="w-3.5 h-3.5 text-[#A8A29E] shrink-0" />
                                 )}
                             </button>
                         );
@@ -101,15 +116,43 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
                 </nav>
             </div>
 
-            <div className="p-6 border-t border-[#FFF7D6]">
+            <div className="pt-4 border-t border-[#FFF7D6]">
                 <button 
-                    onClick={onLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                    onClick={() => {
+                        onLogout?.();
+                        if (isMobile) setMobileOpen?.(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 transition-all cursor-pointer"
                 >
-                    <LogOut className="w-4 h-4 text-red-600" />
+                    <LogOut className="w-4 h-4 text-red-600 shrink-0" />
                     <span>Logout</span>
                 </button>
             </div>
-        </aside>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop Fixed Sidebar */}
+            <aside className="hidden lg:flex w-64 bg-white border-r border-[#FFF7D6] flex-col justify-between h-screen sticky top-0 shrink-0">
+                {renderNavContent(false)}
+            </aside>
+
+            {/* Mobile Sidebar Backdrop */}
+            {mobileOpen && (
+                <div 
+                    className="fixed inset-0 z-40 bg-black/40 lg:hidden transition-opacity"
+                    onClick={() => setMobileOpen?.(false)}
+                />
+            )}
+
+            {/* Mobile Drawer Sidebar */}
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white lg:hidden shadow-2xl transition-transform duration-300 ${
+                mobileOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}>
+                {renderNavContent(true)}
+            </aside>
+        </>
     );
 }
+

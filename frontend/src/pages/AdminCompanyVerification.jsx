@@ -347,31 +347,31 @@ export default function AdminCompanyVerification() {
 
                 {/* Document Preview Modal */}
                 {previewDoc && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-                        <div className="bg-white rounded-3xl border border-[#E7E0D8] max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in overflow-y-auto">
+                        <div className="bg-white rounded-3xl border border-[#E7E0D8] w-[calc(100%-24px)] sm:max-w-3xl lg:max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
                             {/* Modal Header */}
-                            <div className="p-6 border-b border-[#E7E0D8] flex justify-between items-center bg-[#FAF6F0]">
-                                <div>
-                                    <h3 className="text-lg font-bold text-[#1C1917]">
+                            <div className="p-4 sm:p-6 border-b border-[#E7E0D8] flex justify-between items-center bg-[#FAF6F0]">
+                                <div className="min-w-0 pr-2">
+                                    <h3 className="text-base sm:text-lg font-bold text-[#1C1917] truncate">
                                         {previewDoc.documentType.replace(/_/g, ' ')}
                                     </h3>
-                                    <p className="text-xs text-[#78716C] mt-0.5 flex items-center gap-2">
-                                        <span>File: {previewDoc.fileName || 'document'}</span>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                                    <p className="text-xs text-[#78716C] mt-0.5 flex flex-wrap items-center gap-2">
+                                        <span className="truncate">File: {previewDoc.fileName || 'document'}</span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">
                                             Status: {previewDoc.status}
                                         </span>
                                     </p>
                                 </div>
                                 <button 
                                     onClick={handleClosePreview}
-                                    className="p-2 text-[#78716C] hover:text-[#1C1917] rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                                    className="p-2 text-[#78716C] hover:text-[#1C1917] rounded-full hover:bg-black/5 transition-colors cursor-pointer shrink-0"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             {/* Modal Body */}
-                            <div className="p-6 flex-1 overflow-auto bg-[#FAF6F0] flex items-center justify-center min-h-[400px]">
+                            <div className="p-3 sm:p-6 flex-1 overflow-auto bg-[#FAF6F0] flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
                                 {previewLoading && (
                                     <div className="flex flex-col items-center gap-3 text-xs text-[#78716C]">
                                         <Loader2 className="w-8 h-8 text-[#EAB308] animate-spin" />
@@ -400,13 +400,13 @@ export default function AdminCompanyVerification() {
                                             <img 
                                                 src={previewBlobUrl} 
                                                 alt={previewDoc.fileName || 'Verification Document'}
-                                                className="max-h-[65vh] object-contain rounded-2xl shadow-sm border border-[#E7E0D8] bg-white"
+                                                className="max-h-[55vh] sm:max-h-[65vh] max-w-full object-contain rounded-2xl shadow-sm border border-[#E7E0D8] bg-white"
                                             />
                                         ) : (
                                             <iframe 
                                                 src={previewBlobUrl} 
                                                 title={previewDoc.fileName || 'Document Viewer'}
-                                                className="w-full h-[65vh] rounded-2xl border border-[#E7E0D8] bg-white shadow-sm"
+                                                className="w-full h-[55vh] sm:h-[65vh] rounded-2xl border border-[#E7E0D8] bg-white shadow-sm"
                                             />
                                         )}
                                     </div>
@@ -414,33 +414,33 @@ export default function AdminCompanyVerification() {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="p-4 border-t border-[#E7E0D8] bg-white flex flex-wrap justify-between items-center gap-3">
+                            <div className="p-3 sm:p-4 border-t border-[#E7E0D8] bg-white flex flex-col sm:flex-row justify-between items-center gap-3">
                                 <div className="text-xs text-[#78716C]">
                                     {previewDoc.fileSize && <span>Size: {(previewDoc.fileSize / 1024).toFixed(1)} KB</span>}
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                                     {previewBlobUrl && (
                                         <>
                                             <button 
                                                 onClick={() => window.open(previewBlobUrl, '_blank')}
-                                                className="flex items-center gap-1.5 text-xs font-bold text-[#1C1917] bg-[#FAF6F0] border border-[#E7E0D8] px-4 py-2 rounded-xl hover:bg-[#F5EFE6] transition-colors cursor-pointer"
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-xs font-bold text-[#1C1917] bg-[#FAF6F0] border border-[#E7E0D8] px-3 sm:px-4 py-2 rounded-xl hover:bg-[#F5EFE6] transition-colors cursor-pointer"
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5 text-[#EAB308]" />
-                                                <span>Open in New Tab</span>
+                                                <span>Open</span>
                                             </button>
                                             <a 
                                                 href={previewBlobUrl}
                                                 download={previewDoc.fileName || `${previewDoc.documentType.toLowerCase()}.pdf`}
-                                                className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#EAB308] px-4 py-2 rounded-xl hover:bg-[#CA8A04] transition-colors cursor-pointer"
+                                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-[#EAB308] px-3 sm:px-4 py-2 rounded-xl hover:bg-[#CA8A04] transition-colors cursor-pointer"
                                             >
                                                 <Download className="w-3.5 h-3.5" />
-                                                <span>Download File</span>
+                                                <span>Download</span>
                                             </a>
                                         </>
                                     )}
                                     <button 
                                         onClick={handleClosePreview}
-                                        className="text-xs font-bold text-[#78716C] bg-gray-100 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                                        className="flex-1 sm:flex-initial text-xs font-bold text-[#78716C] bg-gray-100 px-3 sm:px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
                                     >
                                         Close
                                     </button>
