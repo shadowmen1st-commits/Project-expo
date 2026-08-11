@@ -4,6 +4,10 @@ import { authMiddleware } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/rbac.js';
 import { createWorkerPayoutAccount, listWorkerPayoutAccounts, getWorkerPayoutAccount, setDefaultWorkerPayoutAccount, validateWorkerPayoutAccount, disableWorkerPayoutAccount, createWorkerPayout, listWorkerPayouts, getWorkerPayout } from '../controllers/payoutController.js';
 import { publicList, summary } from '../controllers/reviewController.js';
+import multer from 'multer';
+import { uploadProfilePhoto, deleteProfilePhoto } from '../controllers/verificationController.js';
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 const router = Router();
 // Public routes
 router.get('/search', searchWorkers);
@@ -13,6 +17,8 @@ router.get('/:workerId/rating-summary', summary);
 // Authenticated routes
 router.post('/onboarding', authMiddleware, submitOnboarding);
 router.post('/location', authMiddleware, updateLocation);
+router.post('/profile-photo', authMiddleware, upload.single('file'), uploadProfilePhoto);
+router.delete('/profile-photo', authMiddleware, deleteProfilePhoto);
 router.get('/jobs', authMiddleware, getWorkerAvailableJobs);
 router.post('/jobs/:id/apply', authMiddleware, applyForJob);
 router.get('/applications', authMiddleware, getWorkerApplications);

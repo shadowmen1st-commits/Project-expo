@@ -792,11 +792,31 @@ export const uploadProfilePhoto = async (req, res, next) => {
         const photoUrl = `/api/v1/worker/verification/profile-photo/file/${randomName}`;
         profile.profilePhotoId = photoUrl;
         await profile.save();
+        await User.findByIdAndUpdate(workerId, { profileImage: photoUrl });
 
         res.status(200).json({
             success: true,
             message: 'Profile photo uploaded successfully.',
             photoUrl: photoUrl
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteProfilePhoto = async (req, res, next) => {
+    try {
+        const workerId = req.user.userId;
+        let profile = await WorkerProfile.findOne({ userId: workerId });
+        if (profile) {
+            profile.profilePhotoId = null;
+            await profile.save();
+        }
+        await User.findByIdAndUpdate(workerId, { profileImage: null });
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile photo removed successfully.'
         });
     } catch (error) {
         next(error);

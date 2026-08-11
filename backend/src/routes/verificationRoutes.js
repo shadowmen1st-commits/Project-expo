@@ -12,6 +12,7 @@ import {
     resubmitVerification,
     getDocumentAccess,
     uploadProfilePhoto,
+    deleteProfilePhoto,
     serveProfilePhoto
 } from '../controllers/verificationController.js';
 import {
@@ -47,6 +48,7 @@ router.post('/worker/verification/documents', authMiddleware, requireWorkerRole,
 router.put('/worker/verification/documents/:documentId', authMiddleware, requireWorkerRole, upload.single('file'), uploadDocument);
 router.delete('/worker/verification/documents/:documentId', authMiddleware, requireWorkerRole, softDeleteDocument);
 router.post('/worker/verification/profile-photo', authMiddleware, requireWorkerRole, upload.single('file'), uploadProfilePhoto);
+router.delete('/worker/verification/profile-photo', authMiddleware, requireWorkerRole, deleteProfilePhoto);
 router.get('/worker/verification/profile-photo/file/:filename', serveProfilePhoto);
 router.post('/worker/verification/submit', authMiddleware, requireWorkerRole, submitVerification);
 router.post('/worker/verification/resubmit', authMiddleware, requireWorkerRole, resubmitVerification);

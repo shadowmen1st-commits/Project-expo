@@ -89,8 +89,16 @@ export const CustomerHome = () => {
     const [bookingDuration, setBookingDuration] = useState(2);
     const [pricingType] = useState('HOURLY');
     const [notes, setNotes] = useState('');
-    // Category selected specifically for booking (from the chosen worker's categories)
-    const [selectedBookingCategory, setSelectedBookingCategory] = useState('');
+    // Service Address fields & Booking Step
+    const [houseNumber, setHouseNumber] = useState('Flat 402, Sunshine Apts');
+    const [street, setStreet] = useState('123 Tech Park Road');
+    const [locality, setLocality] = useState('Whitefield');
+    const [city, setCity] = useState('Bengaluru');
+    const [stateName, setStateName] = useState('Karnataka');
+    const [pincode, setPincode] = useState('560066');
+    const [addressType, setAddressType] = useState('HOME');
+    const [addressInstructions, setAddressInstructions] = useState('');
+    const [bookingStep, setBookingStep] = useState(1); // 1 = Details & Address, 2 = Review & Confirm
 
     // Availability & Server Quote State
     const [isCheckingSlot, setIsCheckingSlot] = useState(false);
@@ -191,6 +199,15 @@ export const CustomerHome = () => {
         setBookingTime('09:00');
         setBookingDuration(2);
         setNotes('');
+        setHouseNumber('Flat 402, Sunshine Apts');
+        setStreet('123 Tech Park Road');
+        setLocality('Whitefield');
+        setCity('Bengaluru');
+        setStateName('Karnataka');
+        setPincode('560066');
+        setAddressType('HOME');
+        setAddressInstructions('');
+        setBookingStep(1);
         setSlotAvailable(null);
         setSlotError('');
         setActiveQuote(null);
@@ -211,6 +228,14 @@ export const CustomerHome = () => {
         if (!selectedWorker || !bookingDate || !bookingTime) return;
         if (!selectedBookingCategory) {
             setSlotError('Please select a service category for this booking.');
+            return;
+        }
+        if (!houseNumber || !street || !city || !stateName || !pincode) {
+            setSlotError('Please fill in all required address fields.');
+            return;
+        }
+        if (!/^\d{6}$/.test(pincode)) {
+            setSlotError('PIN code must be exactly 6 digits.');
             return;
         }
         setIsCheckingSlot(true);
@@ -247,6 +272,7 @@ export const CustomerHome = () => {
                     setActiveQuote(quoteRes.data);
                     const diff = Math.max(0, Math.floor((new Date(quoteRes.data.expiresAt).getTime() - Date.now()) / 1000));
                     setQuoteTimeLeft(diff);
+                    setBookingStep(2); // Advance to Booking Review Step
                 }
             }
         } catch (err) {
@@ -263,6 +289,10 @@ export const CustomerHome = () => {
             setError('Price quote has expired. Please recalculate quote.');
             return;
         }
+        if (!/^\d{6}$/.test(pincode)) {
+            setError('PIN code must be exactly 6 digits.');
+            return;
+        }
 
         setLoading(true);
         setError('');
@@ -274,7 +304,17 @@ export const CustomerHome = () => {
                 quoteId: activeQuote.quoteId,
                 workerId: selectedWorker.workerId,
                 serviceCategoryId: selectedBookingCategory,
-                serviceAddress: '123 Tech Park Road, Bengaluru',
+                addressSnapshot: {
+                    houseNumber,
+                    street,
+                    locality,
+                    landmark: locality,
+                    city,
+                    state: stateName,
+                    pincode,
+                    addressType,
+                    instructions: addressInstructions,
+                },
                 scheduledStart: start.toISOString(),
                 scheduledEnd: end.toISOString(),
                 pricingType,
@@ -474,8 +514,21 @@ export const CustomerHome = () => {
                                         <div>
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-[#FFEDD5] border border-[#FED7AA] flex items-center justify-center font-bold text-[#F97316] text-sm">
-                                                        {worker.name ? worker.name[0] : 'W'}
+                                                    <div className="w-11 h-11 rounded-xl bg-[#FFEDD5] border border-[#FED7AA] flex items-center justify-center font-bold text-[#F97316] text-sm overflow-hidden flex-shrink-0 relative shadow-sm">
+                                                        {worker.profileImage ? (
+                                                            <img
+                                                                src={worker.profileImage}
+                                                                alt={worker.name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <span className={worker.profileImage ? 'hidden flex items-center justify-center w-full h-full' : 'flex items-center justify-center w-full h-full'}>
+                                                            {worker.name ? worker.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'W'}
+                                                        </span>
                                                     </div>
                                                     <div>
                                                         <div className="flex items-center gap-1.5">
@@ -675,157 +728,227 @@ export const CustomerHome = () => {
                     {selectedWorker && (
                         <div className="bg-white border border-[#FEF3C7] rounded-3xl p-6 space-y-4 shadow-md shadow-orange-50/50">
                             <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-3">
-                                <h3 className="font-bold text-[#111827] text-sm">Booking: {selectedWorker.name}</h3>
-                                <button onClick={() => setSelectedWorker(null)} className="text-[#4B5563] hover:text-[#111827] cursor-pointer"><X className="w-4 h-4"/></button>
+                                <div>
+                                    <h3 className="font-bold text-[#111827] text-sm">Booking: {selectedWorker.name}</h3>
+                                    <span className="text-[10px] text-[#78716C]">Step {bookingStep} of 2: {bookingStep === 1 ? 'Service Details & Address' : 'Review & Confirm'}</span>
+                                </div>
+                                <button onClick={() => { setSelectedWorker(null); setBookingStep(1); }} className="text-[#4B5563] hover:text-[#111827] cursor-pointer"><X className="w-4 h-4"/></button>
                             </div>
 
-                            <div className="space-y-3">
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Select Date</label>
-                                    <input type="date" value={bookingDate} onChange={(e) => { setBookingDate(e.target.value); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
+                            {bookingStep === 1 ? (
+                                <div className="space-y-3">
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Start Time</label>
-                                        <input type="time" value={bookingTime} onChange={(e) => { setBookingTime(e.target.value); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
+                                        <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Select Date</label>
+                                        <input type="date" value={bookingDate} onChange={(e) => { setBookingDate(e.target.value); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Start Time</label>
+                                            <input type="time" value={bookingTime} onChange={(e) => { setBookingTime(e.target.value); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Duration (Hrs)</label>
+                                            <input type="number" min={1} max={12} value={bookingDuration} onChange={(e) => { setBookingDuration(Number(e.target.value)); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
+                                        </div>
+                                    </div>
+
+                                    {/* Service Category Selector */}
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Duration (Hrs)</label>
-                                        <input type="number" min={1} max={12} value={bookingDuration} onChange={(e) => { setBookingDuration(Number(e.target.value)); setSlotAvailable(null); }} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none"/>
+                                        <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Service Type</label>
+                                        {categories.length === 0 ? (
+                                            <p className="text-[10px] text-[#A8A29E] mt-1">Loading categories…</p>
+                                        ) : (() => {
+                                            const workerCatIds = new Set(
+                                                (selectedWorker.serviceCategoryIds || []).map(id =>
+                                                    typeof id === 'object' ? (id?._id || id)?.toString() : id?.toString()
+                                                ).filter(Boolean)
+                                            );
+                                            const workerCats  = categories.filter(c => workerCatIds.has(c._id?.toString()));
+                                            const otherCats   = categories.filter(c => !workerCatIds.has(c._id?.toString()));
+                                            return (
+                                                <select
+                                                    value={selectedBookingCategory}
+                                                    onChange={(e) => {
+                                                        setSelectedBookingCategory(e.target.value);
+                                                        setSlotAvailable(null);
+                                                        setActiveQuote(null);
+                                                    }}
+                                                    className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all rounded-xl py-2 px-3 text-[#111827] text-xs outline-none cursor-pointer"
+                                                >
+                                                    <option value="">-- Select Service --</option>
+                                                    {workerCats.length > 0 && (
+                                                        <optgroup label="⭐ Worker's Speciality">
+                                                            {workerCats.map(cat => (
+                                                                <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                            ))}
+                                                        </optgroup>
+                                                    )}
+                                                    {otherCats.length > 0 && (
+                                                        <optgroup label="All Other Services">
+                                                            {otherCats.map(cat => (
+                                                                <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                                            ))}
+                                                        </optgroup>
+                                                    )}
+                                                </select>
+                                            );
+                                        })()}
                                     </div>
-                                </div>
 
-                                {/* Service Category Selector — all categories, worker's own highlighted first */}
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Service Type</label>
-                                    {categories.length === 0 ? (
-                                        <p className="text-[10px] text-[#A8A29E] mt-1">Loading categories…</p>
-                                    ) : (() => {
-                                        const workerCatIds = new Set(
-                                            (selectedWorker.serviceCategoryIds || []).map(id =>
-                                                typeof id === 'object' ? (id?._id || id)?.toString() : id?.toString()
-                                            ).filter(Boolean)
-                                        );
-                                        const workerCats  = categories.filter(c => workerCatIds.has(c._id?.toString()));
-                                        const otherCats   = categories.filter(c => !workerCatIds.has(c._id?.toString()));
-                                        return (
-                                            <select
-                                                value={selectedBookingCategory}
-                                                onChange={(e) => {
-                                                    setSelectedBookingCategory(e.target.value);
-                                                    setSlotAvailable(null);
-                                                    setActiveQuote(null);
-                                                }}
-                                                className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all rounded-xl py-2 px-3 text-[#111827] text-xs outline-none cursor-pointer"
-                                            >
-                                                <option value="">-- Select Service --</option>
-
-                                                {/* Worker's speciality categories first */}
-                                                {workerCats.length > 0 && (
-                                                    <optgroup label="⭐ Worker's Speciality">
-                                                        {workerCats.map(cat => (
-                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                )}
-
-                                                {/* All other categories */}
-                                                {otherCats.length > 0 && (
-                                                    <optgroup label="All Other Services">
-                                                        {otherCats.map(cat => (
-                                                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                )}
-                                            </select>
-                                        );
-                                    })()}
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Special Notes</label>
-                                    <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Provide special instructions..." className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none resize-none"/>
-                                </div>
-
-                                {/* Slot Check Status Messages */}
-                                {slotError && (
-                                    <div className="bg-[#DC2626]/10 border border-[#DC2626]/30 text-[#DC2626] text-xs p-3 rounded-xl flex items-start gap-2">
-                                        <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5"/>
-                                        <span>{slotError}</span>
-                                    </div>
-                                )}
-
-                                {slotAvailable && activeQuote && (
-                                    <div className="bg-[#16A34A]/10 border border-[#16A34A]/30 p-3.5 rounded-xl text-xs text-[#16A34A] space-y-2">
-                                        <div className="flex items-center justify-between font-bold">
-                                            <div className="flex items-center gap-1.5">
-                                                <CheckCircle2 className="w-4 h-4"/>
-                                                <span>Time Slot Available</span>
-                                            </div>
-                                            <div className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${quoteTimeLeft > 60 ? 'bg-[#FFEDD5] text-[#F97316] border-[#FED7AA]' : 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/30'}`}>
-                                                <Clock className="w-3 h-3"/>
-                                                <span>Quote expires in {Math.floor(quoteTimeLeft / 60)}m {quoteTimeLeft % 60}s</span>
+                                    {/* Service Address Form */}
+                                    <div className="pt-2 border-t border-[#FEF3C7] space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-[#374151] uppercase tracking-wider">Service Delivery Address</span>
+                                            <div className="flex gap-1 text-[9px] font-bold">
+                                                {['HOME', 'OFFICE', 'OTHER'].map((type) => (
+                                                    <button
+                                                        key={type}
+                                                        type="button"
+                                                        onClick={() => setAddressType(type)}
+                                                        className={`px-2 py-0.5 rounded-full border cursor-pointer ${addressType === type ? 'bg-[#F97316] text-white border-[#F97316]' : 'bg-white text-[#78716C] border-[#FEF3C7]'}`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
-                                        <div className="text-[11px] text-[#44403C] space-y-1 pt-1.5 border-t border-[#16A34A]/20">
-                                            <div className="flex justify-between">
-                                                <span>Base Service Amount:</span>
-                                                <span>₹{activeQuote.breakdown.baseAmountRupees.toFixed(2)}</span>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-[9px] text-[#4B5563] font-semibold mb-0.5">Flat / House No. *</label>
+                                                <input type="text" placeholder="e.g. Flat 402, B Block" value={houseNumber} onChange={(e) => setHouseNumber(e.target.value)} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-lg p-2 text-[#111827] text-xs outline-none focus:border-[#F97316]"/>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span>Platform Fee:</span>
-                                                <span>₹{activeQuote.breakdown.platformFeeRupees.toFixed(2)}</span>
+                                            <div>
+                                                <label className="block text-[9px] text-[#4B5563] font-semibold mb-0.5">Street / Locality *</label>
+                                                <input type="text" placeholder="e.g. 123 Tech Park Road" value={street} onChange={(e) => setStreet(e.target.value)} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-lg p-2 text-[#111827] text-xs outline-none focus:border-[#F97316]"/>
                                             </div>
-                                            {activeQuote.breakdown.taxAmountRupees > 0 && (
-                                                <div className="flex justify-between">
-                                                    <span>GST Tax (18%):</span>
-                                                    <span>₹{activeQuote.breakdown.taxAmountRupees.toFixed(2)}</span>
-                                                </div>
-                                            )}
-                                            {activeQuote.breakdown.discountAmountRupees > 0 && (
-                                                <div className="flex justify-between text-[#16A34A]">
-                                                    <span>Discount:</span>
-                                                    <span>-₹{activeQuote.breakdown.discountAmountRupees.toFixed(2)}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between font-extrabold text-[#F97316] text-xs pt-1 border-t border-[#FEF3C7]">
-                                                <span>Total Payable:</span>
-                                                <span>₹{activeQuote.breakdown.totalAmountRupees.toFixed(2)}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <label className="block text-[9px] text-[#4B5563] font-semibold mb-0.5">Area / Landmark</label>
+                                                <input type="text" placeholder="e.g. Near Metro" value={locality} onChange={(e) => setLocality(e.target.value)} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-lg p-2 text-[#111827] text-xs outline-none focus:border-[#F97316]"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] text-[#4B5563] font-semibold mb-0.5">City *</label>
+                                                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-lg p-2 text-[#111827] text-xs outline-none focus:border-[#F97316]"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[9px] text-[#4B5563] font-semibold mb-0.5">PIN Code (6 digits) *</label>
+                                                <input type="text" maxLength={6} placeholder="560066" value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))} className={`w-full bg-[#FFFDF5] border rounded-lg p-2 text-[#111827] text-xs outline-none focus:border-[#F97316] ${pincode && !/^\d{6}$/.test(pincode) ? 'border-[#DC2626] text-[#DC2626]' : 'border-[#FEF3C7]'}`}/>
                                             </div>
                                         </div>
                                     </div>
-                                )}
 
-                                {createdBooking ? (
-                                    <div className="bg-[#FFEDD5] border border-[#FED7AA] p-4 rounded-2xl text-center space-y-2">
-                                        <Clock className="w-6 h-6 text-[#F97316] mx-auto"/>
-                                        <h4 className="font-bold text-xs text-[#111827]">Booking Created!</h4>
-                                        <p className="text-[10px] text-[#4B5563]">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> generated in <span className="font-bold text-[#EAB308]">PAYMENT_PENDING</span> state.</p>
-                                        <div className="text-[10px] font-semibold text-[#F97316] pt-1">Secure payment setup is pending.</div>
+                                    <div>
+                                        <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Special Delivery / Job Notes</label>
+                                        <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Provide special instructions or entry details..." className="w-full bg-[#FFFDF5] border border-[#FEF3C7] rounded-xl py-2 px-3 text-[#111827] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all text-xs outline-none resize-none"/>
                                     </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <button
-                                            onClick={handleCheckAvailability}
-                                            disabled={isCheckingSlot}
-                                            className="w-full bg-white border border-[#F97316] hover:bg-[#FFEDD5] text-[#F97316] font-bold text-xs py-2.5 rounded-xl cursor-pointer shadow-sm transition-all"
-                                        >
-                                            {isCheckingSlot ? 'Checking Slot Availability...' : 'Check Availability & Price Preview'}
-                                        </button>
 
-                                        {slotAvailable && (
+                                    {slotError && (
+                                        <div className="bg-[#DC2626]/10 border border-[#DC2626]/30 text-[#DC2626] text-xs p-3 rounded-xl flex items-start gap-2">
+                                            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5"/>
+                                            <span>{slotError}</span>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleCheckAvailability}
+                                        disabled={isCheckingSlot}
+                                        className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl cursor-pointer shadow-sm transition-all"
+                                    >
+                                        {isCheckingSlot ? 'Checking Availability...' : 'Check Availability & Review Quote'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Step 2: Booking Review */}
+                                    <div className="bg-[#FFFDF5] border border-[#FEF3C7] rounded-2xl p-4 space-y-3">
+                                        <div className="flex items-center justify-between border-b border-[#FEF3C7] pb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-lg bg-[#FFEDD5] text-[#F97316] font-bold text-xs flex items-center justify-center">
+                                                    {selectedWorker.name ? selectedWorker.name[0] : 'W'}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-xs text-[#111827]">{selectedWorker.name}</h4>
+                                                    <span className="text-[10px] text-[#78716C]">{categories.find(c => c._id === selectedBookingCategory)?.name || 'Service'}</span>
+                                                </div>
+                                            </div>
+                                            <span className="bg-[#F0FDF4] border border-[#86EFAC] text-[#16A34A] text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                ★ {selectedWorker.averageRating > 0 ? selectedWorker.averageRating.toFixed(1) : 'Approved'}
+                                            </span>
+                                        </div>
+
+                                        <div className="text-[11px] text-[#374151] space-y-1.5">
+                                            <div className="flex justify-between">
+                                                <span className="text-[#78716C]">Scheduled Time:</span>
+                                                <span className="font-semibold">{bookingDate} at {bookingTime} ({bookingDuration} hrs)</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-[#78716C]">Address ({addressType}):</span>
+                                                <span className="font-semibold text-right max-w-[200px] truncate">{houseNumber}, {street}, {city} - {pincode}</span>
+                                            </div>
+                                        </div>
+
+                                        {activeQuote && (
+                                            <div className="bg-[#16A34A]/10 border border-[#16A34A]/30 p-3 rounded-xl text-xs space-y-1.5">
+                                                <div className="flex items-center justify-between font-bold text-[#16A34A]">
+                                                    <span>Guaranteed Price Quote</span>
+                                                    <span className="text-[10px] text-[#F97316]">Expires in {Math.floor(quoteTimeLeft / 60)}m {quoteTimeLeft % 60}s</span>
+                                                </div>
+                                                <div className="text-[11px] text-[#44403C] space-y-1 pt-1 border-t border-[#16A34A]/20">
+                                                    <div className="flex justify-between">
+                                                        <span>Base Amount:</span>
+                                                        <span>₹{activeQuote.breakdown.baseAmountRupees.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>Platform Fee:</span>
+                                                        <span>₹{activeQuote.breakdown.platformFeeRupees.toFixed(2)}</span>
+                                                    </div>
+                                                    {activeQuote.breakdown.taxAmountRupees > 0 && (
+                                                        <div className="flex justify-between">
+                                                            <span>GST (18%):</span>
+                                                            <span>₹{activeQuote.breakdown.taxAmountRupees.toFixed(2)}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between font-extrabold text-[#F97316] text-xs pt-1 border-t border-[#FEF3C7]">
+                                                        <span>Total Payable:</span>
+                                                        <span>₹{activeQuote.breakdown.totalAmountRupees.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {createdBooking ? (
+                                        <div className="bg-[#FFEDD5] border border-[#FED7AA] p-4 rounded-2xl text-center space-y-2">
+                                            <Clock className="w-6 h-6 text-[#F97316] mx-auto"/>
+                                            <h4 className="font-bold text-xs text-[#111827]">Booking Confirmed!</h4>
+                                            <p className="text-[10px] text-[#4B5563]">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> created.</p>
+                                            <div className="text-[10px] font-semibold text-[#F97316] pt-1">Proceed to My Bookings to complete payment.</div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
                                             <button
+                                                type="button"
+                                                onClick={() => setBookingStep(1)}
+                                                className="w-1/2 bg-white border border-[#E7E0D8] text-[#44403C] hover:bg-[#FEFCE8] font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                            >
+                                                Edit Details
+                                            </button>
+                                            <button
+                                                type="button"
                                                 onClick={handleCreateBooking}
                                                 disabled={loading}
-                                                className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                                className="w-1/2 btn-primary-gradient font-bold text-xs py-2.5 rounded-xl cursor-pointer"
                                             >
                                                 {loading ? 'Creating Booking...' : 'Confirm & Create Booking'}
                                             </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

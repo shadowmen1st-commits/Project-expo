@@ -20,7 +20,7 @@ import workerReviewRoutes from './routes/workerReviewRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import supportRoutes from './routes/supportRoutes.js';
-import { getCategories } from './controllers/adminController.js';
+import { getCategories, getCategoryById } from './controllers/adminController.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rawBodyMiddleware } from './middleware/rawBody.js';
 import browserOriginGuard from './middleware/browserOriginGuard.js';
@@ -94,6 +94,9 @@ export const createApp = () => {
     app.use('/api/v1', verificationRoutes);
     app.use('/api/company', companyRoutes);
     app.get('/api/categories', getCategories);
+    app.get('/api/categories/:id', getCategoryById);
+    app.get('/api/services', getCategories);
+    app.get('/api/services/:id', getCategoryById);
     const healthLimiter = rateLimit({
         windowMs: 60000,
         max: process.env.NODE_ENV === 'test' ? 100000 : 50000,

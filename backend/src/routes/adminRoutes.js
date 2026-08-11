@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
     getPendingWorkers, verifyWorker, approveWorkerAdmin, rejectWorkerAdmin, suspendWorkerAdmin, reactivateWorkerAdmin, viewDocumentDetails,
-    createCategory, getCategories, deleteCategory, createCommissionRule, getCommissionRules,
+    createCategory, getCategories, getAdminCategories, updateCategory, setCategoryStatus, deleteCategory, createCommissionRule, getCommissionRules,
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, getCompanyVerificationsList, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
@@ -56,7 +56,14 @@ router.get('/documents/view/:docId', requirePermission('documents.review'), view
 
 // ── Categories & Commission ────────────────────────────────────────────────────
 router.post('/categories', requirePermission('categories.manage'), createCategory);
-router.get('/categories/all', getCategories);
+router.get('/categories/all', getAdminCategories);
+router.get('/categories', getCategories);
+router.put('/categories/:categoryId', requirePermission('categories.manage'), updateCategory);
+router.put('/categories/:id', requirePermission('categories.manage'), updateCategory);
+router.patch('/categories/:categoryId', requirePermission('categories.manage'), updateCategory);
+router.patch('/categories/:id', requirePermission('categories.manage'), updateCategory);
+router.patch('/categories/:categoryId/status', requirePermission('categories.manage'), setCategoryStatus);
+router.patch('/categories/:id/status', requirePermission('categories.manage'), setCategoryStatus);
 router.delete('/categories/:categoryId', requirePermission('categories.manage'), deleteCategory);
 router.delete('/categories/:id', requirePermission('categories.manage'), deleteCategory);
 router.post('/commissions', requirePermission('commissions.manage'), createCommissionRule);

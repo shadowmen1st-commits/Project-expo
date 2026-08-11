@@ -15,6 +15,7 @@ import PricingService from '../services/PricingService.js';
 import AvailabilityService from '../services/availabilityService.js';
 import BookingStatusTransitionService from '../services/BookingStatusTransitionService.js';
 import WorkerProfile from '../models/WorkerProfile.js';
+import ServiceCategory from '../models/ServiceCategory.js';
 import { toSafeBookingDTO } from '../utils/dto.js';
 
 /**
@@ -88,12 +89,68 @@ export const createBooking = async (req, res, next) => {
             workerId,
             serviceCategoryId,
             serviceAddress,
+            addressSnapshot: inputAddressSnapshot,
             scheduledStart,
             scheduledEnd,
             pricingType,
             customerNotes,
             couponCode,
         } = validatedData;
+
+        // 0. Validate Service Status (Admin Controlled)
+        const serviceCat = await ServiceCategory.findById(serviceCategoryId);
+        if (!serviceCat || serviceCat.status !== 'ACTIVE' || serviceCat.isActive === false) {
+            res.status(400).json({
+                statusCode: 400,
+                errorCode: 'SERVICE_NOT_AVAILABLE',
+                message: 'This service is currently unavailable or inactive.',
+            });
+            return;
+        }
+
+        // Address & Pincode Validation
+        let finalServiceAddress = serviceAddress;
+        let finalAddressSnapshot = inputAddressSnapshot || {};
+
+        if (inputAddressSnapshot) {
+            const { houseNumber, street, locality, landmark, city, state, pincode, addressType, instructions } = inputAddressSnapshot;
+            if (!pincode || !/^\d{6}$/.test(pincode)) {
+                res.status(400).json({
+                    statusCode: 400,
+                    errorCode: 'INVALID_PINCODE',
+                    message: 'PIN code must be exactly 6 digits.',
+                });
+                return;
+            }
+            finalServiceAddress = `${houseNumber}, ${street}${locality ? ', ' + locality : ''}, ${city}, ${state} - ${pincode}`;
+            finalAddressSnapshot = {
+                houseNumber,
+                street,
+                locality,
+                landmark,
+                city,
+                state,
+                pincode,
+                addressType: addressType || 'HOME',
+                instructions,
+                addressLine: finalServiceAddress,
+            };
+        } else if (serviceAddress) {
+            const pincodeMatch = serviceAddress.match(/\b\d{6}\b/);
+            finalAddressSnapshot = {
+                addressLine: serviceAddress,
+                city: serviceAddress.split(',')[1]?.trim() || 'Local City',
+                state: 'State',
+                pincode: pincodeMatch ? pincodeMatch[0] : '100000',
+            };
+        } else {
+            res.status(400).json({
+                statusCode: 400,
+                errorCode: 'ADDRESS_REQUIRED',
+                message: 'Service address is required.',
+            });
+            return;
+        }
 
         // 1. Prevent Self-Booking
         if (workerId === user.userId) {
@@ -116,9 +173,9 @@ export const createBooking = async (req, res, next) => {
             return;
         }
 
-        // Validate Worker Verification status
+        // Validate Worker Verification status & visibility
         const workerProfile = await WorkerProfile.findOne({ userId: workerId });
-        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED' || workerProfile.isPubliclyVisible === false) {
             res.status(400).json({
                 statusCode: 400,
                 errorCode: 'WORKER_NOT_AVAILABLE',
@@ -220,7 +277,8 @@ export const createBooking = async (req, res, next) => {
             customerId: user.userId,
             workerId,
             serviceCategoryId,
-            serviceAddress,
+            serviceAddress: finalServiceAddress,
+            addressSnapshot: finalAddressSnapshot,
             scheduledStart: startDate,
             scheduledEnd: endDate,
             durationMinutes,

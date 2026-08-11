@@ -59,15 +59,29 @@ export const availabilityCheckSchema = z.object({
     pricingType: z.enum(['HOURLY', 'DAILY']).optional().default('HOURLY'),
 });
 
+export const addressSnapshotSchema = z.object({
+    houseNumber: z.string().min(1, 'House or flat number is required'),
+    street: z.string().min(2, 'Street or locality is required'),
+    locality: z.string().optional(),
+    landmark: z.string().optional(),
+    city: z.string().min(2, 'City is required'),
+    state: z.string().min(2, 'State is required'),
+    pincode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
+    addressType: z.enum(['HOME', 'OFFICE', 'OTHER']).optional().default('HOME'),
+    instructions: z.string().optional(),
+});
+
 export const bookingCreateSchema = z.object({
     workerId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid worker ID'),
     serviceCategoryId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category ID'),
-    serviceAddress: z.string().min(5, 'Address must be detailed'),
+    serviceAddress: z.string().min(5, 'Address must be detailed').optional(),
+    addressSnapshot: addressSnapshotSchema.optional(),
     scheduledStart: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid start date'),
     scheduledEnd: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid end date'),
     pricingType: z.enum(['HOURLY', 'DAILY']),
     customerNotes: z.string().optional(),
     couponCode: z.string().optional(),
+    quoteId: z.string().optional(),
 });
 
 export const bookingCancelSchema = z.object({
@@ -105,13 +119,20 @@ export const adminVerifyWorkerSchema = z.object({
 export const categoryCreateSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
     description: z.string().min(5, 'Description required'),
-    icon: z.string().min(1, 'Icon name required'),
+    icon: z.string().default('wrench'),
+    image: z.string().optional(),
     requiredDocuments: z.array(z.string()).default(['AADHAAR']),
+    requiredSkills: z.array(z.string()).optional(),
     minimumExperience: z.number().default(0),
-    defaultCommission: z.number().min(0).max(100),
+    defaultCommission: z.number().min(0).max(100).default(10),
     minimumBookingDuration: z.number().default(1),
+    durationHours: z.number().default(2),
+    price: z.number().min(0).default(499),
     cancellationRules: z.string().optional(),
+    status: z.enum(['DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED']).default('ACTIVE'),
 });
+
+export const categoryUpdateSchema = categoryCreateSchema.partial();
 
 export const commissionRuleCreateSchema = z.object({
     name: z.string().min(3, 'Rule name is required'),

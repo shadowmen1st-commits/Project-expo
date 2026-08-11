@@ -10,7 +10,7 @@ import Booking from '../models/Booking.js';
 import AuditLog from '../models/AuditLog.js';
 import Notification from '../models/Notification.js';
 import WalletLedger from '../models/WalletLedger.js';
-import { adminVerifyWorkerSchema, categoryCreateSchema, commissionRuleCreateSchema } from '../utils/validation.js';
+import { adminVerifyWorkerSchema, categoryCreateSchema, categoryUpdateSchema, commissionRuleCreateSchema } from '../utils/validation.js';
 import { decryptText } from '../utils/crypto.js';
 import { recordTransaction } from '../services/ledger.js';
 import CompanyProfile from '../models/CompanyProfile.js';
@@ -176,9 +176,12 @@ export const createCategory = async (req, res, next) => {
     try {
         const validatedData = categoryCreateSchema.parse(req.body);
         const slug = validatedData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const status = validatedData.status || 'ACTIVE';
         const category = new ServiceCategory({
             ...validatedData,
             slug,
+            status,
+            isActive: status === 'ACTIVE',
         });
         await category.save();
         res.status(201).json({ success: true, category });
@@ -187,15 +190,116 @@ export const createCategory = async (req, res, next) => {
         next(error);
     }
 };
+
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await ServiceCategory.find({ isActive: { $ne: false } }).sort({ sortOrder: 1 });
+        // Customer / Public service listing returns ONLY ACTIVE services
+        const categories = await ServiceCategory.find({
+            status: 'ACTIVE',
+            isActive: { $ne: false }
+        }).sort({ sortOrder: 1, name: 1 });
         res.status(200).json({ success: true, categories });
     }
     catch (error) {
         next(error);
     }
 };
+
+export const getAdminCategories = async (req, res, next) => {
+    try {
+        // Admin gets all categories (DRAFT, ACTIVE, INACTIVE, ARCHIVED)
+        const categories = await ServiceCategory.find({}).sort({ sortOrder: 1, name: 1 });
+        res.status(200).json({ success: true, categories });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+
+export const getCategoryById = async (req, res, next) => {
+    try {
+        const categoryId = req.params.categoryId || req.params.id;
+        if (!categoryId || !categoryId.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                errorCode: 'INVALID_CATEGORY_ID',
+                message: 'Invalid category ID format.'
+            });
+        }
+        const category = await ServiceCategory.findById(categoryId);
+        const isAdmin = req.user && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role);
+
+        if (!category || (!isAdmin && (category.status !== 'ACTIVE' || category.isActive === false))) {
+            return res.status(404).json({
+                success: false,
+                statusCode: 404,
+                errorCode: 'SERVICE_NOT_AVAILABLE',
+                message: 'This service is currently unavailable.'
+            });
+        }
+
+        res.status(200).json({ success: true, category });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateCategory = async (req, res, next) => {
+    try {
+        const categoryId = req.params.categoryId || req.params.id;
+        if (!categoryId || !categoryId.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ success: false, message: 'Invalid category ID format.' });
+        }
+        const category = await ServiceCategory.findById(categoryId);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Service category not found.' });
+        }
+
+        const validatedData = categoryUpdateSchema.parse(req.body);
+        Object.assign(category, validatedData);
+        if (validatedData.status) {
+            category.isActive = validatedData.status === 'ACTIVE';
+        }
+        await category.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Service category updated successfully.',
+            category,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const setCategoryStatus = async (req, res, next) => {
+    try {
+        const categoryId = req.params.categoryId || req.params.id;
+        const { status } = req.body;
+        if (!['DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid category status.' });
+        }
+
+        const category = await ServiceCategory.findById(categoryId);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Service category not found.' });
+        }
+
+        category.status = status;
+        category.isActive = status === 'ACTIVE';
+        await category.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Service category status changed to ${status}.`,
+            category,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const deleteCategory = async (req, res, next) => {
     try {
         const categoryId = req.params.categoryId || req.params.id;
@@ -215,11 +319,11 @@ export const deleteCategory = async (req, res, next) => {
         if (!category) {
             return res.status(404).json({ success: false, message: 'Service category not found' });
         }
-        if (category.isActive === false) {
-            return res.status(409).json({ success: false, message: 'This category has already been removed.' });
+        if (category.status === 'ARCHIVED' || category.isActive === false) {
+            return res.status(409).json({ success: false, message: 'This category has already been archived or removed.' });
         }
         // Check for references: active bookings
-        const bookingRef = await Booking.findOne({ serviceCategoryId: categoryId, status: { $in: ['PENDING', 'ACCEPTED', 'IN_PROGRESS'] } });
+        const bookingRef = await Booking.findOne({ serviceCategoryId: categoryId, bookingStatus: { $in: ['PENDING', 'PAYMENT_PENDING', 'PAID', 'ACCEPTED', 'CONFIRMED', 'WORKER_EN_ROUTE', 'STARTED'] } });
         if (bookingRef) {
             return res.status(409).json({
                 success: false,
@@ -240,14 +344,15 @@ export const deleteCategory = async (req, res, next) => {
                 message: `Cannot remove "${category.name}" — it has approved workers assigned. Reassign workers first.`
             });
         }
-        // Soft delete
+        // Soft delete / archive
+        category.status = 'ARCHIVED';
         category.isActive = false;
         category.deletedAt = new Date();
         category.deletedBy = req.user?.userId || req.user?.id;
         await category.save();
         res.status(200).json({
             success: true,
-            message: 'Service category removed successfully',
+            message: 'Service category archived successfully',
             category,
         });
     } catch (error) {

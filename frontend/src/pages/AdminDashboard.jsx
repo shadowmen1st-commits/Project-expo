@@ -192,11 +192,17 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                 description: catDesc,
                 icon: catIcon,
                 defaultCommission: Number(catCommission),
+                price: Number(catPrice),
+                durationHours: Number(catDuration),
+                status: catStatus,
             });
             if (res.data.success) {
                 setSuccess('Service Category created successfully.');
                 setCatName('');
                 setCatDesc('');
+                setCatPrice(499);
+                setCatDuration(2);
+                setCatStatus('ACTIVE');
                 fetchCategoriesList();
             }
         } catch (err) {
@@ -204,7 +210,17 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
         }
     };
 
-
+    const handleToggleCategoryStatus = async (catId, newStatus) => {
+        try {
+            const res = await api.patch(`/admin/categories/${catId}/status`, { status: newStatus });
+            if (res.data.success) {
+                showToast(`Category status set to ${newStatus}.`, 'success');
+                fetchCategoriesList();
+            }
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Failed to update status.', 'error');
+        }
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -875,24 +891,67 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     {activeSection === 'categories' && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-4">
-                                <h1 className="text-xl font-extrabold text-[#1C1917]">Active Service Categories</h1>
+                                <h1 className="text-xl font-extrabold text-[#1C1917]">Service Catalog & Admin Controls</h1>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {categories.map((cat) => (
-                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
+                                        <div key={cat._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-sm">
                                             <div>
-                                                <h3 className="font-bold text-[#1C1917] text-sm">{cat.name}</h3>
-                                                <p className="text-[#78716C] text-xs mt-1">{cat.description}</p>
-                                                <span className="inline-block bg-[#FEFCE8] text-[#EAB308] text-[9px] font-semibold px-2 py-0.5 rounded-full mt-2 border border-[#FEF08A]">
-                                                    Commission: {cat.defaultCommission}%
-                                                </span>
+                                                <div className="flex items-start justify-between mb-1">
+                                                    <h3 className="font-bold text-[#1C1917] text-sm">{cat.name}</h3>
+                                                    <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${
+                                                        (cat.status === 'ACTIVE' || (!cat.status && cat.isActive !== false)) ? 'bg-[#F0FDF4] border-[#86EFAC] text-[#16A34A]' :
+                                                        cat.status === 'DRAFT' ? 'bg-[#FEFCE8] border-[#FEF08A] text-[#EAB308]' :
+                                                        cat.status === 'INACTIVE' ? 'bg-[#FFEDD5] border-[#FED7AA] text-[#F97316]' :
+                                                        'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]'
+                                                    }`}>
+                                                        {cat.status || (cat.isActive !== false ? 'ACTIVE' : 'INACTIVE')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[#78716C] text-xs line-clamp-2">{cat.description}</p>
+                                                <div className="flex flex-wrap items-center gap-2 mt-3 text-[10px] font-semibold">
+                                                    <span className="bg-[#FEFCE8] text-[#EAB308] px-2 py-0.5 rounded-full border border-[#FEF08A]">
+                                                        Commission: {cat.defaultCommission}%
+                                                    </span>
+                                                    <span className="bg-[#FAF6F0] text-[#1C1917] px-2 py-0.5 rounded-full border border-[#E7E0D8]">
+                                                        Price: ₹{cat.price || 499}
+                                                    </span>
+                                                    <span className="bg-[#FAF6F0] text-[#1C1917] px-2 py-0.5 rounded-full border border-[#E7E0D8]">
+                                                        Duration: {cat.durationHours || 2} hrs
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-end pt-1 border-t border-[#F5F0E8]">
+
+                                            <div className="flex items-center justify-between pt-2 border-t border-[#F5F0E8] text-xs">
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleToggleCategoryStatus(cat._id, 'ACTIVE')}
+                                                        disabled={cat.status === 'ACTIVE'}
+                                                        className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer ${cat.status === 'ACTIVE' ? 'opacity-50 border-gray-200 text-gray-400' : 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/30'}`}
+                                                    >
+                                                        Activate
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleCategoryStatus(cat._id, 'INACTIVE')}
+                                                        disabled={cat.status === 'INACTIVE'}
+                                                        className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer ${cat.status === 'INACTIVE' ? 'opacity-50 border-gray-200 text-gray-400' : 'bg-[#F97316]/10 text-[#F97316] border-[#F97316]/30'}`}
+                                                    >
+                                                        Deactivate
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleCategoryStatus(cat._id, 'DRAFT')}
+                                                        disabled={cat.status === 'DRAFT'}
+                                                        className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer ${cat.status === 'DRAFT' ? 'opacity-50 border-gray-200 text-gray-400' : 'bg-[#EAB308]/10 text-[#EAB308] border-[#EAB308]/30'}`}
+                                                    >
+                                                        Draft
+                                                    </button>
+                                                </div>
+
                                                 <button
                                                     onClick={() => setDeleteModal({ open: true, id: cat._id, name: cat.name })}
-                                                    className="flex items-center gap-1.5 text-[#EF4444] hover:bg-[#FEF2F2] text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-[#FECACA] hover:border-[#EF4444] transition-colors duration-150"
+                                                    className="flex items-center gap-1 text-[#EF4444] hover:bg-[#FEF2F2] text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#FECACA] hover:border-[#EF4444] transition-colors"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                    Remove
+                                                    <Trash2 className="w-3 h-3" />
+                                                    Archive
                                                 </button>
                                             </div>
                                         </div>
@@ -901,22 +960,43 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                             </div>
 
                             <form onSubmit={handleCreateCategory} className="bg-white border border-[#E7E0D8] rounded-3xl p-6 space-y-4 shadow-sm">
-                                <h3 className="font-bold text-[#1C1917] text-sm pb-2 border-b border-[#E7E0D8]">Add Service Category</h3>
+                                <h3 className="font-bold text-[#1C1917] text-sm pb-2 border-b border-[#E7E0D8]">Add New Service Category</h3>
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Name</label>
-                                        <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)} placeholder="e.g. Caretaker" className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none" required/>
+                                        <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Service Name *</label>
+                                        <input type="text" value={catName} onChange={(e) => setCatName(e.target.value)} placeholder="e.g. Elderly Care Specialist" className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none" required/>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Description</label>
-                                        <textarea rows={2} value={catDesc} onChange={(e) => setCatDesc(e.target.value)} placeholder="Brief description..." className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none resize-none" required/>
+                                        <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Description *</label>
+                                        <textarea rows={2} value={catDesc} onChange={(e) => setCatDesc(e.target.value)} placeholder="Full description of service scope..." className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none resize-none" required/>
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Commission (%)</label>
-                                        <input type="number" value={catCommission} onChange={(e) => setCatCommission(Number(e.target.value))} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Price (₹)</label>
+                                            <input type="number" value={catPrice} onChange={(e) => setCatPrice(Number(e.target.value))} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Duration (Hrs)</label>
+                                            <input type="number" value={catDuration} onChange={(e) => setCatDuration(Number(e.target.value))} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Commission (%)</label>
+                                            <input type="number" value={catCommission} onChange={(e) => setCatCommission(Number(e.target.value))} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none"/>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-[#44403C] uppercase tracking-wider mb-1">Initial Status</label>
+                                            <select value={catStatus} onChange={(e) => setCatStatus(e.target.value)} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] rounded-xl py-2 px-3 text-[#1C1917] text-xs outline-none cursor-pointer">
+                                                <option value="ACTIVE">ACTIVE</option>
+                                                <option value="DRAFT">DRAFT</option>
+                                                <option value="INACTIVE">INACTIVE</option>
+                                                <option value="ARCHIVED">ARCHIVED</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <button type="submit" className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl cursor-pointer mt-2">
-                                        Create Category
+                                        Create Service Category
                                     </button>
                                 </div>
                             </form>

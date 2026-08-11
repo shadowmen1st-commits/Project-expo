@@ -40,6 +40,18 @@ export const errorHandler = (err, req, res, next) => {
     };
     // Special handling for Zod validation errors
     if (err instanceof ZodError) {
+        const pincodeErr = err.errors.find((e) => e.path.includes('pincode'));
+        if (pincodeErr) {
+            res.status(400).json({
+                statusCode: 400,
+                errorCode: 'INVALID_PINCODE',
+                message: pincodeErr.message || 'PIN code must be exactly 6 digits.',
+                timestamp: responsePayload.timestamp,
+                requestId: responsePayload.requestId,
+            });
+            return;
+        }
+
         res.status(400).json({
             statusCode: 400,
             errorCode: 'VALIDATION_ERROR',

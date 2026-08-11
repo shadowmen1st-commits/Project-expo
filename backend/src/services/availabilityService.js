@@ -49,6 +49,16 @@ export class AvailabilityService {
             throw error;
         }
 
+        if (serviceCategoryId && Array.isArray(workerProfile.serviceCategoryIds) && workerProfile.serviceCategoryIds.length > 0) {
+            const hasCat = workerProfile.serviceCategoryIds.some(id => id.toString() === serviceCategoryId.toString());
+            if (!hasCat) {
+                const error = new Error('Worker does not provide this service category.');
+                error.statusCode = 400;
+                error.errorCode = 'WORKER_SERVICE_MISMATCH';
+                throw error;
+            }
+        }
+
         if (workerProfile.isTemporarilyUnavailable || !workerProfile.isPubliclyVisible) {
             const error = new Error('Worker is temporarily unavailable.');
             error.statusCode = 409;
