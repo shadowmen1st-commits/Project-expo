@@ -35,6 +35,7 @@ import {
     deleteCompanyDocument,
     submitCompanyVerification
 } from '../controllers/companyController.js';
+import { viewCompanyVerificationDocument } from '../controllers/adminController.js';
 import { requireVerifiedCompany } from '../middleware/requireVerifiedCompany.js';
 import multer from 'multer';
 
@@ -107,6 +108,7 @@ router.post('/verification/profile', authMiddleware, requireCompanyRole, updateC
 router.post('/verification/details', authMiddleware, requireCompanyRole, updateCompanyVerificationDetails);
 router.post('/verification/submit', authMiddleware, requireCompanyRole, submitCompanyVerification);
 router.post('/verification/documents', authMiddleware, requireCompanyRole, upload.single('file'), uploadCompanyDocument);
+router.get('/verification/documents/:documentId/view', authMiddleware, requireCompanyRole, viewCompanyVerificationDocument);
 router.delete('/verification/documents/:id', authMiddleware, requireCompanyRole, deleteCompanyDocument);
 
 export default router;

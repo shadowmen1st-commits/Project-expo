@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import WorkerProfile from '../models/WorkerProfile.js';
 import VerificationDocument from '../models/VerificationDocument.js';
@@ -709,4 +712,85 @@ export const getCompanyPaymentsAdmin = async (req, res, next) => {
         next(error);
     }
 };
+
+export const viewCompanyVerificationDocument = async (req, res, next) => {
+    try {
+        const { documentId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(documentId)) {
+            return res.status(400).json({
+                statusCode: 400,
+                errorCode: 'INVALID_DOCUMENT_ID',
+                message: 'Invalid document ID format.'
+            });
+        }
+
+        const doc = await CompanyVerificationDocument.findById(documentId);
+        if (!doc) {
+            return res.status(404).json({
+                statusCode: 404,
+                errorCode: 'DOCUMENT_NOT_FOUND',
+                message: 'Company verification document not found.'
+            });
+        }
+
+        // Authorization checks
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role);
+        const isOwner = req.user?.role === 'COMPANY' && doc.companyId.toString() === req.user.userId;
+
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'FORBIDDEN',
+                message: 'Access denied. You do not have permission to view this document.'
+            });
+        }
+
+        const storageKey = doc.storageKey || (doc.documentUrl ? path.basename(doc.documentUrl) : null);
+        if (!storageKey || path.basename(storageKey) !== storageKey) {
+            return res.status(400).json({
+                statusCode: 400,
+                errorCode: 'INVALID_STORAGE_KEY',
+                message: 'Document file reference is invalid.'
+            });
+        }
+
+        const STORAGE_DIR = path.resolve('uploads/verification');
+        const filePath = path.join(STORAGE_DIR, storageKey);
+
+        if (fs.existsSync(filePath)) {
+            if (isAdmin) {
+                await new AuditLog({
+                    actor: req.user.userId,
+                    action: 'ADMIN_COMPANY_DOCUMENT_VIEW',
+                    resourceType: 'CompanyVerificationDocument',
+                    resourceId: documentId,
+                    ipAddress: req.ip,
+                    userAgent: req.headers['user-agent'],
+                    requestId: req.requestId
+                }).save();
+            }
+
+            const mimeType = doc.mimeType || (filePath.endsWith('.pdf') ? 'application/pdf' : 'image/png');
+            res.setHeader('Content-Type', mimeType);
+            res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.setHeader('Content-Disposition', `inline; filename="${doc.fileName || 'document'}"`);
+            return fs.createReadStream(filePath).pipe(res);
+        }
+
+        if (doc.documentUrl && /^https?:\/\//i.test(doc.documentUrl)) {
+            return res.redirect(doc.documentUrl);
+        }
+
+        return res.status(404).json({
+            statusCode: 404,
+            errorCode: 'FILE_NOT_FOUND',
+            message: 'Document metadata exists, but actual file content is missing.'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 

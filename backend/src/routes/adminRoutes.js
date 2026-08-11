@@ -5,7 +5,7 @@ import {
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, getCompanyVerificationsList, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
-    getCompanyVerificationAdmin, requestInfoCompanyVerification,
+    getCompanyVerificationAdmin, requestInfoCompanyVerification, viewCompanyVerificationDocument
 } from '../controllers/adminController.js';
 import {
     listPayments, getPaymentDetail, reconcilePayment,
@@ -105,6 +105,7 @@ router.post('/ledger/manual', requirePermission('payments.manage'), postManualJo
 // ── Company Administration ───────────────────────────────────────────────────
 router.get('/companies', requirePermission('users.read'), getCompanies);
 router.get('/company-verifications', requirePermission('users.read'), getCompanyVerificationsList);
+router.get('/company-verifications/documents/:documentId/view', requirePermission('users.read'), viewCompanyVerificationDocument);
 router.get('/company-verifications/:id', requirePermission('users.read'), getCompanyVerificationAdmin);
 router.post('/company-verifications/:id/approve', requirePermission('users.manage'), verifyCompany);
 router.post('/company-verifications/:id/reject', requirePermission('users.manage'), rejectCompany);

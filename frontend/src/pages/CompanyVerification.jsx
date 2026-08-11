@@ -809,15 +809,22 @@ export default function CompanyVerification() {
                                                         {dbDoc.fileName || `${doc.type}.pdf`}
                                                     </span>
                                                     <div className="flex items-center gap-2">
-                                                        <a 
-                                                            href={dbDoc.documentUrl} 
-                                                            target="_blank" 
-                                                            rel="noreferrer"
-                                                            className="text-[#F97316] hover:underline font-bold flex items-center gap-1"
+                                                        <button 
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await axios.get(`/company/verification/documents/${dbDoc._id}/view`, { responseType: 'blob' });
+                                                                    const url = URL.createObjectURL(new Blob([res.data], { type: dbDoc.mimeType || res.headers['content-type'] || 'application/pdf' }));
+                                                                    window.open(url, '_blank');
+                                                                } catch (err) {
+                                                                    alert('Failed to load document content.');
+                                                                }
+                                                            }}
+                                                            className="text-[#F97316] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                                                         >
                                                             <Eye className="w-3.5 h-3.5" />
                                                             <span>View</span>
-                                                        </a>
+                                                        </button>
                                                         <button 
                                                             type="button"
                                                             onClick={() => handleDeleteDoc(doc.type)}
