@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import CompanySidebar from '../components/CompanySidebar';
+import WorkerMultiSelect from '../components/WorkerMultiSelect';
 import { 
     TrendingUp, 
     Users, 
@@ -78,8 +79,9 @@ export default function CompanyDashboard() {
     const [newTeam, setNewTeam] = useState({
         name: '',
         leaderId: '',
-        members: ''
+        members: []
     });
+    const [editingTeam, setEditingTeam] = useState(null);
 
     const [newAssignment, setNewAssignment] = useState({
         jobId: '',
@@ -277,16 +279,70 @@ export default function CompanyDashboard() {
     const handleCreateTeam = async (e) => {
         e.preventDefault();
         try {
-            const data = {
-                name: newTeam.name,
-                leaderId: newTeam.leaderId || undefined,
-                members: newTeam.members.split(',').map(m => m.trim()).filter(Boolean)
-            };
-            await axios.post('/company/teams', data);
+            if (!newTeam.name || !newTeam.name.trim()) {
+                setError('Team name is required.');
+                return;
+            }
+            if (!newTeam.leaderId) {
+                setError('Please select a team leader.');
+                return;
+            }
+            const membersToSend = newTeam.members.includes(newTeam.leaderId)
+                ? newTeam.members
+                : [newTeam.leaderId, ...newTeam.members];
+
+            await axios.post('/company/teams', {
+                name: newTeam.name.trim(),
+                leaderId: newTeam.leaderId,
+                members: membersToSend
+            });
             setSuccess('Team created successfully.');
-            setActiveTab('teams');
+            setNewTeam({ name: '', leaderId: '', members: [] });
+            fetchData();
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create team.');
+            setError(err.response?.data?.message || 'Failed to create team. Please select valid team leader and members.');
+        }
+    };
+
+    const handleUpdateTeam = async (e) => {
+        e.preventDefault();
+        if (!editingTeam) return;
+        try {
+            if (!editingTeam.name || !editingTeam.name.trim()) {
+                setError('Team name is required.');
+                return;
+            }
+            if (!editingTeam.leaderId) {
+                setError('Please select a team leader.');
+                return;
+            }
+            const membersToSend = editingTeam.members.includes(editingTeam.leaderId)
+                ? editingTeam.members
+                : [editingTeam.leaderId, ...editingTeam.members];
+
+            await axios.put(`/company/teams/${editingTeam._id}`, {
+                name: editingTeam.name.trim(),
+                leaderId: editingTeam.leaderId,
+                members: membersToSend
+            });
+            setSuccess('Team updated successfully.');
+            setEditingTeam(null);
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update team.');
+        }
+    };
+
+    const handleDeleteTeam = async (teamId, teamName) => {
+        if (!window.confirm(`Are you sure you want to delete "${teamName}"? Workers will remain intact.`)) {
+            return;
+        }
+        try {
+            await axios.delete(`/company/teams/${teamId}`);
+            setSuccess('Team deleted successfully.');
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to delete team.');
         }
     };
 
@@ -1035,48 +1091,71 @@ export default function CompanyDashboard() {
                 {activeTab === 'teams' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-extrabold text-[#111827]">Workforce Teams</h2>
+                            <div>
+                                <h2 className="text-2xl font-extrabold text-[#111827]">Workforce Teams</h2>
+                                <p className="text-sm text-[#4B5563]">Create and manage team structures for rapid event staffing</p>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Create Team Form Card */}
-                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4">
+                            <div className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4 h-fit">
                                 <h3 className="font-bold text-sm text-[#111827] uppercase tracking-wider">Create New Team</h3>
-                                <form onSubmit={handleCreateTeam} className="space-y-3">
+                                <form onSubmit={handleCreateTeam} className="space-y-4">
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase text-[#4B5563] mb-1">Team Name</label>
+                                        <label className="block text-xs font-bold uppercase text-[#111827] mb-1">
+                                            Team Name <span className="text-red-500">*</span>
+                                        </label>
                                         <input 
                                             type="text" 
                                             placeholder="e.g. Noida Marshals A" 
                                             value={newTeam.name}
                                             onChange={e => setNewTeam({ ...newTeam, name: e.target.value })}
-                                            className="w-full input-field-style rounded-lg px-3 py-1.5 text-xs border border-[#FEF3C7]"
+                                            className="w-full input-field-style rounded-xl px-3 py-2 text-xs border border-[#FEF3C7]"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase text-[#4B5563] mb-1">Team Leader ID (Worker ID)</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Worker MongoDB User ID" 
+                                        <label className="block text-xs font-bold uppercase text-[#111827] mb-1">
+                                            Team Leader <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
                                             value={newTeam.leaderId}
-                                            onChange={e => setNewTeam({ ...newTeam, leaderId: e.target.value })}
-                                            className="w-full input-field-style rounded-lg px-3 py-1.5 text-xs border border-[#FEF3C7]"
-                                        />
+                                            onChange={e => {
+                                                const lId = e.target.value;
+                                                const updatedMembers = lId && !newTeam.members.includes(lId) 
+                                                    ? [...newTeam.members, lId] 
+                                                    : newTeam.members;
+                                                setNewTeam({ ...newTeam, leaderId: lId, members: updatedMembers });
+                                            }}
+                                            className="w-full bg-white border border-[#FEF3C7] rounded-xl px-3 py-2 text-xs focus:border-[#F97316]"
+                                            required
+                                        >
+                                            <option value="">[ Select Worker ▼ ]</option>
+                                            {workers.map(w => (
+                                                <option key={w._id} value={w._id}>
+                                                    {w.name} {w.phone ? `(${w.phone})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase text-[#4B5563] mb-1">Members IDs (Comma separated)</label>
-                                        <textarea 
-                                            rows={2}
-                                            placeholder="Worker1_ID, Worker2_ID" 
-                                            value={newTeam.members}
-                                            onChange={e => setNewTeam({ ...newTeam, members: e.target.value })}
-                                            className="w-full input-field-style rounded-lg px-3 py-1.5 text-xs border border-[#FEF3C7]"
+                                        <WorkerMultiSelect
+                                            label="Team Members"
+                                            workers={workers}
+                                            selectedWorkerIds={newTeam.members}
+                                            onChange={ids => {
+                                                const updated = newTeam.leaderId && !ids.includes(newTeam.leaderId)
+                                                    ? [newTeam.leaderId, ...ids]
+                                                    : ids;
+                                                setNewTeam({ ...newTeam, members: updated });
+                                            }}
+                                            placeholder="Select workers ▼"
                                         />
                                     </div>
                                     <button 
                                         type="submit"
-                                        className="w-full bg-[#F97316] text-white hover:bg-orange-600 font-bold py-2 rounded-xl text-xs cursor-pointer"
+                                        className="w-full bg-[#F97316] text-white hover:bg-orange-600 font-bold py-2.5 rounded-xl text-xs cursor-pointer shadow-sm"
                                     >
                                         Create Team
                                     </button>
@@ -1084,29 +1163,65 @@ export default function CompanyDashboard() {
                             </div>
 
                             {/* Teams list */}
-                            {teams.length === 0 ? (
-                                <p className="text-sm text-[#4B5563] italic col-span-2">No teams created yet.</p>
-                            ) : (
-                                teams.map(team => (
-                                    <div key={team._id} className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4">
-                                        <div className="flex justify-between items-start">
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {teams.length === 0 ? (
+                                    <div className="bg-white border border-[#FEF3C7] p-8 rounded-2xl col-span-2 text-center space-y-2">
+                                        <p className="text-sm text-[#4B5563] italic">No teams created yet.</p>
+                                        <p className="text-xs text-[#9CA3AF]">Select a leader and workers above to create your first team.</p>
+                                    </div>
+                                ) : (
+                                    teams.map(team => (
+                                        <div key={team._id} className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4 flex flex-col justify-between">
                                             <div>
-                                                <h3 className="font-extrabold text-base text-[#111827]">{team.name}</h3>
-                                                {team.leaderId && <p className="text-xs text-orange-600 font-semibold mt-0.5">Leader: {team.leaderId.name}</p>}
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h3 className="font-extrabold text-base text-[#111827]">{team.name}</h3>
+                                                        {team.leaderId && (
+                                                            <p className="text-xs text-[#F97316] font-bold mt-1 flex items-center gap-1.5">
+                                                                <span className="bg-orange-100 text-[#F97316] text-[10px] uppercase font-black px-2 py-0.5 rounded-md">Leader</span>
+                                                                {team.leaderId.name}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => setEditingTeam({
+                                                                _id: team._id,
+                                                                name: team.name,
+                                                                leaderId: team.leaderId?._id || team.leaderId || '',
+                                                                members: team.members.map(m => m._id || m)
+                                                            })}
+                                                            className="text-xs text-blue-600 hover:text-blue-800 font-bold cursor-pointer"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteTeam(team._id, team.name)}
+                                                            className="text-xs text-red-600 hover:text-red-800 font-bold cursor-pointer"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5 border-t border-[#FEF3C7] pt-3 mt-3">
+                                                    <p className="text-[10px] font-bold text-[#9CA3AF] uppercase">Members ({team.members?.length || 0})</p>
+                                                    <ul className="space-y-1">
+                                                        {team.members?.map(m => (
+                                                            <li key={m._id} className="text-xs flex justify-between items-center bg-gray-50 px-2.5 py-1 rounded-lg">
+                                                                <span className="font-semibold text-[#111827]">
+                                                                    • {m.name} {m._id === (team.leaderId?._id || team.leaderId) ? '(Leader)' : ''}
+                                                                </span>
+                                                                <span className="text-[#4B5563] text-[11px]">{m.phone || m.email}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-1.5 border-t border-[#FEF3C7] pt-3">
-                                            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase">Members ({team.members.length})</p>
-                                            {team.members.map(m => (
-                                                <div key={m._id} className="text-xs flex justify-between">
-                                                    <span className="font-semibold">{m.name}</span>
-                                                    <span className="text-[#4B5563]">{m.phone}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -1639,6 +1754,90 @@ export default function CompanyDashboard() {
                                 <button
                                     type="submit"
                                     className="w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white font-bold text-xs hover:bg-[#EA580C] cursor-pointer"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Team Modal */}
+            {editingTeam && (
+                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#FEF3C7] shadow-2xl">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xl font-extrabold text-[#111827]">Edit Team</h3>
+                            <button 
+                                onClick={() => setEditingTeam(null)} 
+                                className="text-gray-400 hover:text-gray-600 font-extrabold text-lg cursor-pointer"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateTeam} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-[#111827] mb-1">
+                                    Team Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingTeam.name}
+                                    onChange={e => setEditingTeam({ ...editingTeam, name: e.target.value })}
+                                    className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-[#111827] mb-1">
+                                    Team Leader <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={editingTeam.leaderId}
+                                    onChange={e => {
+                                        const lId = e.target.value;
+                                        const updated = lId && !editingTeam.members.includes(lId)
+                                            ? [...editingTeam.members, lId]
+                                            : editingTeam.members;
+                                        setEditingTeam({ ...editingTeam, leaderId: lId, members: updated });
+                                    }}
+                                    className="w-full bg-white border border-[#FEF3C7] rounded-xl px-4 py-2 text-sm focus:border-[#F97316]"
+                                    required
+                                >
+                                    <option value="">[ Select Worker ▼ ]</option>
+                                    {workers.map(w => (
+                                        <option key={w._id} value={w._id}>
+                                            {w.name} {w.phone ? `(${w.phone})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <WorkerMultiSelect
+                                    label="Team Members"
+                                    workers={workers}
+                                    selectedWorkerIds={editingTeam.members}
+                                    onChange={ids => {
+                                        const updated = editingTeam.leaderId && !ids.includes(editingTeam.leaderId)
+                                            ? [editingTeam.leaderId, ...ids]
+                                            : ids;
+                                        setEditingTeam({ ...editingTeam, members: updated });
+                                    }}
+                                    placeholder="Select workers ▼"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingTeam(null)}
+                                    className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white text-xs font-bold hover:bg-orange-600 cursor-pointer"
                                 >
                                     Save Changes
                                 </button>

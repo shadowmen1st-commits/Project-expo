@@ -446,17 +446,15 @@ export const updateApplicationStatus = async (req, res, next) => {
     }
 };
 
-// Workers Assigned
+// Workers Assigned / Available
 export const getCompanyWorkers = async (req, res, next) => {
     try {
-        const jobs = await Job.find({ companyId: req.user.userId }).select('_id');
-        const jobIds = jobs.map(j => j._id);
-        const assignments = await WorkerAssignment.find({ jobId: { $in: jobIds } })
-            .populate('jobId', 'title payRate location')
-            .populate('workerId', 'name email phone profileImage')
-            .sort({ createdAt: -1 });
+        const workers = await User.find({
+            role: 'WORKER',
+            status: 'ACTIVE'
+        }).select('_id name email phone status profileImage').sort({ name: 1 });
 
-        return res.status(200).json({ success: true, workers: assignments });
+        return res.status(200).json({ success: true, workers });
     } catch (error) {
         next(error);
     }
@@ -466,8 +464,9 @@ export const getCompanyWorkers = async (req, res, next) => {
 export const getCompanyTeams = async (req, res, next) => {
     try {
         const teams = await CompanyTeam.find({ companyId: req.user.userId })
-            .populate('leaderId', 'name email')
-            .populate('members', 'name email phone');
+            .populate('leaderId', 'name email phone profileImage')
+            .populate('members', 'name email phone profileImage')
+            .sort({ createdAt: -1 });
         return res.status(200).json({ success: true, teams });
     } catch (error) {
         next(error);
@@ -477,16 +476,86 @@ export const getCompanyTeams = async (req, res, next) => {
 export const createCompanyTeam = async (req, res, next) => {
     try {
         const { name, leaderId, members } = req.body;
-        if (!name) {
-            return res.status(400).json({ success: false, message: 'Team name is required.' });
+
+        // 1. Team Name validation
+        const trimmedName = typeof name === 'string' ? name.trim() : '';
+        if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 100) {
+            return res.status(400).json({ 
+                success: false, 
+                errorCode: 'INVALID_TEAM_NAME',
+                message: 'Team name is required and must be between 2 and 100 characters.' 
+            });
         }
+
+        // 2. Leader ID validation
+        if (!leaderId || !mongoose.Types.ObjectId.isValid(leaderId)) {
+            return res.status(400).json({ 
+                success: false, 
+                errorCode: 'INVALID_WORKER_ID',
+                message: 'Please select a valid team leader.' 
+            });
+        }
+
+        // 3. Members array validation
+        const rawMembers = Array.isArray(members) ? members : [];
+        for (const mId of rawMembers) {
+            if (!mId || !mongoose.Types.ObjectId.isValid(mId)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    errorCode: 'INVALID_WORKER_ID',
+                    message: 'Please select valid team members.' 
+                });
+            }
+        }
+
+        // 4. Automatically include leader in members & remove duplicates
+        const uniqueWorkerIdStrs = Array.from(new Set([
+            leaderId.toString(), 
+            ...rawMembers.map(m => m.toString())
+        ]));
+
+        // 5. Query MongoDB for worker documents
+        const foundWorkers = await User.find({ 
+            _id: { $in: uniqueWorkerIdStrs } 
+        });
+
+        if (foundWorkers.length !== uniqueWorkerIdStrs.length) {
+            return res.status(404).json({ 
+                success: false, 
+                errorCode: 'WORKER_NOT_FOUND',
+                message: 'One or more selected workers do not exist.' 
+            });
+        }
+
+        // 6. Verify role, status, and company authorization
+        for (const w of foundWorkers) {
+            if (w.role !== 'WORKER' || w.status !== 'ACTIVE') {
+                return res.status(403).json({ 
+                    success: false, 
+                    errorCode: 'WORKER_NOT_AUTHORIZED',
+                    message: 'One or more selected workers are not available to this company.' 
+                });
+            }
+        }
+
+        // 7. Create team
         const team = await CompanyTeam.create({
             companyId: req.user.userId,
-            name,
+            name: trimmedName,
             leaderId,
-            members: members || []
+            members: uniqueWorkerIdStrs
         });
-        return res.status(201).json({ success: true, message: 'Team created successfully.', team });
+
+        // 8. Populate & return created team
+        const populatedTeam = await CompanyTeam.findById(team._id)
+            .populate('leaderId', 'name email phone profileImage')
+            .populate('members', 'name email phone profileImage');
+
+        return res.status(201).json({ 
+            success: true, 
+            message: 'Team created successfully.', 
+            team: populatedTeam 
+        });
     } catch (error) {
         next(error);
     }
@@ -494,13 +563,99 @@ export const createCompanyTeam = async (req, res, next) => {
 
 export const updateCompanyTeam = async (req, res, next) => {
     try {
-        const team = await CompanyTeam.findOne({ _id: req.params.id, companyId: req.user.userId });
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ 
+                success: false, 
+                errorCode: 'INVALID_TEAM_ID',
+                message: 'Invalid team ID.' 
+            });
+        }
+
+        const team = await CompanyTeam.findOne({ _id: id, companyId: req.user.userId });
         if (!team) {
             return res.status(404).json({ success: false, message: 'Team not found.' });
         }
-        Object.assign(team, req.body);
+
+        const { name, leaderId, members } = req.body;
+
+        // 1. Name validation
+        if (name !== undefined) {
+            const trimmedName = typeof name === 'string' ? name.trim() : '';
+            if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 100) {
+                return res.status(400).json({ 
+                    success: false, 
+                    errorCode: 'INVALID_TEAM_NAME',
+                    message: 'Team name is required and must be between 2 and 100 characters.' 
+                });
+            }
+            team.name = trimmedName;
+        }
+
+        // 2. Leader ID validation
+        const targetLeaderId = leaderId || team.leaderId?.toString();
+        if (!targetLeaderId || !mongoose.Types.ObjectId.isValid(targetLeaderId)) {
+            return res.status(400).json({ 
+                success: false, 
+                errorCode: 'INVALID_WORKER_ID',
+                message: 'Please select a valid team leader.' 
+            });
+        }
+
+        // 3. Members validation
+        const rawMembers = Array.isArray(members) ? members : (team.members || []);
+        for (const mId of rawMembers) {
+            if (!mId || !mongoose.Types.ObjectId.isValid(mId)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    errorCode: 'INVALID_WORKER_ID',
+                    message: 'Please select valid team members.' 
+                });
+            }
+        }
+
+        // 4. Include leader & deduplicate
+        const uniqueWorkerIdStrs = Array.from(new Set([
+            targetLeaderId.toString(), 
+            ...rawMembers.map(m => m.toString())
+        ]));
+
+        // 5. Worker checks
+        const foundWorkers = await User.find({ 
+            _id: { $in: uniqueWorkerIdStrs } 
+        });
+
+        if (foundWorkers.length !== uniqueWorkerIdStrs.length) {
+            return res.status(404).json({ 
+                success: false, 
+                errorCode: 'WORKER_NOT_FOUND',
+                message: 'One or more selected workers do not exist.' 
+            });
+        }
+
+        for (const w of foundWorkers) {
+            if (w.role !== 'WORKER' || w.status !== 'ACTIVE') {
+                return res.status(403).json({ 
+                    success: false, 
+                    errorCode: 'WORKER_NOT_AUTHORIZED',
+                    message: 'One or more selected workers are not available to this company.' 
+                });
+            }
+        }
+
+        team.leaderId = targetLeaderId;
+        team.members = uniqueWorkerIdStrs;
         await team.save();
-        return res.status(200).json({ success: true, message: 'Team updated successfully.', team });
+
+        const populatedTeam = await CompanyTeam.findById(team._id)
+            .populate('leaderId', 'name email phone profileImage')
+            .populate('members', 'name email phone profileImage');
+
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Team updated successfully.', 
+            team: populatedTeam 
+        });
     } catch (error) {
         next(error);
     }
@@ -508,7 +663,16 @@ export const updateCompanyTeam = async (req, res, next) => {
 
 export const deleteCompanyTeam = async (req, res, next) => {
     try {
-        const result = await CompanyTeam.deleteOne({ _id: req.params.id, companyId: req.user.userId });
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ 
+                success: false, 
+                errorCode: 'INVALID_TEAM_ID',
+                message: 'Invalid team ID.' 
+            });
+        }
+
+        const result = await CompanyTeam.deleteOne({ _id: id, companyId: req.user.userId });
         if (result.deletedCount === 0) {
             return res.status(404).json({ success: false, message: 'Team not found.' });
         }
