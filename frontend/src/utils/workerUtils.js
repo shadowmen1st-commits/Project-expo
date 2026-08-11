@@ -1,3 +1,5 @@
+import { getProfileImageUrl } from './imageUtils';
+
 /**
  * Worker Utilities for Image URL Resolution and Name Formatting
  */
@@ -10,43 +12,7 @@
  * @returns {string|null} Full image URL or null
  */
 export const getWorkerImageUrl = (worker) => {
-    if (!worker) return null;
-
-    const rawUrl =
-        worker.profileImage ||
-        worker.profileImageUrl ||
-        worker.profilePhotoId ||
-        worker.user?.profileImage ||
-        worker.user?.profileImageUrl ||
-        worker.user?.profilePhotoId ||
-        worker.userId?.profileImage ||
-        worker.userId?.profileImageUrl ||
-        worker.userId?.profilePhotoId ||
-        worker.workerProfile?.profileImage ||
-        worker.workerProfile?.profileImageUrl ||
-        worker.workerProfile?.profilePhotoId ||
-        worker.worker?.profileImage ||
-        worker.worker?.profileImageUrl ||
-        worker.worker?.profilePhotoId ||
-        null;
-
-    if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.trim()) {
-        return null;
-    }
-
-    const trimmed = rawUrl.trim();
-
-    // Absolute URLs (http://, https://, data:)
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
-        return trimmed;
-    }
-
-    // Relative uploads path (/uploads/...) -> prefix with backend host
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const hostOrigin = apiUrl.replace(/\/api(\/v\d+)?\/?$/, '');
-
-    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return `${hostOrigin}${cleanPath}`;
+    return getProfileImageUrl(worker);
 };
 
 /**
