@@ -15,6 +15,7 @@ import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
 import { validateFileBuffer } from '../utils/fileValidator.js';
+import { isValidCategory, isValidCategoryAndTitle } from '../config/jobCategories.js';
 import { hashPassword, comparePassword } from '../utils/authUtils.js';
 import { issueSession, setSessionCookies, safeUser } from './authController.js';
 
@@ -236,8 +237,33 @@ export const createJob = async (req, res, next) => {
             applicationDeadline
         } = req.body;
 
-        if (!title || !description || !category || !workersRequired || !location || !address || !workingDate || !startTime || !endTime || !payRate || !applicationDeadline) {
+        if (!category) {
+            return res.status(400).json({ success: false, message: 'Please select a category.' });
+        }
+
+        if (!title) {
+            return res.status(400).json({ success: false, message: 'Please select a job title.' });
+        }
+
+        if (!description || workersRequired === undefined || workersRequired === null || !location || !address || !workingDate || !startTime || !endTime || !payRate || !applicationDeadline) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields.' });
+        }
+
+        if (!isValidCategory(category)) {
+            return res.status(400).json({ success: false, message: 'Invalid job category.' });
+        }
+
+        if (!isValidCategoryAndTitle(category, title)) {
+            return res.status(400).json({ success: false, message: 'Please select a valid job title for this category.' });
+        }
+
+        const numWorkers = Number(workersRequired);
+        if (isNaN(numWorkers) || numWorkers < 1) {
+            return res.status(400).json({ success: false, message: 'Workers Required must be at least 1.' });
+        }
+
+        if (endTime <= startTime) {
+            return res.status(400).json({ success: false, message: 'End time must be after start time.' });
         }
 
         const job = await Job.create({
@@ -246,7 +272,7 @@ export const createJob = async (req, res, next) => {
             description,
             category,
             requiredSkills: requiredSkills || [],
-            workersRequired,
+            workersRequired: numWorkers,
             location,
             address,
             workingDate,
@@ -263,7 +289,7 @@ export const createJob = async (req, res, next) => {
         });
 
         // Trigger Escrow status or Payment required for jobs
-        const totalJobEscrow = payRate * workersRequired;
+        const totalJobEscrow = payRate * numWorkers;
         const wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
         if (wallet) {
             wallet.escrowAmountPaise += totalJobEscrow;
@@ -308,6 +334,41 @@ export const updateCompanyJob = async (req, res, next) => {
         if (!job) {
             return res.status(404).json({ success: false, message: 'Job not found.' });
         }
+
+        const category = req.body.category !== undefined ? req.body.category : job.category;
+        const title = req.body.title !== undefined ? req.body.title : job.title;
+
+        if (req.body.category !== undefined && !category) {
+            return res.status(400).json({ success: false, message: 'Please select a category.' });
+        }
+
+        if (req.body.title !== undefined && !title) {
+            return res.status(400).json({ success: false, message: 'Please select a job title.' });
+        }
+
+        if (req.body.category !== undefined && !isValidCategory(category)) {
+            return res.status(400).json({ success: false, message: 'Invalid job category.' });
+        }
+
+        if ((req.body.category !== undefined || req.body.title !== undefined) && !isValidCategoryAndTitle(category, title)) {
+            return res.status(400).json({ success: false, message: 'Please select a valid job title for this category.' });
+        }
+
+        if (req.body.workersRequired !== undefined) {
+            const numWorkers = Number(req.body.workersRequired);
+            if (isNaN(numWorkers) || numWorkers < 1) {
+                return res.status(400).json({ success: false, message: 'Workers Required must be at least 1.' });
+            }
+        }
+
+        if (req.body.startTime !== undefined || req.body.endTime !== undefined) {
+            const start = req.body.startTime !== undefined ? req.body.startTime : job.startTime;
+            const end = req.body.endTime !== undefined ? req.body.endTime : job.endTime;
+            if (end <= start) {
+                return res.status(400).json({ success: false, message: 'End time must be after start time.' });
+            }
+        }
+
         Object.assign(job, req.body);
         await job.save();
         return res.status(200).json({ success: true, message: 'Job updated successfully.', job });

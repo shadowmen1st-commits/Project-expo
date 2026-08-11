@@ -19,8 +19,14 @@ import {
     Percent,
     Lock,
     Bell,
-    Wallet
+    Wallet,
+    Edit3,
+    Filter,
+    X,
+    Search
 } from 'lucide-react';
+import SearchableSelect from '../components/SearchableSelect';
+import { CATEGORY_LIST, getJobTitlesForCategory, isValidCategoryAndTitle } from '../config/jobCategories';
 
 export default function CompanyDashboard() {
     const { logout } = useAuth();
@@ -43,11 +49,17 @@ export default function CompanyDashboard() {
     const [showLockModal, setShowLockModal] = useState(false);
     const [lockedFeatureName, setLockedFeatureName] = useState('');
 
-    // Form states
+    // Form & Filter states
+    const [editingJob, setEditingJob] = useState(null);
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterTitle, setFilterTitle] = useState('');
+    const [filterStatus, setFilterStatus] = useState('ALL');
+    const [filterSearch, setFilterSearch] = useState('');
+
     const [newJob, setNewJob] = useState({
         title: '',
         description: '',
-        category: 'Event Management',
+        category: '',
         requiredSkills: '',
         workersRequired: 1,
         location: '',
@@ -140,19 +152,125 @@ export default function CompanyDashboard() {
 
     const handleCreateJob = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        if (!newJob.category) {
+            setError('Please select a category.');
+            return;
+        }
+
+        if (!newJob.title) {
+            setError('Please select a job title.');
+            return;
+        }
+
+        if (!isValidCategoryAndTitle(newJob.category, newJob.title)) {
+            setError('Please select a valid job title for this category.');
+            return;
+        }
+
+        if (Number(newJob.workersRequired) < 1) {
+            setError('Workers Required must be at least 1.');
+            return;
+        }
+
+        if (newJob.endTime <= newJob.startTime) {
+            setError('End time must be after start time.');
+            return;
+        }
+
         try {
             const data = {
                 ...newJob,
                 payRate: Number(newJob.payRate) * 100, // to paise
                 workersRequired: Number(newJob.workersRequired),
-                requiredSkills: newJob.requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
-                applicationDeadline: newJob.workingDate // simple default
+                requiredSkills: typeof newJob.requiredSkills === 'string'
+                    ? newJob.requiredSkills.split(',').map(s => s.trim()).filter(Boolean)
+                    : newJob.requiredSkills,
+                applicationDeadline: newJob.workingDate
             };
             await axios.post('/company/jobs', data);
             setSuccess('Job created successfully.');
+            setNewJob({
+                title: '',
+                description: '',
+                category: '',
+                requiredSkills: '',
+                workersRequired: 1,
+                location: '',
+                address: '',
+                workingDate: '',
+                startTime: '09:00',
+                endTime: '18:00',
+                payRate: '',
+                paymentType: 'DAILY',
+                duration: '1 day',
+                experienceRequired: 0,
+                genderPreference: 'ANY',
+                instructions: ''
+            });
+            fetchData();
             setActiveTab('jobs');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create job.');
+        }
+    };
+
+    const handleOpenEditJob = (job) => {
+        setEditingJob({
+            ...job,
+            payRate: job.payRate ? job.payRate / 100 : '',
+            workingDate: job.workingDate ? new Date(job.workingDate).toISOString().split('T')[0] : '',
+            requiredSkills: Array.isArray(job.requiredSkills) ? job.requiredSkills.join(', ') : job.requiredSkills || ''
+        });
+    };
+
+    const handleUpdateJob = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        if (!editingJob.category) {
+            setError('Please select a category.');
+            return;
+        }
+
+        if (!editingJob.title) {
+            setError('Please select a job title.');
+            return;
+        }
+
+        if (!isValidCategoryAndTitle(editingJob.category, editingJob.title)) {
+            setError('Please select a valid job title for this category.');
+            return;
+        }
+
+        if (Number(editingJob.workersRequired) < 1) {
+            setError('Workers Required must be at least 1.');
+            return;
+        }
+
+        if (editingJob.endTime <= editingJob.startTime) {
+            setError('End time must be after start time.');
+            return;
+        }
+
+        try {
+            const data = {
+                ...editingJob,
+                payRate: Number(editingJob.payRate) * 100,
+                workersRequired: Number(editingJob.workersRequired),
+                requiredSkills: typeof editingJob.requiredSkills === 'string'
+                    ? editingJob.requiredSkills.split(',').map(s => s.trim()).filter(Boolean)
+                    : editingJob.requiredSkills
+            };
+            await axios.put(`/company/jobs/${editingJob._id}`, data);
+            setSuccess('Job updated successfully.');
+            setEditingJob(null);
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update job.');
         }
     };
 
@@ -484,33 +602,32 @@ export default function CompanyDashboard() {
                     <div className="bg-white border border-[#FEF3C7] p-8 rounded-3xl max-w-2xl shadow-sm space-y-6">
                         <div>
                             <h2 className="text-2xl font-extrabold text-[#111827]">Post a New Job</h2>
-                            <p className="text-sm text-[#4B5563] mt-1">Bulk or regular part-time jobs for event marshals, helper teams, delivery agents.</p>
+                            <p className="text-sm text-[#4B5563] mt-1">Select a category and dependent job title for your hiring request.</p>
                         </div>
 
                         <form onSubmit={handleCreateJob} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Job Title</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="e.g. Event Marshal / Ticketing Clerk" 
-                                    value={newJob.title}
-                                    onChange={e => setNewJob({ ...newJob, title: e.target.value })}
-                                    className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <SearchableSelect 
+                                    label="Category"
                                     required
+                                    options={CATEGORY_LIST}
+                                    value={newJob.category}
+                                    onChange={cat => setNewJob({ ...newJob, category: cat, title: '' })}
+                                    placeholder="Search category..."
+                                />
+                                <SearchableSelect 
+                                    label="Job Title"
+                                    required
+                                    options={getJobTitlesForCategory(newJob.category)}
+                                    value={newJob.title}
+                                    onChange={title => setNewJob({ ...newJob, title })}
+                                    placeholder={newJob.category ? "Search job title..." : "Select category first"}
+                                    disabled={!newJob.category}
+                                    disabledPlaceholder="Select category first"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Category</label>
-                                    <input 
-                                        type="text" 
-                                        value={newJob.category}
-                                        onChange={e => setNewJob({ ...newJob, category: e.target.value })}
-                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
-                                        required
-                                    />
-                                </div>
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Workers Required</label>
                                     <input 
@@ -522,9 +639,6 @@ export default function CompanyDashboard() {
                                         required
                                     />
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Rate (INR)</label>
                                     <input 
@@ -536,6 +650,9 @@ export default function CompanyDashboard() {
                                         required
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Type</label>
                                     <select 
@@ -547,9 +664,6 @@ export default function CompanyDashboard() {
                                         <option value="HOURLY">Hourly Rate</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Date</label>
                                     <input 
@@ -560,6 +674,9 @@ export default function CompanyDashboard() {
                                         required
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1">Location / Area</label>
                                     <input 
@@ -567,6 +684,17 @@ export default function CompanyDashboard() {
                                         placeholder="e.g. Noida Sector 62" 
                                         value={newJob.location}
                                         onChange={e => setNewJob({ ...newJob, location: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Detailed Address</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Event center full address details" 
+                                        value={newJob.address}
+                                        onChange={e => setNewJob({ ...newJob, address: e.target.value })}
                                         className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
                                         required
                                     />
@@ -594,18 +722,6 @@ export default function CompanyDashboard() {
                                         required
                                     />
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Detailed Address</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Event center full address details" 
-                                    value={newJob.address}
-                                    onChange={e => setNewJob({ ...newJob, address: e.target.value })}
-                                    className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
-                                    required
-                                />
                             </div>
 
                             <div>
@@ -643,23 +759,137 @@ export default function CompanyDashboard() {
                 {/* My Jobs Tab */}
                 {activeTab === 'jobs' && (
                     <div className="space-y-6">
-                        <h2 className="text-2xl font-extrabold text-[#111827]">Active Job Postings</h2>
-                        {jobs.length === 0 ? (
-                            <p className="text-sm text-[#4B5563] italic">No jobs posted yet.</p>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-2xl font-extrabold text-[#111827]">Active Job Postings</h2>
+                                <p className="text-sm text-[#4B5563]">Manage and edit your posted jobs</p>
+                            </div>
+                            <button
+                                onClick={() => setActiveTab('post-job')}
+                                className="inline-flex items-center gap-1.5 bg-[#F97316] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#EA580C] cursor-pointer transition-colors shadow-xs"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Post New Job</span>
+                            </button>
+                        </div>
+
+                        {/* Job Search & Filter Bar */}
+                        <div className="bg-white border border-[#FEF3C7] p-4 rounded-2xl shadow-xs space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Search Jobs</label>
+                                    <div className="relative">
+                                        <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#9CA3AF]" />
+                                        <input
+                                            type="text"
+                                            value={filterSearch}
+                                            onChange={e => setFilterSearch(e.target.value)}
+                                            placeholder="Search title or area..."
+                                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-[#FEF3C7] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+                                        />
+                                    </div>
+                                </div>
+                                <SearchableSelect 
+                                    label="Filter Category"
+                                    options={['', ...CATEGORY_LIST]}
+                                    value={filterCategory}
+                                    onChange={cat => {
+                                        setFilterCategory(cat);
+                                        setFilterTitle('');
+                                    }}
+                                    placeholder="All Categories"
+                                />
+                                <SearchableSelect 
+                                    label="Filter Job Title"
+                                    options={['', ...getJobTitlesForCategory(filterCategory)]}
+                                    value={filterTitle}
+                                    onChange={t => setFilterTitle(t)}
+                                    placeholder={filterCategory ? "All Job Titles" : "Select category first"}
+                                    disabled={!filterCategory}
+                                    disabledPlaceholder="Select category first"
+                                />
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#78716C] mb-1">Status</label>
+                                    <select
+                                        value={filterStatus}
+                                        onChange={e => setFilterStatus(e.target.value)}
+                                        className="w-full py-2 px-3 text-xs bg-white border border-[#FEF3C7] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F97316] font-medium"
+                                    >
+                                        <option value="ALL">All Statuses</option>
+                                        <option value="ACTIVE">ACTIVE</option>
+                                        <option value="COMPLETED">COMPLETED</option>
+                                        <option value="CANCELLED">CANCELLED</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {(filterSearch || filterCategory || filterTitle || filterStatus !== 'ALL') && (
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => {
+                                            setFilterSearch('');
+                                            setFilterCategory('');
+                                            setFilterTitle('');
+                                            setFilterStatus('ALL');
+                                        }}
+                                        className="text-xs text-[#F97316] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                                    >
+                                        <X className="w-3 h-3" /> Reset Filters
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Jobs Grid */}
+                        {jobs.filter(job => {
+                            if (filterCategory && job.category !== filterCategory) return false;
+                            if (filterTitle && job.title !== filterTitle) return false;
+                            if (filterStatus !== 'ALL' && job.status !== filterStatus) return false;
+                            if (filterSearch) {
+                                const q = filterSearch.toLowerCase();
+                                const mTitle = job.title?.toLowerCase().includes(q);
+                                const mCat = job.category?.toLowerCase().includes(q);
+                                const mLoc = job.location?.toLowerCase().includes(q);
+                                if (!mTitle && !mCat && !mLoc) return false;
+                            }
+                            return true;
+                        }).length === 0 ? (
+                            <p className="text-sm text-[#4B5563] italic py-8 text-center bg-white rounded-2xl border border-[#FEF3C7]">No matching jobs found.</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {jobs.map(job => (
-                                    <div key={job._id} className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4">
+                                {jobs.filter(job => {
+                                    if (filterCategory && job.category !== filterCategory) return false;
+                                    if (filterTitle && job.title !== filterTitle) return false;
+                                    if (filterStatus !== 'ALL' && job.status !== filterStatus) return false;
+                                    if (filterSearch) {
+                                        const q = filterSearch.toLowerCase();
+                                        const mTitle = job.title?.toLowerCase().includes(q);
+                                        const mCat = job.category?.toLowerCase().includes(q);
+                                        const mLoc = job.location?.toLowerCase().includes(q);
+                                        if (!mTitle && !mCat && !mLoc) return false;
+                                    }
+                                    return true;
+                                }).map(job => (
+                                    <div key={job._id} className="bg-white border border-[#FEF3C7] p-6 rounded-2xl shadow-sm space-y-4 hover:shadow-md transition-shadow">
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h3 className="font-extrabold text-lg text-[#111827]">{job.title}</h3>
                                                 <p className="text-xs text-[#F97316] font-semibold">{job.category}</p>
                                             </div>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                                job.status === 'ACTIVE' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-gray-50 border border-gray-200 text-gray-700'
-                                            }`}>
-                                                {job.status}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                                                    job.status === 'ACTIVE' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-gray-50 border border-gray-200 text-gray-700'
+                                                }`}>
+                                                    {job.status}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleOpenEditJob(job)}
+                                                    title="Edit Job"
+                                                    className="p-1.5 rounded-lg bg-[#FAF6F0] hover:bg-[#FEF3C7] text-[#78716C] hover:text-[#F97316] transition-colors cursor-pointer"
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <p className="text-xs text-[#4B5563] line-clamp-2">{job.description}</p>
@@ -667,19 +897,19 @@ export default function CompanyDashboard() {
                                         <div className="grid grid-cols-2 gap-2 text-xs border-t border-[#FEF3C7] pt-3">
                                             <div>
                                                 <span className="text-[#9CA3AF] block uppercase tracking-wider text-[9px]">Workers Required</span>
-                                                <span className="font-bold">{job.workersRequired}</span>
+                                                <span className="font-bold text-[#111827]">{job.workersRequired} Workers</span>
                                             </div>
                                             <div>
                                                 <span className="text-[#9CA3AF] block uppercase tracking-wider text-[9px]">Pay Rate</span>
-                                                <span className="font-bold">₹{job.payRate/100}/{job.paymentType === 'DAILY' ? 'day' : 'hr'}</span>
+                                                <span className="font-bold text-[#111827]">₹{job.payRate/100} / {job.paymentType === 'DAILY' ? 'Day' : 'Hr'}</span>
                                             </div>
                                             <div>
                                                 <span className="text-[#9CA3AF] block uppercase tracking-wider text-[9px]">Date</span>
-                                                <span className="font-bold">{new Date(job.workingDate).toLocaleDateString()}</span>
+                                                <span className="font-bold text-[#111827]">{new Date(job.workingDate).toLocaleDateString()}</span>
                                             </div>
                                             <div>
-                                                <span className="text-[#9CA3AF] block uppercase tracking-wider text-[9px]">Time</span>
-                                                <span className="font-bold">{job.startTime} - {job.endTime}</span>
+                                                <span className="text-[#9CA3AF] block uppercase tracking-wider text-[9px]">Location</span>
+                                                <span className="font-bold text-[#111827]">{job.location}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1266,6 +1496,158 @@ export default function CompanyDashboard() {
             </main>
 
             {/* Lock feature modal */}
+            {/* Edit Job Modal */}
+            {editingJob && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#FEF3C7] rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center pb-3 border-b border-[#FEF3C7]">
+                            <div>
+                                <h3 className="text-xl font-extrabold text-[#111827]">Edit Job Posting</h3>
+                                <p className="text-xs text-[#4B5563] mt-0.5">Update category, title, or job requirements</p>
+                            </div>
+                            <button
+                                onClick={() => setEditingJob(null)}
+                                className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateJob} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <SearchableSelect 
+                                    label="Category"
+                                    required
+                                    options={CATEGORY_LIST}
+                                    value={editingJob.category}
+                                    onChange={cat => setEditingJob({ ...editingJob, category: cat, title: '' })}
+                                    placeholder="Search category..."
+                                />
+                                <SearchableSelect 
+                                    label="Job Title"
+                                    required
+                                    options={getJobTitlesForCategory(editingJob.category)}
+                                    value={editingJob.title}
+                                    onChange={title => setEditingJob({ ...editingJob, title })}
+                                    placeholder={editingJob.category ? "Search job title..." : "Select category first"}
+                                    disabled={!editingJob.category}
+                                    disabledPlaceholder="Select category first"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Workers Required</label>
+                                    <input 
+                                        type="number" 
+                                        min={1}
+                                        value={editingJob.workersRequired}
+                                        onChange={e => setEditingJob({ ...editingJob, workersRequired: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Rate (INR)</label>
+                                    <input 
+                                        type="number" 
+                                        value={editingJob.payRate}
+                                        onChange={e => setEditingJob({ ...editingJob, payRate: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Pay Type</label>
+                                    <select 
+                                        value={editingJob.paymentType}
+                                        onChange={e => setEditingJob({ ...editingJob, paymentType: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                    >
+                                        <option value="DAILY">Daily Rate</option>
+                                        <option value="HOURLY">Hourly Rate</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Date</label>
+                                    <input 
+                                        type="date" 
+                                        value={editingJob.workingDate}
+                                        onChange={e => setEditingJob({ ...editingJob, workingDate: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">Start Time</label>
+                                    <input 
+                                        type="time" 
+                                        value={editingJob.startTime}
+                                        onChange={e => setEditingJob({ ...editingJob, startTime: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1">End Time</label>
+                                    <input 
+                                        type="time" 
+                                        value={editingJob.endTime}
+                                        onChange={e => setEditingJob({ ...editingJob, endTime: e.target.value })}
+                                        className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Location / Area</label>
+                                <input 
+                                    type="text" 
+                                    value={editingJob.location}
+                                    onChange={e => setEditingJob({ ...editingJob, location: e.target.value })}
+                                    className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider mb-1">Job Description</label>
+                                <textarea 
+                                    rows={3}
+                                    value={editingJob.description}
+                                    onChange={e => setEditingJob({ ...editingJob, description: e.target.value })}
+                                    className="w-full input-field-style rounded-xl px-4 py-2 text-sm border border-[#FEF3C7]"
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingJob(null)}
+                                    className="w-1/2 py-2.5 rounded-xl border border-gray-300 font-bold text-xs hover:bg-gray-50 cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="w-1/2 py-2.5 rounded-xl bg-[#F97316] text-white font-bold text-xs hover:bg-[#EA580C] cursor-pointer"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {showLockModal && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-3xl border border-[#FFF7D6] p-8 max-w-sm w-full text-center space-y-6">
