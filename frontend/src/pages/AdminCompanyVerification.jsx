@@ -133,7 +133,7 @@ export default function AdminCompanyVerification() {
             setPreviewBlobUrl(url);
         } catch (err) {
             console.error('Document fetch error:', err);
-            const msg = err.response?.data?.message || 'Document metadata exists, but actual file content is missing or corrupt.';
+            const msg = err.response?.data?.message || 'Document file is unavailable. Please request re-upload.';
             setPreviewError(msg);
         } finally {
             setPreviewLoading(false);

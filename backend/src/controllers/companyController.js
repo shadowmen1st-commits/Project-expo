@@ -14,6 +14,7 @@ import CompanyPayment from '../models/CompanyPayment.js';
 import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
+import { validateFileBuffer } from '../utils/fileValidator.js';
 import { hashPassword, comparePassword } from '../utils/authUtils.js';
 import { issueSession, setSessionCookies, safeUser } from './authController.js';
 
@@ -934,12 +935,24 @@ export const uploadCompanyDocument = async (req, res, next) => {
         const companyId = req.user.userId;
         const { documentType } = req.body;
 
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No file uploaded.' });
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({ success: false, message: 'No file uploaded or file buffer is empty.' });
         }
 
-        if (!documentType) {
-            return res.status(400).json({ success: false, message: 'documentType is required.' });
+        const validTypes = ['BUSINESS_REGISTRATION', 'ADDRESS_PROOF', 'GST_CERTIFICATE', 'AUTHORIZED_PERSON_ID', 'COMPANY_PAN', 'OTHER_SUPPORTING_DOCUMENT'];
+        if (!documentType || !validTypes.includes(documentType)) {
+            return res.status(400).json({ success: false, message: 'Valid documentType is required.' });
+        }
+
+        // Validate buffer, filename, extension, MIME type, magic bytes, size limit (10MB)
+        try {
+            validateFileBuffer(req.file.buffer, req.file.originalname, req.file.mimetype, 10 * 1024 * 1024);
+        } catch (valErr) {
+            return res.status(400).json({
+                success: false,
+                errorCode: valErr.message || 'INVALID_FILE',
+                message: `File validation failed: ${valErr.message}`
+            });
         }
 
         const STORAGE_DIR = path.resolve('uploads/verification');
@@ -947,19 +960,32 @@ export const uploadCompanyDocument = async (req, res, next) => {
             fs.mkdirSync(STORAGE_DIR, { recursive: true });
         }
 
-        const fileExt = path.extname(req.file.originalname);
+        const fileExt = path.extname(req.file.originalname).toLowerCase();
         const randomName = `${crypto.randomUUID()}${fileExt}`;
         const filePath = path.join(STORAGE_DIR, randomName);
+
+        // Write file buffer to disk
         fs.writeFileSync(filePath, req.file.buffer);
 
-        // Upsert document
+        // Verify storage write succeeded
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+            return res.status(500).json({
+                success: false,
+                errorCode: 'STORAGE_UPLOAD_FAILED',
+                message: 'Failed to write physical document file to storage.'
+            });
+        }
+
+        const fileSize = fs.statSync(filePath).size;
+
+        // Upsert document in MongoDB only AFTER storage confirmation
         const document = await CompanyVerificationDocument.findOneAndUpdate(
             { companyId, documentType },
             {
                 documentUrl: `/uploads/verification/${randomName}`,
                 storageKey: randomName,
                 fileName: req.file.originalname,
-                fileSize: req.file.size,
+                fileSize,
                 mimeType: req.file.mimetype,
                 status: 'PENDING',
                 rejectionReason: null

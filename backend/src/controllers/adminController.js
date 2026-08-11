@@ -759,24 +759,27 @@ export const viewCompanyVerificationDocument = async (req, res, next) => {
         const filePath = path.join(STORAGE_DIR, storageKey);
 
         if (fs.existsSync(filePath)) {
-            if (isAdmin) {
-                await new AuditLog({
-                    actor: req.user.userId,
-                    action: 'ADMIN_COMPANY_DOCUMENT_VIEW',
-                    resourceType: 'CompanyVerificationDocument',
-                    resourceId: documentId,
-                    ipAddress: req.ip,
-                    userAgent: req.headers['user-agent'],
-                    requestId: req.requestId
-                }).save();
-            }
+            const stat = fs.statSync(filePath);
+            if (stat.size > 0) {
+                if (isAdmin) {
+                    await new AuditLog({
+                        actor: req.user.userId,
+                        action: 'ADMIN_COMPANY_DOCUMENT_VIEW',
+                        resourceType: 'CompanyVerificationDocument',
+                        resourceId: documentId,
+                        ipAddress: req.ip,
+                        userAgent: req.headers['user-agent'],
+                        requestId: req.requestId
+                    }).save();
+                }
 
-            const mimeType = doc.mimeType || (filePath.endsWith('.pdf') ? 'application/pdf' : 'image/png');
-            res.setHeader('Content-Type', mimeType);
-            res.setHeader('Cache-Control', 'private, no-store, max-age=0');
-            res.setHeader('X-Content-Type-Options', 'nosniff');
-            res.setHeader('Content-Disposition', `inline; filename="${doc.fileName || 'document'}"`);
-            return fs.createReadStream(filePath).pipe(res);
+                const mimeType = doc.mimeType || (filePath.endsWith('.pdf') ? 'application/pdf' : 'image/png');
+                res.setHeader('Content-Type', mimeType);
+                res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+                res.setHeader('X-Content-Type-Options', 'nosniff');
+                res.setHeader('Content-Disposition', `inline; filename="${doc.fileName || 'document'}"`);
+                return fs.createReadStream(filePath).pipe(res);
+            }
         }
 
         if (doc.documentUrl && /^https?:\/\//i.test(doc.documentUrl)) {
@@ -785,8 +788,8 @@ export const viewCompanyVerificationDocument = async (req, res, next) => {
 
         return res.status(404).json({
             statusCode: 404,
-            errorCode: 'FILE_NOT_FOUND',
-            message: 'Document metadata exists, but actual file content is missing.'
+            errorCode: 'FILE_MISSING',
+            message: 'Document file is unavailable. Please request re-upload.'
         });
     } catch (error) {
         next(error);
