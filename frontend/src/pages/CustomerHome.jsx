@@ -29,6 +29,8 @@ const getCategoryIcon = (name) => {
 export const CustomerHome = () => {
     const { user, logout } = useAuth();
     const [categories, setCategories] = useState([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(false);
+    const [categoriesError, setCategoriesError] = useState('');
     const [workers, setWorkers] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchSkill, setSearchSkill] = useState('');
@@ -138,13 +140,20 @@ export const CustomerHome = () => {
     }, [activeQuote]);
 
     const fetchCategories = async () => {
+        setCategoriesLoading(true);
+        setCategoriesError('');
         try {
             const res = await api.get('/categories');
             if (res.data.success) {
-                setCategories(res.data.categories);
+                setCategories(res.data.categories || []);
+            } else {
+                setCategoriesError('Unable to load services.');
             }
         } catch (err) {
             console.error('Error fetching categories:', err);
+            setCategoriesError('Unable to load services.');
+        } finally {
+            setCategoriesLoading(false);
         }
     };
 
@@ -757,8 +766,15 @@ export const CustomerHome = () => {
                                     {/* Service Category Selector */}
                                     <div>
                                         <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-1">Service Type</label>
-                                        {categories.length === 0 ? (
-                                            <p className="text-[10px] text-[#A8A29E] mt-1">Loading categories…</p>
+                                        {categoriesLoading ? (
+                                            <p className="text-[10px] text-[#A8A29E] mt-1">Loading categories...</p>
+                                        ) : categoriesError ? (
+                                            <div className="flex items-center justify-between mt-1">
+                                                <p className="text-[10px] text-[#DC2626]">{categoriesError}</p>
+                                                <button onClick={fetchCategories} className="text-[10px] text-[#F97316] hover:underline font-semibold cursor-pointer">Retry</button>
+                                            </div>
+                                        ) : categories.length === 0 ? (
+                                            <p className="text-[10px] text-[#78716C] mt-1">No services are currently available.</p>
                                         ) : (() => {
                                             const workerCatIds = new Set(
                                                 (selectedWorker.serviceCategoryIds || []).map(id =>
