@@ -455,14 +455,15 @@ async function runMasterTestSuite() {
         assert.equal(releaseRes.body.success, true);
     });
 
-    await test('20. Re-releasing payment on already completed assignment returns HTTP 400', async () => {
+    await test('20. Re-releasing payment on already completed assignment returns HTTP 409 PAYMENT_ALREADY_RELEASED', async () => {
         const res = await request(app)
             .post('/api/company/payments/release')
             .set('Authorization', `Bearer ${companyAToken}`)
             .send({ assignmentId: createdAssignmentId });
 
-        assert.equal(res.status, 400);
+        assert.equal(res.status, 409);
         assert.equal(res.body.success, false);
+        assert.equal(res.body.errorCode, 'PAYMENT_ALREADY_RELEASED');
     });
 
     // 8. Data Isolation Matrix
