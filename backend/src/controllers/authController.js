@@ -10,6 +10,7 @@ import CompanyWallet from '../models/CompanyWallet.js';
 import { registerSchema, loginSchema } from '../utils/validation.js';
 import { hashPassword, comparePassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/authUtils.js';
 import { validateFileBuffer } from '../utils/fileValidator.js';
+import mongoose from 'mongoose';
 
 const ACCESS_COOKIE='access_token', REFRESH_COOKIE='refreshToken';
 const hashToken = token => crypto.createHash('sha256').update(token).digest('hex');
@@ -71,15 +72,22 @@ export const uploadProfileImage=async(req,res,next)=>{
             });
         }
 
-        const PHOTO_DIR = path.resolve('uploads/profile-photos');
-        if (!fs.existsSync(PHOTO_DIR)) {
-            fs.mkdirSync(PHOTO_DIR, { recursive: true });
-        }
-
         const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
         const randomName = `${crypto.randomUUID()}${ext}`;
-        const filePath = path.join(PHOTO_DIR, randomName);
-        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Upload to GridFS
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+            bucketName: 'profilePhotos'
+        });
+        const uploadStream = bucket.openUploadStream(randomName, {
+            contentType: req.file.mimetype
+        });
+        
+        await new Promise((resolve, reject) => {
+            uploadStream.on('finish', resolve);
+            uploadStream.on('error', reject);
+            uploadStream.end(req.file.buffer);
+        });
 
         const photoUrl = `/api/v1/worker/verification/profile-photo/file/${randomName}`;
         
@@ -115,9 +123,16 @@ export const deleteProfileImage=async(req,res,next)=>{
 
         if (user.profileImage && user.profileImage.includes('/file/')) {
             const filename = path.basename(user.profileImage);
-            const filePath = path.join(path.resolve('uploads/profile-photos'), filename);
-            if (fs.existsSync(filePath)) {
-                try { fs.unlinkSync(filePath); } catch (e) { console.error('Failed deleting photo file:', e); }
+            const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+                bucketName: 'profilePhotos'
+            });
+            const files = await bucket.find({ filename }).toArray();
+            if (files && files.length > 0) {
+                try {
+                    await bucket.delete(files[0]._id);
+                } catch (e) {
+                    console.error('Failed deleting GridFS file:', e);
+                }
             }
         }
 

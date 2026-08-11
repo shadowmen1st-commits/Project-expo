@@ -768,16 +768,22 @@ export const uploadProfilePhoto = async (req, res, next) => {
             });
         }
 
-        // Create Private File Storage directory if it doesn't exist
-        const PHOTO_DIR = path.resolve(__dirname, '../../../uploads/profile-photos');
-        if (!fs.existsSync(PHOTO_DIR)) {
-            fs.mkdirSync(PHOTO_DIR, { recursive: true });
-        }
-
         const fileExt = path.extname(req.file.originalname);
         const randomName = `${crypto.randomUUID()}${fileExt}`;
-        const filePath = path.join(PHOTO_DIR, randomName);
-        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Upload to GridFS
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+            bucketName: 'profilePhotos'
+        });
+        const uploadStream = bucket.openUploadStream(randomName, {
+            contentType: req.file.mimetype
+        });
+        
+        await new Promise((resolve, reject) => {
+            uploadStream.on('finish', resolve);
+            uploadStream.on('error', reject);
+            uploadStream.end(req.file.buffer);
+        });
 
         // Update profilePhotoId on WorkerProfile
         let profile = await WorkerProfile.findOne({ userId: workerId });
@@ -813,6 +819,20 @@ export const deleteProfilePhoto = async (req, res, next) => {
         const workerId = req.user.userId;
         let profile = await WorkerProfile.findOne({ userId: workerId });
         if (profile) {
+            if (profile.profilePhotoId) {
+                const filename = path.basename(profile.profilePhotoId);
+                const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+                    bucketName: 'profilePhotos'
+                });
+                const files = await bucket.find({ filename }).toArray();
+                if (files && files.length > 0) {
+                    try {
+                        await bucket.delete(files[0]._id);
+                    } catch (e) {
+                        console.error('Failed deleting GridFS file:', e);
+                    }
+                }
+            }
             profile.profilePhotoId = null;
             await profile.save();
         }
@@ -831,22 +851,36 @@ export const serveProfilePhoto = async (req, res, next) => {
     try {
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         const { filename } = req.params;
-        const filePath = path.join(path.resolve(__dirname, '../../../uploads/profile-photos'), filename);
-        if (!fs.existsSync(filePath)) {
-            res.status(404);
-            res.setHeader('Content-Type', 'image/png');
-            const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
-            return res.send(transparentPng);
+
+        // 1. Try GridFS
+        const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+            bucketName: 'profilePhotos'
+        });
+        const files = await bucket.find({ filename }).toArray();
+        if (files && files.length > 0) {
+            const file = files[0];
+            res.setHeader('Content-Type', file.contentType || 'image/jpeg');
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            const downloadStream = bucket.openDownloadStreamByName(filename);
+            return downloadStream.pipe(res);
         }
-        
-        let contentType = 'image/jpeg';
-        const ext = path.extname(filename).toLowerCase();
-        if (ext === '.png') contentType = 'image/png';
-        else if (ext === '.webp') contentType = 'image/webp';
-        
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-        fs.createReadStream(filePath).pipe(res);
+
+        // 2. Fallback to filesystem
+        const filePath = path.join(path.resolve(__dirname, '../../../uploads/profile-photos'), filename);
+        if (fs.existsSync(filePath)) {
+            let contentType = 'image/jpeg';
+            const ext = path.extname(filename).toLowerCase();
+            if (ext === '.png') contentType = 'image/png';
+            else if (ext === '.webp') contentType = 'image/webp';
+            res.setHeader('Content-Type', contentType);
+            return fs.createReadStream(filePath).pipe(res);
+        }
+
+        // 3. Fallback to 1x1 transparent PNG
+        res.status(404);
+        res.setHeader('Content-Type', 'image/png');
+        const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+        return res.send(transparentPng);
     } catch (error) {
         next(error);
     }
