@@ -236,7 +236,16 @@ export const CustomerHome = () => {
 
     const handleCheckAvailability = async () => {
         if (!selectedWorker || !bookingDate || !bookingTime) return;
-        if (!selectedBookingCategory) {
+        let catToUse = selectedBookingCategory;
+        if (!catToUse) {
+            const workerCatIds = selectedWorker.serviceCategoryIds || [];
+            const firstWorkerCat = workerCatIds[0];
+            catToUse = (typeof firstWorkerCat === 'object' ? firstWorkerCat?._id || firstWorkerCat?.toString() : firstWorkerCat) || categories[0]?._id || '';
+            if (catToUse) {
+                setSelectedBookingCategory(catToUse);
+            }
+        }
+        if (!catToUse) {
             setSlotError('Please select a service category for this booking.');
             return;
         }
@@ -798,10 +807,11 @@ export const CustomerHome = () => {
                                             );
                                             const workerCats  = combinedCategories.filter(c => workerCatIds.has((c._id || c)?.toString()));
                                             const otherCats   = combinedCategories.filter(c => !workerCatIds.has((c._id || c)?.toString()));
+                                            const defaultCat  = workerCats[0]?._id || otherCats[0]?._id || '';
 
                                             return (
                                                 <select
-                                                    value={selectedBookingCategory}
+                                                    value={selectedBookingCategory || defaultCat}
                                                     onChange={(e) => {
                                                         setSelectedBookingCategory(e.target.value);
                                                         setSlotAvailable(null);
@@ -809,7 +819,7 @@ export const CustomerHome = () => {
                                                     }}
                                                     className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 transition-all rounded-xl py-2 px-3 text-[#111827] text-xs outline-none cursor-pointer"
                                                 >
-                                                    <option value="">-- Select Service --</option>
+                                                    {!selectedBookingCategory && !defaultCat && <option value="">-- Select Service --</option>}
                                                     {workerCats.length > 0 && (
                                                         <optgroup label="⭐ Worker's Speciality">
                                                             {workerCats.map(cat => (

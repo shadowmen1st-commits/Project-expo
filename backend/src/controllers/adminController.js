@@ -194,11 +194,35 @@ export const createCategory = async (req, res, next) => {
 export const getCategories = async (req, res, next) => {
     try {
         // Customer / Public service listing returns ONLY ACTIVE services
-        const categories = await ServiceCategory.find({
+        let categories = await ServiceCategory.find({
             isActive: { $ne: false },
             status: { $nin: ['DRAFT', 'INACTIVE', 'ARCHIVED'] },
             deletedAt: null
         }).sort({ sortOrder: 1, name: 1 });
+
+        // Auto-seed default categories if database has 0 categories
+        if (categories.length === 0) {
+            const defaultCats = [
+                { name: 'Home Cleaning', slug: 'home-cleaning', description: 'Professional home cleaning services', icon: 'sparkles', price: 499, status: 'ACTIVE', isActive: true },
+                { name: 'Plumbing', slug: 'plumbing', description: 'Expert plumbing repairs and installation', icon: 'wrench', price: 599, status: 'ACTIVE', isActive: true },
+                { name: 'Electrical', slug: 'electrical', description: 'Certified electrician services', icon: 'zap', price: 699, status: 'ACTIVE', isActive: true },
+                { name: 'Senior Care', slug: 'senior-care', description: 'Compassionate elderly care services', icon: 'heart', price: 799, status: 'ACTIVE', isActive: true },
+                { name: 'Housekeeping', slug: 'housekeeping', description: 'Daily house keeping and chores', icon: 'home', price: 499, status: 'ACTIVE', isActive: true }
+            ];
+            for (const catData of defaultCats) {
+                await ServiceCategory.findOneAndUpdate(
+                    { slug: catData.slug },
+                    { $setOnInsert: catData },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+            }
+            categories = await ServiceCategory.find({
+                isActive: { $ne: false },
+                status: { $nin: ['DRAFT', 'INACTIVE', 'ARCHIVED'] },
+                deletedAt: null
+            }).sort({ sortOrder: 1, name: 1 });
+        }
+
         res.status(200).json({ success: true, categories });
     }
     catch (error) {
