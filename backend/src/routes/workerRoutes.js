@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { submitOnboarding, updateLocation, searchWorkers, getWorkerProfile } from '../controllers/workerController.js';
+import { submitOnboarding, updateLocation, searchWorkers, getWorkerProfile, getWorkerAvailableJobs, applyForJob, getWorkerApplications, getWorkerAssignments } from '../controllers/workerController.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/rbac.js';
 import { createWorkerPayoutAccount, listWorkerPayoutAccounts, getWorkerPayoutAccount, setDefaultWorkerPayoutAccount, validateWorkerPayoutAccount, disableWorkerPayoutAccount, createWorkerPayout, listWorkerPayouts, getWorkerPayout } from '../controllers/payoutController.js';
@@ -13,6 +13,10 @@ router.get('/:workerId/rating-summary', summary);
 // Authenticated routes
 router.post('/onboarding', authMiddleware, submitOnboarding);
 router.post('/location', authMiddleware, updateLocation);
+router.get('/jobs', authMiddleware, getWorkerAvailableJobs);
+router.post('/jobs/:id/apply', authMiddleware, applyForJob);
+router.get('/applications', authMiddleware, getWorkerApplications);
+router.get('/assignments', authMiddleware, getWorkerAssignments);
 router.post('/payout-accounts', authMiddleware, requirePermission('payouts.manage'), createWorkerPayoutAccount);
 router.get('/payout-accounts', authMiddleware, requirePermission('payouts.manage'), listWorkerPayoutAccounts);
 router.get('/payout-accounts/:id', authMiddleware, requirePermission('payouts.manage'), getWorkerPayoutAccount);

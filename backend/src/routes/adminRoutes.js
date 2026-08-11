@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-    getPendingWorkers, verifyWorker, viewDocumentDetails,
+    getPendingWorkers, verifyWorker, approveWorkerAdmin, rejectWorkerAdmin, suspendWorkerAdmin, reactivateWorkerAdmin, viewDocumentDetails,
     createCategory, getCategories, deleteCategory, createCommissionRule, getCommissionRules,
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, getCompanyVerificationsList, verifyCompany, rejectCompany, suspendCompany, activateCompany,
@@ -48,6 +48,10 @@ router.post('/review-reconciliation/rebuild/:workerId', requirePermission('revie
 // ── Workers & Documents Verification ──────────────────────────────────────────
 router.get('/workers/pending', requirePermission('documents.review'), getPendingWorkers);
 router.post('/workers/verify/:id', requirePermission('workers.approve'), verifyWorker);
+router.patch('/workers/:id/approve', requirePermission('workers.approve'), approveWorkerAdmin);
+router.patch('/workers/:id/reject', requirePermission('workers.approve'), rejectWorkerAdmin);
+router.patch('/workers/:id/suspend', requirePermission('workers.approve'), suspendWorkerAdmin);
+router.patch('/workers/:id/reactivate', requirePermission('workers.approve'), reactivateWorkerAdmin);
 router.get('/documents/view/:docId', requirePermission('documents.review'), viewDocumentDetails);
 
 // ── Categories & Commission ────────────────────────────────────────────────────

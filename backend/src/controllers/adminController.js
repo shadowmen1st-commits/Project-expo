@@ -43,14 +43,27 @@ export const getPendingWorkers = async (req, res, next) => {
 export const verifyWorker = async (req, res, next) => {
     const { id } = req.params; // worker userId
     try {
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid worker ID.' });
+        }
+
         const validatedData = adminVerifyWorkerSchema.parse(req.body);
         const { action, reason } = validatedData;
-        const profile = await WorkerProfile.findOne({ userId: id });
+        let profile = await WorkerProfile.findOne({ userId: id });
         if (!profile) {
-            res.status(404).json({ success: false, message: 'Worker profile not found.' });
-            return;
+            // Auto-create WorkerProfile if user exists and is worker
+            const workerUser = await User.findById(id);
+            if (workerUser && workerUser.role === 'WORKER') {
+                profile = await WorkerProfile.create({
+                    userId: id,
+                    verificationStatus: 'PENDING'
+                });
+            } else {
+                return res.status(404).json({ success: false, message: 'Worker profile not found.' });
+            }
         }
         const beforeSnapshot = JSON.parse(JSON.stringify(profile));
+
         // Update profile verification status
         profile.verificationStatus = action;
         if (action === 'APPROVED') {
@@ -58,13 +71,22 @@ export const verifyWorker = async (req, res, next) => {
             profile.isPubliclyVisible = true;
             profile.approvedAt = new Date();
             profile.approvedBy = req.user?.userId;
-        }
-        else {
+            await User.findByIdAndUpdate(id, { status: 'ACTIVE' });
+        } else if (action === 'REJECTED') {
             profile.verificationBadge = false;
             profile.isPubliclyVisible = false;
             profile.rejectionReason = reason;
+            profile.rejectedAt = new Date();
+            profile.rejectedBy = req.user?.userId;
+            await User.findByIdAndUpdate(id, { status: 'REJECTED' });
+        } else if (action === 'SUSPENDED') {
+            profile.verificationBadge = false;
+            profile.isPubliclyVisible = false;
+            profile.rejectionReason = reason;
+            await User.findByIdAndUpdate(id, { status: 'SUSPENDED' });
         }
         await profile.save();
+
         // Update document statuses as well
         const docStatus = action === 'APPROVED' ? 'APPROVED' : 'REJECTED';
         await VerificationDocument.updateMany({ workerId: id }, {
@@ -73,6 +95,7 @@ export const verifyWorker = async (req, res, next) => {
             reviewedAt: new Date(),
             rejectionReason: reason,
         });
+
         // Save Audit Log
         await new AuditLog({
             actor: req.user?.userId,
@@ -85,18 +108,39 @@ export const verifyWorker = async (req, res, next) => {
             userAgent: req.headers['user-agent'],
             requestId: req.requestId,
         }).save();
+
         // Notify Worker
         await new Notification({
             recipientId: id,
             title: `Account Verification: ${action}`,
-            message: `Your worker profile status was updated to ${action.toLowerCase()}. Reason: ${reason}`,
+            message: `Your worker profile status was updated to ${action.toLowerCase()}.${reason ? ' Reason: ' + reason : ''}`,
             type: action === 'APPROVED' ? 'SUCCESS' : 'WARNING',
         }).save();
-        res.status(200).json({ success: true, message: `Worker status updated to ${action}.` });
-    }
-    catch (error) {
+
+        return res.status(200).json({ success: true, message: `Worker status updated to ${action}.` });
+    } catch (error) {
         next(error);
     }
+};
+
+export const approveWorkerAdmin = async (req, res, next) => {
+    req.body = { action: 'APPROVED', reason: req.body?.reason || 'Verified by admin', ...req.body };
+    return verifyWorker(req, res, next);
+};
+
+export const rejectWorkerAdmin = async (req, res, next) => {
+    req.body = { action: 'REJECTED', reason: req.body?.reason || 'Failed background verification requirements.', ...req.body };
+    return verifyWorker(req, res, next);
+};
+
+export const suspendWorkerAdmin = async (req, res, next) => {
+    req.body = { action: 'SUSPENDED', reason: req.body?.reason || 'Suspended by admin', ...req.body };
+    return verifyWorker(req, res, next);
+};
+
+export const reactivateWorkerAdmin = async (req, res, next) => {
+    req.body = { action: 'APPROVED', reason: req.body?.reason || 'Reactivated by admin', ...req.body };
+    return verifyWorker(req, res, next);
 };
 export const viewDocumentDetails = async (req, res, next) => {
     const { docId } = req.params;

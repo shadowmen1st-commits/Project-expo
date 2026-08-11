@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import WorkerProfile from '../models/WorkerProfile.js';
 import VerificationDocument from '../models/VerificationDocument.js';
 import User from '../models/User.js';
+import Job from '../models/Job.js';
+import JobApplication from '../models/JobApplication.js';
+import WorkerAssignment from '../models/WorkerAssignment.js';
+import Notification from '../models/Notification.js';
+import AuditLog from '../models/AuditLog.js';
 import { workerOnboardingSchema } from '../utils/validation.js';
 import { encryptText, maskDocumentNumber } from '../utils/crypto.js';
 
@@ -257,6 +262,121 @@ export const getWorkerProfile = async (req, res, next) => {
             location: profile.location,
         };
         res.status(200).json({ success: true, data: safeProfile });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getWorkerAvailableJobs = async (req, res, next) => {
+    try {
+        const { search, category } = req.query;
+        let query = { status: 'ACTIVE' };
+
+        if (category) {
+            query.category = new RegExp(category, 'i');
+        }
+
+        if (search) {
+            query.title = new RegExp(search, 'i');
+        }
+
+        const jobs = await Job.find(query)
+            .populate('companyId', 'name profileImage')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ success: true, jobs });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const applyForJob = async (req, res, next) => {
+    try {
+        const { id } = req.params; // jobId
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid job ID.' });
+        }
+
+        // Verify active worker status
+        const currentUser = await User.findById(req.user.userId);
+        if (!currentUser || currentUser.role !== 'WORKER' || currentUser.status !== 'ACTIVE') {
+            return res.status(403).json({
+                success: false,
+                errorCode: 'WORKER_NOT_ACTIVE',
+                message: 'Only active workers with approved profiles can apply for jobs.'
+            });
+        }
+
+        const job = await Job.findById(id);
+        if (!job || job.status !== 'ACTIVE') {
+            return res.status(404).json({ success: false, message: 'Job is not open for applications.' });
+        }
+
+        // Prevent duplicate application
+        const existingApp = await JobApplication.findOne({ jobId: id, workerId: req.user.userId });
+        if (existingApp) {
+            return res.status(409).json({
+                success: false,
+                errorCode: 'DUPLICATE_APPLICATION',
+                message: 'You have already applied for this job.'
+            });
+        }
+
+        const application = await JobApplication.create({
+            jobId: id,
+            workerId: req.user.userId,
+            status: 'PENDING'
+        });
+
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'WORKER_JOB_APPLICATION_SUBMITTED',
+            resourceType: 'JobApplication',
+            resourceId: application._id.toString()
+        }).save();
+
+        await new Notification({
+            recipientId: job.companyId,
+            title: 'New Job Application Received',
+            message: `${currentUser.name} applied for "${job.title}".`,
+            type: 'INFO'
+        }).save();
+
+        return res.status(201).json({
+            success: true,
+            message: 'Application submitted successfully.',
+            application
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getWorkerApplications = async (req, res, next) => {
+    try {
+        const applications = await JobApplication.find({ workerId: req.user.userId })
+            .populate({
+                path: 'jobId',
+                populate: { path: 'companyId', select: 'name profileImage' }
+            })
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ success: true, applications });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getWorkerAssignments = async (req, res, next) => {
+    try {
+        const assignments = await WorkerAssignment.find({ workerId: req.user.userId })
+            .populate({
+                path: 'jobId',
+                populate: { path: 'companyId', select: 'name profileImage' }
+            })
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ success: true, assignments });
     } catch (error) {
         next(error);
     }

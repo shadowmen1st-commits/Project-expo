@@ -73,6 +73,7 @@ export const createApp = () => {
     app.use('/api/auth', authRoutes);
     app.use('/api/v1/dev', devRoutes);
     app.use('/api/workers', workerRoutes);
+    app.use('/api/worker', workerRoutes);
     app.use('/api/bookings', bookingRoutes);
     app.use('/api/v1/bookings', bookingRoutes);
     app.use('/api/pricing', pricingRoutes);

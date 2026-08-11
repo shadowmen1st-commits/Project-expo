@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import User from '../models/User.js';
+import WorkerProfile from '../models/WorkerProfile.js';
 import CompanyProfile from '../models/CompanyProfile.js';
 import Job from '../models/Job.js';
 import JobApplication from '../models/JobApplication.js';
@@ -411,8 +412,11 @@ export const updateApplicationStatus = async (req, res, next) => {
     try {
         const { id, status } = req.params; // E.g., select, reject, shortlist
         const app = await JobApplication.findById(id).populate('jobId');
-        if (!app || app.jobId.companyId.toString() !== req.user.userId) {
+        if (!app) {
             return res.status(404).json({ success: false, message: 'Application not found.' });
+        }
+        if (app.jobId.companyId.toString() !== req.user.userId) {
+            return res.status(403).json({ success: false, errorCode: 'FORBIDDEN', message: 'Unauthorized. Application belongs to another company.' });
         }
 
         app.status = status.toUpperCase();
@@ -449,12 +453,135 @@ export const updateApplicationStatus = async (req, res, next) => {
 // Workers Assigned / Available
 export const getCompanyWorkers = async (req, res, next) => {
     try {
-        const workers = await User.find({
-            role: 'WORKER',
-            status: 'ACTIVE'
-        }).select('_id name email phone status profileImage').sort({ name: 1 });
+        const { search, category, status } = req.query;
+        let filter = { role: 'WORKER' };
+
+        if (status) {
+            filter.status = status.toUpperCase();
+        } else {
+            filter.status = 'ACTIVE';
+        }
+
+        if (search) {
+            const regex = new RegExp(search, 'i');
+            filter.$or = [{ name: regex }, { email: regex }, { phone: regex }];
+        }
+
+        let workers = await User.find(filter).select('_id name email phone status profileImage').sort({ name: 1 });
+
+        if (category) {
+            const profiles = await WorkerProfile.find({ category: new RegExp(category, 'i') }).select('userId');
+            const matchingUserIds = new Set(profiles.map(p => p.userId.toString()));
+            workers = workers.filter(w => matchingUserIds.has(w._id.toString()));
+        }
 
         return res.status(200).json({ success: true, workers });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const createCompanyWorker = async (req, res, next) => {
+    try {
+        const { name, email, phone, category, skills, hourlyRate, experienceYears } = req.body;
+
+        // 1. Validation
+        const trimmedName = typeof name === 'string' ? name.trim() : '';
+        if (!trimmedName || trimmedName.length < 2) {
+            return res.status(400).json({ success: false, message: 'Worker name is required.' });
+        }
+
+        const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+        }
+
+        const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
+        const phoneRegex = /^\+?\d{7,15}$/;
+        if (!trimmedPhone || !phoneRegex.test(trimmedPhone)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid phone number.' });
+        }
+
+        // 2. Duplicate checks
+        const existingEmail = await User.findOne({ email: trimmedEmail });
+        if (existingEmail) {
+            return res.status(409).json({ 
+                success: false, 
+                errorCode: 'DUPLICATE_EMAIL',
+                message: 'A user with this email address already exists.' 
+            });
+        }
+
+        const existingPhone = await User.findOne({ phone: trimmedPhone });
+        if (existingPhone) {
+            return res.status(409).json({ 
+                success: false, 
+                errorCode: 'DUPLICATE_PHONE',
+                message: 'A user with this phone number already exists.' 
+            });
+        }
+
+        // 3. Create User record
+        const randomPass = crypto.randomBytes(8).toString('hex');
+        const passwordHash = await hashPassword(randomPass);
+
+        const workerUser = await User.create({
+            name: trimmedName,
+            email: trimmedEmail,
+            phone: trimmedPhone,
+            passwordHash,
+            role: 'WORKER',
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
+        });
+
+        // 4. Create WorkerProfile
+        const parsedSkills = Array.isArray(skills) 
+            ? skills 
+            : (typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : []);
+
+        const profile = await WorkerProfile.create({
+            userId: workerUser._id,
+            category: category || 'Event Staffing',
+            skills: parsedSkills,
+            hourlyRate: Number(hourlyRate) || 100,
+            experienceYears: Number(experienceYears) || 1,
+            verificationStatus: 'APPROVED',
+            isPubliclyVisible: true,
+            verificationBadge: true,
+            approvedAt: new Date(),
+            approvedBy: req.user.userId
+        });
+
+        // 5. Audit Log & Notification
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_WORKER_CREATE',
+            resourceType: 'User',
+            resourceId: workerUser._id.toString()
+        }).save();
+
+        await new Notification({
+            recipientId: workerUser._id,
+            title: 'Welcome to HyperLocal Marketplace',
+            message: `You have been added to the workforce pool by company.`,
+            type: 'INFO'
+        }).save();
+
+        return res.status(201).json({
+            success: true,
+            message: 'Worker created successfully.',
+            worker: {
+                _id: workerUser._id,
+                name: workerUser.name,
+                email: workerUser.email,
+                phone: workerUser.phone,
+                status: workerUser.status,
+                profile
+            }
+        });
     } catch (error) {
         next(error);
     }
@@ -686,8 +813,10 @@ export const deleteCompanyTeam = async (req, res, next) => {
 export const assignWorkers = async (req, res, next) => {
     try {
         const { jobId, workerIds, teamId } = req.body;
-        if (!jobId) {
-            return res.status(400).json({ success: false, message: 'Job ID is required.' });
+
+        // 1. Job ID validation
+        if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid job ID.' });
         }
 
         const job = await Job.findOne({ _id: jobId, companyId: req.user.userId });
@@ -695,42 +824,101 @@ export const assignWorkers = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Job not found.' });
         }
 
+        // 2. Resolve target workers
         let targets = [];
         if (workerIds && Array.isArray(workerIds)) {
-            targets = workerIds;
-        } else if (teamId) {
-            const team = await CompanyTeam.findOne({ _id: teamId, companyId: req.user.userId });
-            if (team) {
-                targets = team.members;
-                if (team.leaderId && !targets.includes(team.leaderId)) {
-                    targets.push(team.leaderId);
+            for (const wId of workerIds) {
+                if (!wId || !mongoose.Types.ObjectId.isValid(wId)) {
+                    return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid worker ID.' });
                 }
             }
+            targets = workerIds.map(w => w.toString());
+        } else if (teamId) {
+            if (!mongoose.Types.ObjectId.isValid(teamId)) {
+                return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid team ID.' });
+            }
+            const team = await CompanyTeam.findOne({ _id: teamId, companyId: req.user.userId });
+            if (!team) {
+                return res.status(404).json({ success: false, message: 'Team not found.' });
+            }
+            targets = team.members.map(m => m.toString());
+            if (team.leaderId && !targets.includes(team.leaderId.toString())) {
+                targets.push(team.leaderId.toString());
+            }
+        } else {
+            return res.status(400).json({ success: false, message: 'Please select workers or a team to assign.' });
         }
 
+        // Deduplicate targets
+        targets = Array.from(new Set(targets));
+
+        // 3. Worker Role & Status & Schedule Conflict Checks
         const created = [];
-        for (const workerId of targets) {
-            // Prevent duplicate assignments
-            const exists = await WorkerAssignment.exists({ jobId, workerId });
+        for (const workerIdStr of targets) {
+            const worker = await User.findById(workerIdStr);
+            if (!worker || worker.role !== 'WORKER' || worker.status !== 'ACTIVE') {
+                return res.status(403).json({
+                    success: false,
+                    errorCode: 'WORKER_NOT_AUTHORIZED',
+                    message: `Worker ${worker?.name || workerIdStr} is inactive or not available.`
+                });
+            }
+
+            // Schedule Conflict Check: Check if worker has existing active assignment on same workingDate
+            const existingAssignments = await WorkerAssignment.find({
+                workerId: workerIdStr,
+                status: { $in: ['ASSIGNED', 'WORKING', 'AVAILABLE'] }
+            }).populate('jobId');
+
+            for (const existing of existingAssignments) {
+                if (existing.jobId && existing.jobId._id.toString() !== jobId.toString()) {
+                    const exDateStr = existing.jobId.workingDate ? new Date(existing.jobId.workingDate).toISOString().slice(0, 10) : '';
+                    const newDateStr = job.workingDate ? new Date(job.workingDate).toISOString().slice(0, 10) : '';
+                    if (exDateStr && newDateStr && exDateStr === newDateStr) {
+                        const exStart = existing.jobId.startTime || '00:00';
+                        const exEnd = existing.jobId.endTime || '23:59';
+                        const newStart = job.startTime || '00:00';
+                        const newEnd = job.endTime || '23:59';
+
+                        // Check time overlap
+                        if (exStart < newEnd && exEnd > newStart) {
+                            return res.status(400).json({
+                                success: false,
+                                errorCode: 'WORKER_NOT_AVAILABLE',
+                                message: `Worker ${worker.name} is not available during the selected time due to a schedule conflict.`
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Prevent duplicate assignment for same job
+            const exists = await WorkerAssignment.exists({ jobId, workerId: workerIdStr });
             if (!exists) {
                 const assign = await WorkerAssignment.create({
                     jobId,
-                    workerId,
+                    workerId: workerIdStr,
                     assignedBy: req.user.userId,
                     status: 'ASSIGNED'
                 });
                 created.push(assign);
 
-                // Dispatch notification
+                await new AuditLog({
+                    actor: req.user.userId,
+                    action: 'WORKER_ASSIGNED_TO_JOB',
+                    resourceType: 'Job',
+                    resourceId: jobId.toString()
+                }).save();
+
                 await Notification.create({
-                    recipientId: workerId,
+                    recipientId: workerIdStr,
                     type: 'WORKER_ACCEPTED',
                     category: 'BOOKING',
                     title: 'New Job Assignment',
                     messageSafe: `You have been directly assigned to job: ${job.title}`,
                     entityType: 'Job',
                     entityId: job._id,
-                    dedupeKey: `job-assign-${job._id}-${workerId}`
+                    dedupeKey: `job-assign-${job._id}-${workerIdStr}`
                 });
             }
         }
@@ -760,7 +948,13 @@ export const getCompanyAttendance = async (req, res, next) => {
 export const postAttendance = async (req, res, next) => {
     try {
         const { jobId, workerId, date, startTime, endTime, status, hoursWorked } = req.body;
-        if (!jobId || !workerId || !date || !status) {
+        if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid job ID.' });
+        }
+        if (!workerId || !mongoose.Types.ObjectId.isValid(workerId)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid worker ID.' });
+        }
+        if (!date || !status) {
             return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
         }
 
@@ -769,11 +963,24 @@ export const postAttendance = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Job not found.' });
         }
 
+        // Verify worker is assigned to job
+        const isAssigned = await WorkerAssignment.exists({ jobId, workerId });
+        if (!isAssigned) {
+            return res.status(403).json({ success: false, errorCode: 'WORKER_NOT_ASSIGNED', message: 'Worker is not assigned to this job.' });
+        }
+
         const record = await Attendance.findOneAndUpdate(
             { jobId, workerId, date: new Date(date) },
-            { startTime: startTime || '09:00', endTime: endTime || '18:00', status, hoursWorked: hoursWorked || 0 },
+            { startTime: startTime || '09:00', endTime: endTime || '18:00', status: status.toUpperCase(), hoursWorked: hoursWorked || 8 },
             { upsert: true, new: true }
         );
+
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_ATTENDANCE_LOGGED',
+            resourceType: 'Attendance',
+            resourceId: record._id.toString()
+        }).save();
 
         return res.status(200).json({ success: true, message: 'Attendance record saved successfully.', record });
     } catch (error) {
@@ -819,7 +1026,17 @@ export const addWalletMoney = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid amount.' });
         }
 
-        const wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
+        let wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
+        if (!wallet) {
+            wallet = await CompanyWallet.create({
+                companyId: req.user.userId,
+                availableBalancePaise: 0,
+                pendingAmountPaise: 0,
+                escrowAmountPaise: 0,
+                totalSpentPaise: 0
+            });
+        }
+
         wallet.availableBalancePaise += Number(amount);
         wallet.transactionHistory.push({
             amountPaise: Number(amount),
@@ -837,6 +1054,10 @@ export const addWalletMoney = async (req, res, next) => {
 export const releaseEscrowPayment = async (req, res, next) => {
     try {
         const { assignmentId } = req.body;
+        if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+            return res.status(400).json({ success: false, errorCode: 'INVALID_ID', message: 'Invalid assignment ID.' });
+        }
+
         const assign = await WorkerAssignment.findById(assignmentId).populate('jobId');
         if (!assign || assign.jobId.companyId.toString() !== req.user.userId) {
             return res.status(404).json({ success: false, message: 'Assignment not found.' });
@@ -846,31 +1067,77 @@ export const releaseEscrowPayment = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Payment already released.' });
         }
 
-        const totalPay = assign.jobId.payRate;
-        const commission = Math.round(totalPay * 0.1); // 10% Platform fee
-        const workerEarning = totalPay - commission;
+        const totalPay = assign.jobId.payRate || 0;
+        const totalPayPaise = totalPay * 100;
+        const commissionPaise = Math.round(totalPayPaise * 0.1); // 10% Platform fee
+        const workerEarningPaise = totalPayPaise - commissionPaise;
 
-        // Deduct from Company Wallet escrow and transfer to worker
-        const wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
-        if (wallet) {
-            wallet.escrowAmountPaise = Math.max(0, wallet.escrowAmountPaise - totalPay);
-            wallet.totalSpentPaise += totalPay;
-            await wallet.save();
+        // Verify Company Wallet balance
+        let wallet = await CompanyWallet.findOne({ companyId: req.user.userId });
+        if (!wallet) {
+            wallet = await CompanyWallet.create({
+                companyId: req.user.userId,
+                availableBalancePaise: 0,
+                pendingAmountPaise: 0,
+                escrowAmountPaise: 0,
+                totalSpentPaise: 0
+            });
         }
+
+        const currentTotalBalance = wallet.availableBalancePaise + wallet.escrowAmountPaise;
+        if (currentTotalBalance < totalPayPaise) {
+            return res.status(400).json({
+                success: false,
+                errorCode: 'INSUFFICIENT_FUNDS',
+                message: 'Insufficient wallet balance.'
+            });
+        }
+
+        if (wallet.escrowAmountPaise >= totalPayPaise) {
+            wallet.escrowAmountPaise -= totalPayPaise;
+        } else {
+            const remainder = totalPayPaise - wallet.escrowAmountPaise;
+            wallet.escrowAmountPaise = 0;
+            wallet.availableBalancePaise = Math.max(0, wallet.availableBalancePaise - remainder);
+        }
+        wallet.totalSpentPaise += totalPayPaise;
+        wallet.transactionHistory.push({
+            amountPaise: totalPayPaise,
+            type: 'DEBIT',
+            description: `Payment released for job ${assign.jobId.title}`
+        });
+        await wallet.save();
 
         // Create Payment record
         await CompanyPayment.create({
             companyId: req.user.userId,
             jobId: assign.jobId._id,
             workerId: assign.workerId,
-            amountPaise: totalPay,
-            platformCommissionPaise: commission,
-            workerEarningPaise: workerEarning,
+            amountPaise: totalPayPaise,
+            platformCommissionPaise: commissionPaise,
+            workerEarningPaise: workerEarningPaise,
             status: 'RELEASED'
         });
 
         assign.status = 'COMPLETED';
         await assign.save();
+
+        await new AuditLog({
+            actor: req.user.userId,
+            action: 'COMPANY_PAYMENT_RELEASED',
+            resourceType: 'WorkerAssignment',
+            resourceId: assign._id.toString()
+        }).save();
+
+        await Notification.create({
+            recipientId: assign.workerId,
+            type: 'PAYMENT_RECEIVED',
+            category: 'PAYMENT',
+            title: 'Payment Received',
+            messageSafe: `Payment of ₹${totalPay} for job "${assign.jobId.title}" has been released.`,
+            entityType: 'WorkerAssignment',
+            entityId: assign._id
+        });
 
         return res.status(200).json({ success: true, message: 'Payment released to worker successfully.' });
     } catch (error) {

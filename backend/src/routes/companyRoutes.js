@@ -14,6 +14,7 @@ import {
     getCompanyApplications,
     updateApplicationStatus,
     getCompanyWorkers,
+    createCompanyWorker,
     getCompanyTeams,
     createCompanyTeam,
     updateCompanyTeam,
@@ -76,6 +77,9 @@ router.patch('/applications/:id/:status', authMiddleware, requireCompanyRole, re
 
 // Workers
 router.get('/workers', authMiddleware, requireCompanyRole, getCompanyWorkers);
+router.post('/workers', authMiddleware, requireCompanyRole, requireVerifiedCompany, createCompanyWorker);
+router.post('/workers/create', authMiddleware, requireCompanyRole, requireVerifiedCompany, createCompanyWorker);
+router.post('/workers/invite', authMiddleware, requireCompanyRole, requireVerifiedCompany, createCompanyWorker);
 
 // Teams
 router.get('/teams', authMiddleware, requireCompanyRole, getCompanyTeams);
