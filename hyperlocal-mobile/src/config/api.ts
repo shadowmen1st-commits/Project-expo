@@ -2,7 +2,7 @@ import axios from 'axios';
 import { storage } from '../utils/storage';
 
 const normalizeApiUrl = (url?: string) => {
-  if (!url) return 'https://project-expo-md70.onrender.com/api';
+  if (!url) return 'https://project-expo-md7o.onrender.com/api';
   let cleaned = url.trim().replace(/\/+$/, '');
   if (!cleaned.includes('/api')) {
     cleaned += '/api';
