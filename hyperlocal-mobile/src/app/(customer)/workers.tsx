@@ -5,17 +5,17 @@ import {
   StyleSheet,
   FlatList,
   TextInput,
-  ActivityIndicator,
+  TouchableOpacity,
   RefreshControl,
-  TouchableOpacity
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/Header';
-import WorkerCard from '../../components/WorkerCard';
-import Button from '../../components/Button';
+import { MobileHeader } from '../../components/MobileHeader';
+import { WorkerCard } from '../../components/WorkerCard';
+import { EmptyState } from '../../components/EmptyState';
+import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { colors, spacing, typography, radius } from '../../theme';
 
 export default function WorkersScreen() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function WorkersScreen() {
 
       const [wRes, cRes] = await Promise.allSettled([
         api.get('/workers/search', { params }),
-        api.get('/categories')
+        api.get('/categories'),
       ]);
 
       if (wRes.status === 'fulfilled' && wRes.value.data) {
@@ -56,7 +56,7 @@ export default function WorkersScreen() {
       }
     } catch (err: any) {
       console.error('Error fetching workers:', err);
-      setError('Unable to load worker listings. Please try again.');
+      setError('Unable to load worker listings. Please check connection and try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,44 +73,46 @@ export default function WorkersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Find Professionals" />
+    <View style={styles.container}>
+      <MobileHeader title="Find Professionals" showBack={false} />
 
       {/* Search Input Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color="#94A3B8" />
+          <Ionicons name="search-outline" size={20} color={colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by pro name or service..."
-            placeholderTextColor="#94A3B8"
+            placeholder="Search pro name or service category..."
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={fetchWorkers}
           />
           {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
       </View>
 
-      {/* Categories Filter Pills */}
-      {categories.length > 0 ? (
+      {/* Category Filter Chips */}
+      {categories.length > 0 && (
         <View style={styles.filterPillsContainer}>
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
             data={[{ _id: '', name: 'All Pros' }, ...categories]}
-            keyExtractor={(item) => item._id || 'all'}
+            keyExtractor={(item) => item._id || item.id || 'all'}
             contentContainerStyle={styles.filterList}
             renderItem={({ item }) => {
-              const isActive = selectedCategory === item._id;
+              const itemId = item._id || item.id || '';
+              const isActive = selectedCategory === itemId;
               return (
                 <TouchableOpacity
                   style={[styles.pill, isActive && styles.pillActive]}
-                  onPress={() => setSelectedCategory(item._id)}
+                  onPress={() => setSelectedCategory(itemId)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
                     {item.name}
@@ -120,137 +122,108 @@ export default function WorkersScreen() {
             }}
           />
         </View>
-      ) : null}
+      )}
 
       {/* Main Workers List */}
       {loading && !refreshing ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-          <Text style={styles.loadingText}>Searching available pros...</Text>
-        </View>
+        <LoadingState message="Searching available verified pros..." />
       ) : error ? (
-        <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#DC2626" />
-          <Text style={styles.errorText}>{error}</Text>
-          <Button title="Retry" onPress={fetchWorkers} style={{ marginTop: 16 }} />
-        </View>
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Listing Failed"
+          description={error}
+          actionTitle="Retry Search"
+          onAction={fetchWorkers}
+        />
       ) : (
         <FlatList
           data={workers}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item._id || item.id}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
+          }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="people-outline" size={48} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>No Professionals Found</Text>
-              <Text style={styles.emptySub}>
-                Try adjusting your search criteria or select a different service category.
-              </Text>
-            </View>
+            <EmptyState
+              icon="people-outline"
+              title="No Professionals Found"
+              description="Try adjusting your search criteria or select a different category filter."
+              actionTitle="Reset Filters"
+              onAction={() => {
+                setSelectedCategory('');
+                setSearchQuery('');
+              }}
+            />
           }
           renderItem={({ item }) => (
             <WorkerCard
               worker={item}
-              onPressProfile={() => router.push(`/(customer)/worker/${item._id}`)}
-              onPressBook={() => router.push(`/(customer)/booking/${item._id}`)}
+              onPressProfile={() => router.push(`/(customer)/worker/${item._id || item.id}`)}
+              onPressBook={() => router.push(`/(customer)/booking/${item._id || item.id}`)}
             />
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
+    backgroundColor: colors.background,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 46
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    height: 48,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#0F172A'
+    marginLeft: spacing.sm,
+    fontSize: typography.sizes.md,
+    color: colors.textPrimary,
   },
   filterPillsContainer: {
-    paddingVertical: 8
+    paddingVertical: spacing.xs,
   },
   filterList: {
-    paddingHorizontal: 16,
-    gap: 8
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
   },
   pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderColor: colors.border,
   },
   pillActive: {
-    backgroundColor: '#EA580C',
-    borderColor: '#EA580C'
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   pillText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
   },
   pillTextActive: {
-    color: '#FFFFFF'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#64748B'
-  },
-  errorText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#DC2626',
-    textAlign: 'center'
+    color: colors.textPrimary,
+    fontWeight: typography.weights.bold,
   },
   listContent: {
-    paddingBottom: 24
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl * 2,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 36,
-    marginTop: 40
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 12
-  },
-  emptySub: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 6
-  }
 });

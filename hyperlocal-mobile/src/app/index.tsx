@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, typography, radius } from '../theme';
 
 export default function IndexScreen() {
   const { user, loading } = useAuth();
@@ -23,44 +24,51 @@ export default function IndexScreen() {
   }, [user, loading, router]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>HyperLocal</Text>
-          <Text style={styles.tagline}>Services & Caregiver Marketplace</Text>
+        <View style={styles.logoBox}>
+          <Ionicons name="home-sharp" size={32} color={colors.primaryDark} />
         </View>
-        <ActivityIndicator size="large" color="#EA580C" style={styles.spinner} />
+        <Text style={styles.logoText}>HyperLocal</Text>
+        <Text style={styles.tagline}>Services & Caregiver Marketplace</Text>
+        <ActivityIndicator size="large" color={colors.primaryDark} style={styles.spinner} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFDF9',
+    backgroundColor: colors.background,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   content: {
-    alignItems: 'center'
+    alignItems: 'center',
   },
-  logoContainer: {
-    alignItems: 'center'
+  logoBox: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.lg,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   logoText: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#EA580C',
-    letterSpacing: -0.5
+    fontSize: 32,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+    letterSpacing: -0.5,
   },
   tagline: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 6,
-    fontWeight: '500'
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: 4,
+    fontWeight: typography.weights.medium,
   },
   spinner: {
-    marginTop: 32
-  }
+    marginTop: spacing.xxl,
+  },
 });

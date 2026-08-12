@@ -1,74 +1,107 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ProfileAvatar } from './ProfileAvatar';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, typography, radius, shadows } from '../theme';
+import { WorkerAvatar } from './WorkerAvatar';
+import { AppButton } from './AppButton';
 
 interface WorkerCardProps {
-  worker: {
-    _id: string;
-    userId?: any;
-    name?: string;
-    fullName?: string;
-    hourlyRate?: number;
-    rating?: number;
-    reviewCount?: number;
-    yearsOfExperience?: number;
-    primaryCategoryName?: string;
-    bio?: string;
-    profilePhotoId?: string;
-    isVerified?: boolean;
-    verificationStatus?: string;
-  };
-  onPressProfile: () => void;
-  onPressBook: () => void;
+  worker: any;
+  onPressProfile?: () => void;
+  onPressBook?: () => void;
+  layout?: 'horizontal' | 'vertical';
 }
 
-export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPressProfile, onPressBook }) => {
-  const name = worker.name || worker.fullName || worker.userId?.name || 'Service Professional';
-  const category = worker.primaryCategoryName || 'General Services';
-  const rate = worker.hourlyRate || 250;
-  const rating = worker.rating ? worker.rating.toFixed(1) : '4.8';
-  const reviews = worker.reviewCount || 12;
-  const exp = worker.yearsOfExperience || 2;
+export const WorkerCard: React.FC<WorkerCardProps> = ({
+  worker,
+  onPressProfile,
+  onPressBook,
+  layout = 'horizontal',
+}) => {
+  const name =
+    worker.fullName ||
+    worker.name ||
+    worker.user?.name ||
+    worker.user?.fullName ||
+    'Professional Specialist';
+
+  const profileImage =
+    worker.profileImage ||
+    worker.profilePhoto ||
+    worker.profileImageUrl ||
+    worker.profilePhotoUrl ||
+    worker.user?.profileImage ||
+    worker.user?.profilePhoto ||
+    worker.user?.avatar;
+
+  const categoryName =
+    worker.categoryName ||
+    worker.serviceCategory ||
+    worker.category?.name ||
+    worker.services?.[0]?.name ||
+    worker.skills?.[0] ||
+    'Home Services';
+
+  const hourlyRate =
+    worker.hourlyRate || worker.pricePerHour || worker.rate || (worker.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
+
+  const rating = worker.rating || worker.avgRating || worker.ratingAvg || 4.8;
+  const isVerified = worker.isVerified || worker.verified || worker.verificationStatus === 'APPROVED';
 
   return (
     <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <ProfileAvatar user={worker} size="lg" showBadge={true} />
-        <View style={styles.infoCol}>
+      <View style={styles.topRow}>
+        <WorkerAvatar uri={profileImage} name={name} size="lg" isVerified={isVerified} />
+        
+        <View style={styles.infoContainer}>
           <View style={styles.nameRow}>
-            <Text style={styles.nameText} numberOfLines={1}>{name}</Text>
+            <Text numberOfLines={1} style={styles.nameText}>
+              {name}
+            </Text>
           </View>
-          <Text style={styles.categoryText}>{category}</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Ionicons name="star" size={14} color="#EAB308" />
-              <Text style={styles.statText}>{rating} ({reviews})</Text>
-            </View>
-            <Text style={styles.statDivider}>•</Text>
-            <View style={styles.statItem}>
-              <Ionicons name="briefcase-outline" size={14} color="#64748B" />
-              <Text style={styles.statText}>{exp} yrs exp</Text>
+
+          <Text numberOfLines={1} style={styles.categoryText}>
+            {categoryName}
+          </Text>
+
+          <View style={styles.badgeRow}>
+            {isVerified && (
+              <View style={styles.verifiedBadge}>
+                <Ionicons name="checkmark-circle" size={12} color={colors.success} />
+                <Text style={styles.verifiedText}>VERIFIED</Text>
+              </View>
+            )}
+
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={12} color={colors.gold} />
+              <Text style={styles.ratingText}>{Number(rating).toFixed(1)}</Text>
             </View>
           </View>
         </View>
-        <View style={styles.priceCol}>
-          <Text style={styles.priceAmount}>₹{rate}</Text>
-          <Text style={styles.priceUnit}>/ hr</Text>
+
+        <View style={styles.priceContainer}>
+          <Text style={styles.priceAmount}>₹{hourlyRate}</Text>
+          <Text style={styles.priceUnit}>/hr</Text>
         </View>
       </View>
 
-      {worker.bio ? (
-        <Text style={styles.bioText} numberOfLines={2}>{worker.bio}</Text>
-      ) : null}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={onPressProfile}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.profileButtonText}>Profile</Text>
+        </TouchableOpacity>
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.profileBtn} onPress={onPressProfile} activeOpacity={0.7}>
-          <Text style={styles.profileBtnText}>View Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bookBtn} onPress={onPressBook} activeOpacity={0.7}>
-          <Text style={styles.bookBtnText}>Book Now</Text>
-        </TouchableOpacity>
+        <AppButton
+          title="Book Worker"
+          onPress={onPressBook || (() => {})}
+          variant="primary"
+          size="sm"
+          fullWidth={false}
+          style={styles.bookButton}
+        />
       </View>
     </View>
   );
@@ -76,113 +109,109 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({ worker, onPressProfile, 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2
+    borderColor: colors.borderLight,
+    ...shadows.sm,
   },
-  headerRow: {
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
-  infoCol: {
+  infoContainer: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8
+    marginLeft: spacing.md,
+    marginRight: spacing.xs,
   },
   nameRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   nameText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   categoryText: {
-    fontSize: 13,
-    color: '#EA580C',
-    fontWeight: '600',
-    marginTop: 2
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
-  statsRow: {
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
-  statItem: {
+  verifiedBadge: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+    gap: 3,
   },
-  statText: {
-    fontSize: 12,
-    color: '#475569',
-    marginLeft: 4,
-    fontWeight: '500'
+  verifiedText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.success,
   },
-  statDivider: {
-    marginHorizontal: 6,
-    color: '#94A3B8',
-    fontSize: 12
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+    gap: 3,
   },
-  priceCol: {
-    alignItems: 'flex-end'
+  ratingText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryDark,
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   priceAmount: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A'
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
   },
   priceUnit: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '500'
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
-  bioText: {
-    fontSize: 13,
-    color: '#475569',
-    marginTop: 12,
-    lineHeight: 18
-  },
-  actionsRow: {
+  actionRow: {
     flexDirection: 'row',
-    marginTop: 14,
-    gap: 10
-  },
-  profileBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1'
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    gap: spacing.sm,
   },
-  profileBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#334155'
-  },
-  bookBtn: {
+  profileButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#EA580C',
-    alignItems: 'center'
+    height: 38,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  bookBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF'
-  }
+  profileButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+  },
+  bookButton: {
+    flex: 1.2,
+  },
 });
-
-export default WorkerCard;

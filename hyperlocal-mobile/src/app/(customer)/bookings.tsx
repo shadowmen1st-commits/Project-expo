@@ -5,16 +5,16 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/Header';
+import { MobileHeader } from '../../components/MobileHeader';
+import { EmptyState } from '../../components/EmptyState';
+import { LoadingState } from '../../components/LoadingState';
 import Badge from '../../components/Badge';
-import Button from '../../components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function CustomerBookingsScreen() {
   const router = useRouter();
@@ -55,8 +55,8 @@ export default function CustomerBookingsScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="My Bookings" />
+    <View style={styles.container}>
+      <MobileHeader title="My Bookings" showBack={false} />
 
       {/* Filter Tabs */}
       <View style={styles.tabsRow}>
@@ -65,6 +65,7 @@ export default function CustomerBookingsScreen() {
             key={tab}
             style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
             onPress={() => setActiveTab(tab)}
+            activeOpacity={0.7}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
               {tab}
@@ -74,170 +75,157 @@ export default function CustomerBookingsScreen() {
       </View>
 
       {loading && !refreshing ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-        </View>
+        <LoadingState message="Fetching your booking history..." />
       ) : (
         <FlatList
           data={filteredBookings}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item._id || item.id}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
+          }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-outline" size={48} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>No Bookings Found</Text>
-              <Text style={styles.emptySub}>You haven't made any bookings in this filter tab yet.</Text>
-            </View>
+            <EmptyState
+              icon="calendar-outline"
+              title="No Bookings Found"
+              description="You don't have any bookings matching this filter status yet."
+              actionTitle="Book a Pro"
+              onAction={() => router.push('/(customer)/workers')}
+            />
           }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              onPress={() => router.push(`/(customer)/booking/details/${item._id}`)}
+              onPress={() => router.push(`/(customer)/booking/details/${item._id || item.id}`)}
               activeOpacity={0.8}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.categoryTitle}>
-                  {item.serviceCategoryName || 'Service Booking'}
+                  {item.serviceCategoryName || item.categoryName || 'Service Booking'}
                 </Text>
                 <Badge status={item.status} />
               </View>
 
               <View style={styles.detailsRow}>
-                <Ionicons name="person-outline" size={16} color="#64748B" />
+                <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.detailText}>
-                  {item.workerId?.name || item.workerName || 'Assigned Worker'}
+                  {item.workerId?.name || item.workerName || 'Assigned Professional'}
                 </Text>
               </View>
 
               <View style={styles.detailsRow}>
-                <Ionicons name="time-outline" size={16} color="#64748B" />
+                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
                 <Text style={styles.detailText}>
-                  {new Date(item.bookingDate || Date.now()).toLocaleDateString()} at {item.startTime || '10:00 AM'} ({item.durationHours || 2} hrs)
+                  {new Date(item.bookingDate || Date.now()).toLocaleDateString()} at{' '}
+                  {item.startTime || '10:00 AM'} ({item.durationHours || 2} hrs)
                 </Text>
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.priceText}>₹{item.totalAmount || item.estimatedPrice || 500}</Text>
-                <Text style={styles.viewDetailsLink}>View Details →</Text>
+                <Text style={styles.priceText}>
+                  ₹{item.totalAmount || item.estimatedPrice || 500}
+                </Text>
+                <View style={styles.linkRow}>
+                  <Text style={styles.viewDetailsLink}>View Details</Text>
+                  <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+                </View>
               </View>
             </TouchableOpacity>
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
+    backgroundColor: colors.background,
   },
   tabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    gap: 8
+    borderBottomColor: colors.borderLight,
+    gap: spacing.xs,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md,
     alignItems: 'center',
-    backgroundColor: '#F1F5F9'
+    backgroundColor: colors.surfaceSecondary,
   },
   tabBtnActive: {
-    backgroundColor: '#EA580C'
+    backgroundColor: colors.primary,
   },
   tabText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B'
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: '#FFFFFF'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    color: colors.textPrimary,
   },
   listContent: {
-    padding: 16
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl * 2,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1
+    borderColor: colors.borderLight,
+    ...shadows.sm,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12
+    marginBottom: spacing.sm,
   },
   categoryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   detailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6
+    marginTop: 4,
   },
   detailText: {
-    fontSize: 13,
-    color: '#475569',
-    marginLeft: 8
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 14,
-    paddingTop: 10,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9'
+    borderTopColor: colors.borderLight,
   },
   priceText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   viewDetailsLink: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#EA580C'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
   },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 36,
-    marginTop: 40
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 12
-  },
-  emptySub: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 6
-  }
 });

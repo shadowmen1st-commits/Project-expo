@@ -4,17 +4,18 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../../../components/Header';
+import { MobileHeader } from '../../../../components/MobileHeader';
+import { AppButton } from '../../../../components/AppButton';
+import { LoadingState } from '../../../../components/LoadingState';
+import { EmptyState } from '../../../../components/EmptyState';
+import { ProfileAvatar } from '../../../../components/ProfileAvatar';
 import Badge from '../../../../components/Badge';
-import Button from '../../../../components/Button';
-import ProfileAvatar from '../../../../components/ProfileAvatar';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../../../theme';
 
 export default function BookingDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -40,7 +41,7 @@ export default function BookingDetailsScreen() {
   }, [id]);
 
   const handleCancelBooking = async () => {
-    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
+    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking request?', [
       { text: 'No', style: 'cancel' },
       {
         text: 'Yes, Cancel',
@@ -55,59 +56,63 @@ export default function BookingDetailsScreen() {
           } finally {
             setCancelling(false);
           }
-        }
-      }
+        },
+      },
     ]);
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Booking Details" showBack />
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <MobileHeader title="Booking Details" showBack />
+        <LoadingState message="Fetching booking details..." />
+      </View>
     );
   }
 
   if (!booking) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Booking Details" showBack />
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>Booking details not found.</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <MobileHeader title="Booking Details" showBack />
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Booking Not Found"
+          description="The requested booking details could not be found."
+          actionTitle="Back to Bookings"
+          onAction={() => router.back()}
+        />
+      </View>
     );
   }
 
   const canCancel = ['PENDING', 'ASSIGNED', 'CONFIRMED'].includes(booking.status);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Booking Details" showBack />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Status Card */}
+    <View style={styles.container}>
+      <MobileHeader title="Booking Details" showBack />
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Status Hero Card */}
         <View style={styles.statusCard}>
-          <Text style={styles.bookingIdText}>Booking #{String(booking._id).substring(0, 8)}</Text>
+          <Text style={styles.bookingIdText}>Booking #{String(booking._id || booking.id).substring(0, 8)}</Text>
           <View style={styles.statusBadgeRow}>
             <Badge status={booking.status} />
           </View>
           <Text style={styles.dateText}>
-            Scheduled for {new Date(booking.bookingDate || Date.now()).toLocaleDateString()} at {booking.startTime || '10:00 AM'}
+            Scheduled for {new Date(booking.bookingDate || Date.now()).toLocaleDateString()} at{' '}
+            {booking.startTime || '10:00 AM'}
           </Text>
         </View>
 
-        {/* Assigned Worker */}
-        {booking.workerId || booking.worker ? (
-          <View style={styles.sectionCard}>
+        {/* Assigned Worker Info */}
+        {(booking.workerId || booking.worker) && (
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Assigned Professional</Text>
             <View style={styles.workerRow}>
               <ProfileAvatar user={booking.workerId || booking.worker} size="lg" showBadge />
               <View style={styles.workerInfo}>
                 <Text style={styles.workerName}>
-                  {booking.workerId?.name || booking.worker?.name || 'Assigned Worker'}
+                  {booking.workerId?.name || booking.worker?.name || 'Assigned Professional'}
                 </Text>
                 <Text style={styles.workerPhone}>
                   {booking.workerId?.phone || booking.worker?.phone || 'Contact via platform'}
@@ -115,162 +120,161 @@ export default function BookingDetailsScreen() {
               </View>
             </View>
           </View>
-        ) : null}
+        )}
 
         {/* Service Address */}
-        <View style={styles.sectionCard}>
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Service Address</Text>
           <View style={styles.addressRow}>
-            <Ionicons name="location-outline" size={20} color="#EA580C" style={{ marginTop: 2 }} />
+            <Ionicons name="location-outline" size={20} color={colors.accent} style={{ marginTop: 2 }} />
             <Text style={styles.addressText}>
-              {booking.address || 'Address registered for service delivery'}
+              {booking.address || 'Registered address for service delivery'}
             </Text>
           </View>
         </View>
 
-        {/* Payment Summary */}
-        <View style={styles.sectionCard}>
+        {/* Payment & Amount Breakdown */}
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Payment Details</Text>
+          
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Service Duration</Text>
             <Text style={styles.priceVal}>{booking.durationHours || 2} hours</Text>
           </View>
+
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Status</Text>
+            <Text style={styles.priceLabel}>Payment Status</Text>
             <Text style={styles.priceVal}>{booking.paymentStatus || 'PENDING'}</Text>
           </View>
+
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalVal}>₹{booking.totalAmount || booking.estimatedPrice || 500}</Text>
+            <Text style={styles.totalVal}>
+              ₹{booking.totalAmount || booking.estimatedPrice || 500}
+            </Text>
           </View>
         </View>
 
-        {canCancel ? (
-          <Button
+        {canCancel && (
+          <AppButton
             title="Cancel Booking"
             variant="danger"
             onPress={handleCancelBooking}
             loading={cancelling}
-            style={{ marginTop: 12 }}
+            style={{ marginTop: spacing.md }}
           />
-        ) : null}
+        )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#64748B'
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: 16
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl * 2,
   },
   statusCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   bookingIdText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '600'
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    fontWeight: typography.weights.bold,
   },
   statusBadgeRow: {
-    marginVertical: 10
+    marginVertical: spacing.md,
   },
   dateText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-    textAlign: 'center'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 12
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   workerRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   workerInfo: {
-    marginLeft: 12
+    marginLeft: spacing.md,
   },
   workerName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   workerPhone: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   addressRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
   },
   addressText: {
     flex: 1,
-    fontSize: 14,
-    color: '#334155',
-    marginLeft: 8,
-    lineHeight: 20
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+    marginLeft: spacing.sm,
+    lineHeight: 20,
   },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6
+    paddingVertical: spacing.xs,
   },
   priceLabel: {
-    fontSize: 13,
-    color: '#64748B'
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   priceVal: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9'
+    borderTopColor: colors.borderLight,
   },
   totalLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   totalVal: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#EA580C'
-  }
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+  },
 });

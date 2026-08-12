@@ -5,15 +5,15 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/Header';
-import Button from '../../components/Button';
+import { MobileHeader } from '../../components/MobileHeader';
+import { EmptyState } from '../../components/EmptyState';
+import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function ServicesScreen() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function ServicesScreen() {
     fetchCategories();
   };
 
-  const getCategoryIcon = (name: string) => {
+  const getCategoryIcon = (name: string): keyof typeof Ionicons.glyphMap => {
     const n = name?.toLowerCase() || '';
     if (n.includes('clean')) return 'sparkles-outline';
     if (n.includes('electric')) return 'flash-outline';
@@ -58,147 +58,118 @@ export default function ServicesScreen() {
     return 'construct-outline';
   };
 
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Service Categories" />
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-          <Text style={styles.loadingText}>Loading services...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Service Categories" />
-        <View style={styles.centerContainer}>
-          <Ionicons name="cloud-offline-outline" size={48} color="#DC2626" />
-          <Text style={styles.errorText}>{error}</Text>
-          <Button title="Retry" onPress={fetchCategories} style={{ marginTop: 16 }} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Service Categories" />
+    <View style={styles.container}>
+      <MobileHeader title="Service Categories" showBack={false} />
 
-      {categories.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Ionicons name="folder-open-outline" size={48} color="#94A3B8" />
-          <Text style={styles.emptyText}>No services are currently available.</Text>
-          <Button title="Refresh" onPress={fetchCategories} style={{ marginTop: 16 }} />
-        </View>
+      {loading && !refreshing ? (
+        <LoadingState message="Loading available service categories..." />
+      ) : error ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Connection Error"
+          description={error}
+          actionTitle="Retry"
+          onAction={fetchCategories}
+        />
+      ) : categories.length === 0 ? (
+        <EmptyState
+          icon="folder-open-outline"
+          title="No Categories Available"
+          description="Check back later for newly added service categories."
+          actionTitle="Refresh"
+          onAction={fetchCategories}
+        />
       ) : (
         <FlatList
           data={categories}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item._id || item.id}
           numColumns={2}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
+          }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              onPress={() => router.push(`/(customer)/workers?category=${item._id}`)}
-              activeOpacity={0.7}
+              onPress={() => router.push(`/(customer)/workers?category=${item._id || item.id}`)}
+              activeOpacity={0.75}
             >
               <View style={styles.iconCircle}>
-                <Ionicons name={getCategoryIcon(item.name) as any} size={32} color="#EA580C" />
+                <Ionicons name={getCategoryIcon(item.name)} size={28} color={colors.primaryDark} />
               </View>
+
               <Text style={styles.cardTitle}>{item.name}</Text>
+              
               {item.description ? (
-                <Text style={styles.cardSub} numberOfLines={2}>{item.description}</Text>
+                <Text style={styles.cardSub} numberOfLines={2}>
+                  {item.description}
+                </Text>
               ) : null}
+
               <View style={styles.arrowRow}>
                 <Text style={styles.exploreLink}>Find Pros</Text>
-                <Ionicons name="arrow-forward" size={14} color="#EA580C" />
+                <Ionicons name="arrow-forward" size={14} color={colors.accent} />
               </View>
             </TouchableOpacity>
           )}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500'
-  },
-  errorText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#DC2626',
-    textAlign: 'center',
-    fontWeight: '600'
-  },
-  emptyText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center'
+    backgroundColor: colors.background,
   },
   listContent: {
-    padding: 12
+    padding: spacing.md,
+    paddingBottom: spacing.xxxl * 2,
   },
   card: {
     flex: 1,
-    margin: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    margin: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center'
+    borderColor: colors.borderLight,
+    alignItems: 'center',
+    ...shadows.sm,
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FFF7ED',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12
+    marginBottom: spacing.sm,
   },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 4
+    marginBottom: 2,
   },
   cardSub: {
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 12
+    marginBottom: spacing.md,
   },
   arrowRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 'auto'
+    marginTop: 'auto',
+    gap: 4,
   },
   exploreLink: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#EA580C',
-    marginRight: 4
-  }
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+  },
 });

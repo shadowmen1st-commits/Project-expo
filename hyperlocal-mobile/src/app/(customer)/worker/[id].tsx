@@ -4,17 +4,16 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
-  TouchableOpacity
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../../components/Header';
-import ProfileAvatar from '../../../components/ProfileAvatar';
-import Button from '../../../components/Button';
-import Badge from '../../../components/Badge';
+import { MobileHeader } from '../../../components/MobileHeader';
+import { WorkerAvatar } from '../../../components/WorkerAvatar';
+import { AppButton } from '../../../components/AppButton';
+import { EmptyState } from '../../../components/EmptyState';
+import { LoadingState } from '../../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../../theme';
 
 export default function WorkerDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -34,13 +33,12 @@ export default function WorkerDetailScreen() {
           setWorker(res.data);
         }
       } catch (err: any) {
-        // Fallback: try searching if single endpoint differs
         try {
           const searchRes = await api.get('/workers/search');
           const list = Array.isArray(searchRes.data)
             ? searchRes.data
             : searchRes.data.workers || [];
-          const found = list.find((w: any) => w._id === id);
+          const found = list.find((w: any) => (w._id || w.id) === id);
           if (found) {
             setWorker(found);
           } else {
@@ -59,237 +57,294 @@ export default function WorkerDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Professional Profile" showBack />
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <MobileHeader title="Worker Profile" showBack />
+        <LoadingState message="Loading worker profile details..." />
+      </View>
     );
   }
 
   if (error || !worker) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Professional Profile" showBack />
-        <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#DC2626" />
-          <Text style={styles.errorText}>{error || 'Worker not found'}</Text>
-          <Button title="Back" onPress={() => router.back()} style={{ marginTop: 16 }} />
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <MobileHeader title="Worker Profile" showBack />
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Profile Unavailable"
+          description={error || 'The requested worker profile could not be found.'}
+          actionTitle="Go Back"
+          onAction={() => router.back()}
+        />
+      </View>
     );
   }
 
-  const name = worker.name || worker.fullName || worker.userId?.name || 'Professional';
-  const category = worker.primaryCategoryName || 'General Services';
-  const rate = worker.hourlyRate || 250;
-  const rating = worker.rating ? worker.rating.toFixed(1) : '4.8';
-  const exp = worker.yearsOfExperience || 2;
-  const status = worker.verificationStatus || 'APPROVED';
+  const name =
+    worker.fullName ||
+    worker.name ||
+    worker.user?.name ||
+    worker.user?.fullName ||
+    'Professional Specialist';
+
+  const profileImage =
+    worker.profileImage ||
+    worker.profilePhoto ||
+    worker.profileImageUrl ||
+    worker.profilePhotoUrl ||
+    worker.user?.profileImage ||
+    worker.user?.profilePhoto;
+
+  const categoryName =
+    worker.categoryName ||
+    worker.serviceCategory ||
+    worker.category?.name ||
+    worker.services?.[0]?.name ||
+    'General Services';
+
+  const hourlyRate =
+    worker.hourlyRate || worker.pricePerHour || worker.rate || (worker.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
+
+  const rating = worker.rating || worker.avgRating || 4.8;
+  const experienceYears = worker.yearsOfExperience || worker.experience || 2;
+  const isVerified = worker.isVerified || worker.verified || worker.verificationStatus === 'APPROVED';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Professional Profile" showBack />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Card Header */}
-        <View style={styles.profileHeaderCard}>
-          <ProfileAvatar user={worker} size="2xl" showBadge />
+    <View style={styles.container}>
+      <MobileHeader title="Worker Profile" showBack />
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Worker Hero Profile Card */}
+        <View style={styles.profileHeroCard}>
+          <WorkerAvatar uri={profileImage} name={name} size="xxl" isVerified={isVerified} />
           <Text style={styles.nameText}>{name}</Text>
-          <Text style={styles.categoryText}>{category}</Text>
-          <View style={styles.badgeRow}>
-            <Badge status={status} size="sm" />
-          </View>
+          <Text style={styles.categoryText}>{categoryName}</Text>
+
+          {isVerified && (
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+              <Text style={styles.verifiedText}>SHADOW MEN VERIFIED PRO</Text>
+            </View>
+          )}
 
           {/* Quick Stats Grid */}
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
-              <Ionicons name="star" size={20} color="#EAB308" />
-              <Text style={styles.statVal}>{rating}</Text>
+              <Ionicons name="star" size={20} color={colors.gold} />
+              <Text style={styles.statVal}>{Number(rating).toFixed(1)}</Text>
               <Text style={styles.statLbl}>Rating</Text>
             </View>
+
             <View style={styles.statBox}>
-              <Ionicons name="briefcase" size={20} color="#EA580C" />
-              <Text style={styles.statVal}>{exp} Yrs</Text>
+              <Ionicons name="briefcase-outline" size={20} color={colors.accent} />
+              <Text style={styles.statVal}>{experienceYears} Yrs</Text>
               <Text style={styles.statLbl}>Experience</Text>
             </View>
+
             <View style={styles.statBox}>
-              <Ionicons name="cash" size={20} color="#16A34A" />
-              <Text style={styles.statVal}>₹{rate}</Text>
+              <Ionicons name="cash-outline" size={20} color={colors.success} />
+              <Text style={styles.statVal}>₹{hourlyRate}</Text>
               <Text style={styles.statLbl}>Per Hour</Text>
             </View>
           </View>
         </View>
 
         {/* Bio Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>About Professional</Text>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>About Worker</Text>
           <Text style={styles.bioText}>
             {worker.bio ||
-              `${name} is a verified, skilled ${category} professional providing reliable service.`}
+              `${name} is a background-verified, experienced ${categoryName} specialist committed to quality, punctual service and clean workmanship.`}
           </Text>
         </View>
 
-        {/* Service Rate Breakdown */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Pricing Details</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Base Rate</Text>
-            <Text style={styles.priceVal}>₹{rate} / hour</Text>
+        {/* Service Information Section */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Service Information</Text>
+          
+          <View style={styles.infoRow}>
+            <Ionicons name="grid-outline" size={18} color={colors.primaryDark} />
+            <Text style={styles.infoLabel}>Category:</Text>
+            <Text style={styles.infoValue}>{categoryName}</Text>
           </View>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Platform Support & Verification</Text>
-            <Text style={styles.priceVal}>Included</Text>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={18} color={colors.primaryDark} />
+            <Text style={styles.infoLabel}>Coverage Area:</Text>
+            <Text style={styles.infoValue}>{worker.city || 'Indiranagar & Nearby (5km)'}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="time-outline" size={18} color={colors.primaryDark} />
+            <Text style={styles.infoLabel}>Availability:</Text>
+            <Text style={styles.infoValue}>Mon - Sat (8:00 AM - 8:00 PM)</Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Booking Bar */}
+      {/* Fixed Bottom Booking Action Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.priceColumn}>
-          <Text style={styles.bottomPriceLabel}>Starting from</Text>
-          <Text style={styles.bottomPriceValue}>₹{rate} <Text style={{ fontSize: 12, color: '#64748B' }}>/ hr</Text></Text>
+          <Text style={styles.bottomPriceLabel}>Standard Rate</Text>
+          <Text style={styles.bottomPriceValue}>
+            ₹{hourlyRate} <Text style={styles.unitText}>/ hr</Text>
+          </Text>
         </View>
-        <Button
-          title="Book Professional"
-          onPress={() => router.push(`/(customer)/booking/${worker._id}`)}
-          style={styles.bookBtn}
+
+        <AppButton
+          title="Book This Worker"
+          variant="primary"
+          icon="calendar-outline"
+          onPress={() => router.push(`/(customer)/booking/${worker._id || worker.id}`)}
+          fullWidth={false}
+          style={styles.bookButton}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl * 3,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#DC2626',
-    marginTop: 12,
-    textAlign: 'center'
-  },
-  profileHeaderCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
+  profileHeroCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   nameText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginTop: 12
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginTop: spacing.md,
   },
   categoryText: {
-    fontSize: 14,
-    color: '#EA580C',
-    fontWeight: '600',
-    marginTop: 2
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
-  badgeRow: {
-    marginTop: 8
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successLight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    marginTop: spacing.md,
+    gap: 4,
+  },
+  verifiedText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.success,
   },
   statsGrid: {
     flexDirection: 'row',
-    marginTop: 20,
-    paddingTop: 16,
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.borderLight,
     width: '100%',
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
   },
   statBox: {
-    alignItems: 'center'
+    alignItems: 'center',
   },
   statVal: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginTop: 4
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginTop: 4,
   },
   statLbl: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 2
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
   },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 8
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   bioText: {
-    fontSize: 14,
-    color: '#475569',
-    lineHeight: 20
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 22,
   },
-  priceRow: {
+  infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#F8FAFC'
+    borderBottomColor: colors.borderLight,
   },
-  priceLabel: {
-    fontSize: 14,
-    color: '#64748B'
+  infoLabel: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
+    marginRight: spacing.xs,
+    fontWeight: typography.weights.medium,
   },
-  priceVal: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A'
+  infoValue: {
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+    fontWeight: typography.weights.bold,
+    flex: 1,
+    textAlign: 'right',
   },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    borderTopColor: colors.borderLight,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    ...shadows.lg,
   },
   priceColumn: {
-    flex: 1
+    flex: 1,
   },
   bottomPriceLabel: {
-    fontSize: 11,
-    color: '#64748B'
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
   bottomPriceValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A'
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
   },
-  bookBtn: {
-    minWidth: 160
-  }
+  unitText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    fontWeight: typography.weights.regular,
+  },
+  bookButton: {
+    flex: 1.4,
+  },
 });

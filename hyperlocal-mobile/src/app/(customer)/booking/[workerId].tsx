@@ -7,17 +7,18 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Alert
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../../components/Header';
-import Input from '../../../components/Input';
-import Button from '../../../components/Button';
-import ProfileAvatar from '../../../components/ProfileAvatar';
+import { MobileHeader } from '../../../components/MobileHeader';
+import { AppInput } from '../../../components/AppInput';
+import { AppButton } from '../../../components/AppButton';
+import { WorkerAvatar } from '../../../components/WorkerAvatar';
+import { CategorySelector } from '../../../components/CategorySelector';
+import { LoadingState } from '../../../components/LoadingState';
+import { EmptyState } from '../../../components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../../theme';
 
 export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
@@ -25,9 +26,9 @@ export default function CreateBookingScreen() {
 
   const [worker, setWorker] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
 
-  // Booking Parameters
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const defaultDate = tomorrow.toISOString().split('T')[0];
@@ -36,12 +37,12 @@ export default function CreateBookingScreen() {
   const [startTime, setStartTime] = useState('10:00 AM');
   const [duration, setDuration] = useState<number>(2);
 
-  // Address Fields
   const [houseNo, setHouseNo] = useState('');
   const [street, setStreet] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [city, setCity] = useState('');
-  const [pincode, setPincode] = useState('');
+  const [city, setCity] = useState('Bengaluru');
+  const [pincode, setPincode] = useState('560038');
+  const [instructions, setInstructions] = useState('');
   const [addressType, setAddressType] = useState<'HOME' | 'OFFICE' | 'OTHER'>('HOME');
 
   const [loadingWorker, setLoadingWorker] = useState(true);
@@ -53,14 +54,17 @@ export default function CreateBookingScreen() {
       try {
         const [wRes, cRes] = await Promise.allSettled([
           api.get(`/workers/${workerId}`),
-          api.get('/categories')
+          api.get('/categories'),
         ]);
 
         if (wRes.status === 'fulfilled' && wRes.value.data) {
           const wData = wRes.value.data.worker || wRes.value.data;
           setWorker(wData);
           if (wData.primaryServiceCategoryId) {
-            setSelectedCategory(wData.primaryServiceCategoryId);
+            setSelectedCategoryId(wData.primaryServiceCategoryId);
+          }
+          if (wData.primaryCategoryName) {
+            setSelectedCategoryName(wData.primaryCategoryName);
           }
         }
 
@@ -69,8 +73,9 @@ export default function CreateBookingScreen() {
             ? cRes.value.data
             : cRes.value.data.categories || cRes.value.data.data || [];
           setCategories(cats);
-          if (!selectedCategory && cats.length > 0) {
-            setSelectedCategory(cats[0]._id);
+          if (!selectedCategoryId && cats.length > 0) {
+            setSelectedCategoryId(cats[0]._id || cats[0].id);
+            setSelectedCategoryName(cats[0].name);
           }
         }
       } catch (err) {
@@ -83,8 +88,12 @@ export default function CreateBookingScreen() {
     if (workerId) initData();
   }, [workerId]);
 
-  const hourlyRate = worker?.hourlyRate || 250;
-  const estimatedTotal = hourlyRate * duration;
+  const hourlyRate =
+    worker?.hourlyRate || worker?.pricePerHour || worker?.rate || (worker?.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
+
+  const basePrice = hourlyRate * duration;
+  const platformFee = 49;
+  const estimatedTotal = basePrice + platformFee;
 
   const handleConfirmBooking = async () => {
     if (!houseNo.trim() || !street.trim() || !city.trim() || !pincode.trim()) {
@@ -92,7 +101,9 @@ export default function CreateBookingScreen() {
       return;
     }
 
-    const fullAddress = `${houseNo.trim()}, ${street.trim()}, ${landmark.trim() ? landmark.trim() + ', ' : ''}${city.trim()} - ${pincode.trim()} (${addressType})`;
+    const fullAddress = `${houseNo.trim()}, ${street.trim()}, ${
+      landmark.trim() ? landmark.trim() + ', ' : ''
+    }${city.trim()} - ${pincode.trim()} (${addressType})`;
 
     setErrorMsg('');
     setSubmitting(true);
@@ -100,10 +111,11 @@ export default function CreateBookingScreen() {
     try {
       const payload = {
         workerId,
-        categoryId: selectedCategory || worker?.primaryServiceCategoryId,
+        categoryId: selectedCategoryId || worker?.primaryServiceCategoryId,
         bookingDate: date,
         startTime,
         durationHours: duration,
+        instructions: instructions.trim(),
         address: fullAddress,
         serviceAddress: {
           houseNo: houseNo.trim(),
@@ -111,20 +123,21 @@ export default function CreateBookingScreen() {
           landmark: landmark.trim(),
           city: city.trim(),
           pincode: pincode.trim(),
-          addressType
-        }
+          addressType,
+        },
       };
 
       const res = await api.post('/bookings/create', payload);
-
       const bookingId = res.data?.booking?._id || res.data?._id;
+
       if (bookingId) {
         router.replace(`/(customer)/booking/details/${bookingId}`);
       } else {
         router.replace('/(customer)/bookings');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
+      const msg =
+        err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
       setErrorMsg(msg);
     } finally {
       setSubmitting(false);
@@ -133,61 +146,81 @@ export default function CreateBookingScreen() {
 
   if (loadingWorker) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Book Service" showBack />
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#EA580C" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.container}>
+        <MobileHeader title="Booking" showBack />
+        <LoadingState message="Loading worker and category information..." />
+      </View>
     );
   }
 
-  const workerName = worker?.name || worker?.fullName || 'Selected Professional';
+  const workerName =
+    worker?.fullName || worker?.name || worker?.user?.name || 'Selected Professional';
+  const profileImage =
+    worker?.profileImage || worker?.profilePhoto || worker?.profileImageUrl || worker?.user?.profileImage;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header title="Book Service" showBack />
+    <View style={styles.container}>
+      <MobileHeader title="Booking" showBack />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Worker Info Banner */}
-          <View style={styles.workerBanner}>
-            <ProfileAvatar user={worker} size="lg" showBadge />
-            <View style={styles.workerBannerText}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Worker Summary Banner */}
+          <View style={styles.workerCard}>
+            <WorkerAvatar uri={profileImage} name={workerName} size="lg" isVerified />
+            <View style={styles.workerInfo}>
               <Text style={styles.workerName}>{workerName}</Text>
-              <Text style={styles.workerRate}>₹{hourlyRate} / hour</Text>
+              <Text style={styles.workerCategory}>{selectedCategoryName || 'Home Services'}</Text>
+            </View>
+            <View style={styles.workerPriceBox}>
+              <Text style={styles.workerRate}>₹{hourlyRate}</Text>
+              <Text style={styles.unitText}>/hr</Text>
             </View>
           </View>
 
           {errorMsg ? (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={20} color="#DC2626" />
+              <Ionicons name="alert-circle" size={20} color={colors.error} />
               <Text style={styles.errorText}>{errorMsg}</Text>
             </View>
           ) : null}
 
-          {/* Section 1: Schedule & Duration */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>1. Schedule & Duration</Text>
+          {/* Section 1: Service Category Selection */}
+          <View style={styles.card}>
+            <CategorySelector
+              selectedCategoryId={selectedCategoryId}
+              selectedCategoryName={selectedCategoryName}
+              categoriesList={categories}
+              onSelect={(cat) => {
+                setSelectedCategoryId(cat.id || cat._id || '');
+                setSelectedCategoryName(cat.name);
+              }}
+            />
+          </View>
 
-            <Input
+          {/* Section 2: Schedule & Duration */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Schedule & Duration</Text>
+
+            <AppInput
               label="Date (YYYY-MM-DD) *"
               value={date}
               onChangeText={setDate}
-              icon={<Ionicons name="calendar-outline" size={20} color="#64748B" />}
+              icon="calendar-outline"
             />
 
             <Text style={styles.fieldLabel}>Start Time *</Text>
-            <View style={styles.timeSlotsRow}>
+            <View style={styles.chipsRow}>
               {['09:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'].map((slot) => (
                 <TouchableOpacity
                   key={slot}
-                  style={[styles.slotChip, startTime === slot && styles.slotChipActive]}
+                  style={[styles.chip, startTime === slot && styles.chipActive]}
                   onPress={() => setStartTime(slot)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.slotText, startTime === slot && styles.slotTextActive]}>
+                  <Text style={[styles.chipText, startTime === slot && styles.chipTextActive]}>
                     {slot}
                   </Text>
                 </TouchableOpacity>
@@ -201,6 +234,7 @@ export default function CreateBookingScreen() {
                   key={h}
                   style={[styles.durationChip, duration === h && styles.durationChipActive]}
                   onPress={() => setDuration(h)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[styles.durationText, duration === h && styles.durationTextActive]}>
                     {h} {h === 1 ? 'hr' : 'hrs'}
@@ -210,16 +244,17 @@ export default function CreateBookingScreen() {
             </View>
           </View>
 
-          {/* Section 2: Address Information */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>2. Service Address</Text>
+          {/* Section 3: Address Information */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Service Address</Text>
 
-            <View style={styles.addressTypeRow}>
+            <View style={styles.typeRow}>
               {(['HOME', 'OFFICE', 'OTHER'] as const).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeChip, addressType === type && styles.typeChipActive]}
                   onPress={() => setAddressType(type)}
+                  activeOpacity={0.7}
                 >
                   <Text style={[styles.typeText, addressType === type && styles.typeTextActive]}>
                     {type}
@@ -228,30 +263,33 @@ export default function CreateBookingScreen() {
               ))}
             </View>
 
-            <Input
+            <AppInput
               label="Flat / House No. *"
               placeholder="e.g. B-204, Sunset Heights"
               value={houseNo}
               onChangeText={setHouseNo}
+              icon="home-outline"
             />
 
-            <Input
+            <AppInput
               label="Street / Locality *"
               placeholder="e.g. MG Road, Indiranagar"
               value={street}
               onChangeText={setStreet}
+              icon="navigate-outline"
             />
 
-            <Input
+            <AppInput
               label="Area / Landmark"
               placeholder="e.g. Near Metro Station"
               value={landmark}
               onChangeText={setLandmark}
+              icon="location-outline"
             />
 
-            <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ flexDirection: 'row', gap: spacing.md }}>
               <View style={{ flex: 1 }}>
-                <Input
+                <AppInput
                   label="City *"
                   placeholder="e.g. Bengaluru"
                   value={city}
@@ -259,7 +297,7 @@ export default function CreateBookingScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Input
+                <AppInput
                   label="PIN Code *"
                   placeholder="e.g. 560038"
                   value={pincode}
@@ -268,231 +306,262 @@ export default function CreateBookingScreen() {
                 />
               </View>
             </View>
+
+            <AppInput
+              label="Special Instructions (Optional)"
+              placeholder="e.g. Please bring extra ladder / call before arriving"
+              value={instructions}
+              onChangeText={setInstructions}
+              multiline
+              numberOfLines={3}
+              icon="create-outline"
+            />
           </View>
 
-          {/* Section 3: Quote Summary */}
+          {/* Price Summary Breakdown Card */}
           <View style={styles.quoteCard}>
-            <Text style={styles.sectionTitle}>Price Quote</Text>
+            <Text style={styles.quoteTitle}>Price Breakdown</Text>
+            
             <View style={styles.quoteRow}>
-              <Text style={styles.quoteLabel}>Rate x Duration ({duration} hrs)</Text>
-              <Text style={styles.quoteVal}>₹{hourlyRate} x {duration}</Text>
+              <Text style={styles.quoteLabel}>
+                Base Rate (₹{hourlyRate} × {duration} hrs)
+              </Text>
+              <Text style={styles.quoteVal}>₹{basePrice}</Text>
             </View>
+
             <View style={styles.quoteRow}>
-              <Text style={styles.quoteLabel}>Taxes & Fees</Text>
-              <Text style={styles.quoteVal}>₹0</Text>
+              <Text style={styles.quoteLabel}>Safety & Support Fee</Text>
+              <Text style={styles.quoteVal}>₹{platformFee}</Text>
             </View>
+
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Estimated Total</Text>
+              <Text style={styles.totalLabel}>Estimated Total Amount</Text>
               <Text style={styles.totalVal}>₹{estimatedTotal}</Text>
             </View>
           </View>
 
-          <Button
-            title={`Confirm Booking • ₹${estimatedTotal}`}
+          <AppButton
+            title={`Check Availability & Review Quote • ₹${estimatedTotal}`}
             onPress={handleConfirmBooking}
             loading={submitting}
-            style={styles.confirmBtn}
+            variant="primary"
+            size="lg"
+            style={{ marginBottom: spacing.xl }}
           />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl * 2,
   },
-  workerBanner: {
+  workerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
-  workerBannerText: {
-    marginLeft: 12
+  workerInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
   },
   workerName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  workerCategory: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  workerPriceBox: {
+    alignItems: 'flex-end',
   },
   workerRate: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#EA580C',
-    marginTop: 2
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+  },
+  unitText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorLight,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16
+    borderColor: colors.error,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   errorText: {
-    color: '#B91C1C',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 8,
-    flex: 1
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.error,
+    fontWeight: typography.weights.semibold,
   },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 12
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#334155',
-    marginTop: 12,
-    marginBottom: 8
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  timeSlotsRow: {
+  chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
-  slotChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSecondary,
     borderWidth: 1,
-    borderColor: '#CBD5E1'
+    borderColor: colors.border,
   },
-  slotChipActive: {
-    backgroundColor: '#EA580C',
-    borderColor: '#EA580C'
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  slotText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '600'
+  chipText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    color: colors.textSecondary,
   },
-  slotTextActive: {
-    color: '#FFFFFF'
+  chipTextActive: {
+    color: colors.textPrimary,
+    fontWeight: typography.weights.bold,
   },
   durationRow: {
     flexDirection: 'row',
-    gap: 8
+    gap: spacing.xs,
   },
   durationChip: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#CBD5E1'
+    borderColor: colors.border,
   },
   durationChipActive: {
-    backgroundColor: '#EA580C',
-    borderColor: '#EA580C'
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   durationText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
   },
   durationTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700'
+    color: colors.textPrimary,
+    fontWeight: typography.weights.bold,
   },
-  addressTypeRow: {
+  typeRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   typeChip: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    paddingVertical: spacing.sm,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#CBD5E1'
+    borderColor: colors.border,
   },
   typeChipActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A'
+    backgroundColor: colors.textPrimary,
+    borderColor: colors.textPrimary,
   },
   typeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569'
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textSecondary,
   },
   typeTextActive: {
-    color: '#FFFFFF'
+    color: colors.textInverted,
   },
   quoteCard: {
-    backgroundColor: '#FFF7ED',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#FFEDD5',
-    marginBottom: 20
+    borderColor: colors.primary,
+    marginBottom: spacing.lg,
+  },
+  quoteTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   quoteRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 4
+    marginVertical: 4,
   },
   quoteLabel: {
-    fontSize: 13,
-    color: '#64748B'
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   quoteVal: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#334155'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#FED7AA'
+    borderTopColor: colors.primary,
   },
   totalLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   totalVal: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#EA580C'
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
   },
-  confirmBtn: {
-    marginBottom: 16
-  }
 });

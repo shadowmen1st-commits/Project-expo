@@ -5,21 +5,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { WorkerCard } from '../../components/WorkerCard';
+import { ServiceCard } from '../../components/ServiceCard';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { colors, spacing, typography, radius, shadows } from '../../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [categories, setCategories] = useState<any[]>([]);
   const [workers, setWorkers] = useState<any[]>([]);
@@ -32,7 +34,7 @@ export default function CustomerDashboard() {
       const [catRes, workerRes, bookingRes] = await Promise.allSettled([
         api.get('/categories'),
         api.get('/workers/search'),
-        api.get('/bookings/customer/my-bookings')
+        api.get('/bookings/customer/my-bookings'),
       ]);
 
       if (catRes.status === 'fulfilled' && catRes.value.data) {
@@ -72,7 +74,7 @@ export default function CustomerDashboard() {
     fetchData();
   };
 
-  const getCategoryIcon = (name: string) => {
+  const getCategoryIcon = (name: string): keyof typeof Ionicons.glyphMap => {
     const n = name?.toLowerCase() || '';
     if (n.includes('clean')) return 'sparkles-outline';
     if (n.includes('electric')) return 'flash-outline';
@@ -84,19 +86,26 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, 16) }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
+        }
       >
         {/* User Greeting Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greetingSub}>Hello 👋</Text>
-            <Text style={styles.greetingTitle}>{user?.name || 'Customer'}</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.locationPill}>
+              <Ionicons name="location-sharp" size={12} color={colors.accent} />
+              <Text style={styles.locationText}>Indiranagar, Bengaluru</Text>
+            </View>
+            <Text style={styles.greetingTitle}>Hello, {user?.name?.split(' ')[0] || 'Customer'} 👋</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/(customer)/profile')}>
-            <ProfileAvatar user={user} size="lg" />
+
+          <TouchableOpacity onPress={() => router.push('/(customer)/profile')} activeOpacity={0.8}>
+            <ProfileAvatar user={user} size="lg" showBadge />
           </TouchableOpacity>
         </View>
 
@@ -104,70 +113,92 @@ export default function CustomerDashboard() {
         <TouchableOpacity
           style={styles.searchBar}
           onPress={() => router.push('/(customer)/workers')}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <Ionicons name="search-outline" size={20} color="#94A3B8" />
+          <Ionicons name="search-outline" size={20} color={colors.primaryDark} />
           <Text style={styles.searchPlaceholder}>Search plumbers, electricians, cleaners...</Text>
+          <View style={styles.filterChip}>
+            <Ionicons name="options-outline" size={16} color={colors.textPrimary} />
+          </View>
         </TouchableOpacity>
+
+        {/* Promotional Banner */}
+        <View style={styles.promoBanner}>
+          <View style={styles.promoContent}>
+            <View style={styles.promoTag}>
+              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
+            </View>
+            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
+            <Text style={styles.promoSub}>Up to ₹500 off on first home service booking</Text>
+          </View>
+          <View style={styles.promoIconBox}>
+            <Ionicons name="shield-checkmark" size={48} color={colors.primaryDark} />
+          </View>
+        </View>
 
         {/* Categories Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Services</Text>
+          <Text style={styles.sectionTitle}>Categories</Text>
           <TouchableOpacity onPress={() => router.push('/(customer)/services')}>
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
-          <ActivityIndicator color="#EA580C" style={{ marginVertical: 20 }} />
+          <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.xl }} />
         ) : (
-          <View style={styles.categoryGrid}>
-            {(categories.length > 0 ? categories : [
-              { _id: '1', name: 'Home Cleaning', slug: 'cleaning' },
-              { _id: '2', name: 'Electrician', slug: 'electrician' },
-              { _id: '3', name: 'Plumber', slug: 'plumber' },
-              { _id: '4', name: 'Caregiver', slug: 'caregiver' }
-            ]).slice(0, 4).map((cat) => (
-              <TouchableOpacity
-                key={cat._id}
-                style={styles.categoryCard}
-                onPress={() => router.push(`/(customer)/workers?category=${cat._id}`)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.categoryIconCircle}>
-                  <Ionicons name={getCategoryIcon(cat.name) as any} size={24} color="#EA580C" />
-                </View>
-                <Text style={styles.categoryName} numberOfLines={1}>
-                  {cat.name}
-                </Text>
-              </TouchableOpacity>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScrollContent}
+          >
+            {(categories.length > 0
+              ? categories
+              : [
+                  { _id: '1', name: 'Cleaning' },
+                  { _id: '2', name: 'Electrician' },
+                  { _id: '3', name: 'Plumber' },
+                  { _id: '4', name: 'Carpenter' },
+                ]
+            ).map((cat) => (
+              <ServiceCard
+                key={cat._id || cat.id}
+                name={cat.name}
+                icon={getCategoryIcon(cat.name)}
+                onPress={() => router.push(`/(customer)/workers?category=${cat._id || cat.id}`)}
+              />
             ))}
-          </View>
+          </ScrollView>
         )}
 
         {/* Recent Active Bookings Banner */}
-        {recentBookings.length > 0 ? (
+        {recentBookings.length > 0 && (
           <View style={styles.recentBookingContainer}>
             <Text style={styles.sectionTitle}>Recent Booking</Text>
             <TouchableOpacity
               style={styles.recentBookingCard}
               onPress={() => router.push(`/(customer)/booking/details/${recentBookings[0]._id}`)}
+              activeOpacity={0.8}
             >
               <View style={styles.recentBookingRow}>
-                <Ionicons name="time-outline" size={24} color="#EA580C" />
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={styles.bookingIconBox}>
+                  <Ionicons name="time-outline" size={22} color={colors.accent} />
+                </View>
+                <View style={{ flex: 1, marginLeft: spacing.md }}>
                   <Text style={styles.recentBookingTitle}>
-                    {recentBookings[0].serviceCategoryName || 'Service Request'}
+                    {recentBookings[0].serviceCategoryName || 'Home Service Request'}
                   </Text>
                   <Text style={styles.recentBookingSub}>
                     {new Date(recentBookings[0].bookingDate || Date.now()).toLocaleDateString()}
                   </Text>
                 </View>
-                <Text style={styles.recentBookingStatus}>{recentBookings[0].status}</Text>
+                <View style={styles.statusPill}>
+                  <Text style={styles.recentBookingStatus}>{recentBookings[0].status}</Text>
+                </View>
               </View>
             </TouchableOpacity>
           </View>
-        ) : null}
+        )}
 
         {/* Top Verified Workers */}
         <View style={styles.sectionHeader}>
@@ -177,161 +208,213 @@ export default function CustomerDashboard() {
           </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <ActivityIndicator color="#EA580C" style={{ marginVertical: 20 }} />
-        ) : workers.length > 0 ? (
-          workers.map((w) => (
-            <WorkerCard
-              key={w._id}
-              worker={w}
-              onPressProfile={() => router.push(`/(customer)/worker/${w._id}`)}
-              onPressBook={() => router.push(`/(customer)/booking/${w._id}`)}
-            />
-          ))
-        ) : (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No available workers at the moment.</Text>
-          </View>
-        )}
+        <View style={styles.workerListContainer}>
+          {loading ? (
+            <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.xl }} />
+          ) : workers.length > 0 ? (
+            workers.map((w) => (
+              <WorkerCard
+                key={w._id || w.id}
+                worker={w}
+                onPressProfile={() => router.push(`/(customer)/worker/${w._id || w.id}`)}
+                onPressBook={() => router.push(`/(customer)/booking/${w._id || w.id}`)}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyCard}>
+              <Ionicons name="people-outline" size={36} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No available verified workers at the moment.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: 24
+    paddingBottom: spacing.xxxl * 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
-  greetingSub: {
-    fontSize: 13,
-    color: '#64748B',
-    fontWeight: '500'
+  headerLeft: {
+    flex: 1,
+  },
+  locationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  locationText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
   },
   greetingTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A'
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginVertical: 12,
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    height: 50,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
   },
   searchPlaceholder: {
-    marginLeft: 10,
-    color: '#94A3B8',
-    fontSize: 14
+    flex: 1,
+    marginLeft: spacing.sm,
+    color: colors.textMuted,
+    fontSize: typography.sizes.sm,
+  },
+  filterChip: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBanner: {
+    flexDirection: 'row',
+    backgroundColor: colors.primaryLight,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  promoContent: {
+    flex: 1,
+  },
+  promoTag: {
+    backgroundColor: colors.primary,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+    marginBottom: spacing.xs,
+  },
+  promoTagText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  promoTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  promoSub: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+  },
+  promoIconBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0F172A'
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   seeAllText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#EA580C'
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryDark,
   },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 14
-  },
-  categoryCard: {
-    width: '23%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginHorizontal: '1%',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9'
-  },
-  categoryIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF7ED',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8
-  },
-  categoryName: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#334155',
-    textAlign: 'center'
+  categoryScrollContent: {
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.sm,
+    marginBottom: spacing.lg,
   },
   recentBookingContainer: {
-    paddingHorizontal: 20,
-    marginTop: 8
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
   },
   recentBookingCard: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: colors.accentLight,
     borderWidth: 1,
     borderColor: '#FFEDD5',
-    borderRadius: 14,
-    padding: 14
+    borderRadius: radius.lg,
+    padding: spacing.md,
   },
   recentBookingRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+  },
+  bookingIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   recentBookingTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A'
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   recentBookingSub: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  statusPill: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.xs,
   },
   recentBookingStatus: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#EA580C',
-    textTransform: 'uppercase'
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.textInverted,
+    textTransform: 'uppercase',
+  },
+  workerListContainer: {
+    paddingHorizontal: spacing.lg,
   },
   emptyCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    padding: spacing.xxl,
+    borderRadius: radius.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F1F5F9'
+    borderColor: colors.borderLight,
   },
   emptyText: {
-    color: '#64748B',
-    fontSize: 14
-  }
+    color: colors.textMuted,
+    fontSize: typography.sizes.sm,
+    marginTop: spacing.sm,
+  },
 });
