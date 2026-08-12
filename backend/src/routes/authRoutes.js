@@ -9,7 +9,19 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = Router();
-const limiter = (max) => rateLimit({ windowMs: 15 * 60 * 1000, max: process.env.NODE_ENV === 'test' ? 10000 : max, standardHeaders: true, legacyHeaders: false, message: { statusCode: 429, errorCode: 'AUTH_RATE_LIMITED', message: 'Too many authentication attempts. Please retry later.' } });
+const isDevOrTest = process.env.NODE_ENV !== 'production';
+const limiter = (max) => rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDevOrTest ? 100000 : max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    statusCode: 429,
+    errorCode: 'AUTH_RATE_LIMITED',
+    message: 'Too many authentication attempts. Please retry later.'
+  }
+});
+
 router.post('/register', limiter(20), register);
 router.post('/login', limiter(10), login);
 router.post('/refresh', refresh);
@@ -20,4 +32,5 @@ router.put('/change-password', authMiddleware, changePassword);
 router.post('/profile-image', authMiddleware, upload.single('file'), uploadProfileImage);
 router.delete('/profile-image', authMiddleware, deleteProfileImage);
 router.use('/oauth', oauthRoutes);
+
 export default router;
