@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleProp,
   ViewStyle,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius } from '../theme';
@@ -20,6 +21,8 @@ interface AppInputProps extends TextInputProps {
   onRightIconPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
 }
+
+const webOutlineStyle = Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0, outlineColor: 'transparent' } as any) : {};
 
 export const AppInput: React.FC<AppInputProps> = ({
   label,
@@ -56,6 +59,7 @@ export const AppInput: React.FC<AppInputProps> = ({
       <View
         style={[
           styles.inputContainer,
+          webOutlineStyle,
           isFocused && styles.inputFocused,
           Boolean(error) && styles.inputError,
         ]}
@@ -69,7 +73,7 @@ export const AppInput: React.FC<AppInputProps> = ({
           />
         )}
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, webOutlineStyle, style]}
           placeholderTextColor={colors.textMuted}
           onFocus={handleFocus}
           onBlur={handleBlur}

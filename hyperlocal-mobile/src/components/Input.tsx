@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TextInputProps, Platform } from 'react-native';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -7,14 +7,16 @@ interface InputProps extends TextInputProps {
   icon?: React.ReactNode;
 }
 
+const webOutlineStyle = Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0, outlineColor: 'transparent' } as any) : {};
+
 export const Input: React.FC<InputProps> = ({ label, error, icon, style, ...rest }) => {
   return (
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.inputWrapper, error ? styles.inputError : null]}>
+      <View style={[styles.inputWrapper, webOutlineStyle, error ? styles.inputError : null]}>
         {icon ? <View style={styles.iconContainer}>{icon}</View> : null}
         <TextInput
-          style={[styles.input, style]}
+          style={[styles.input, webOutlineStyle, style]}
           placeholderTextColor="#94A3B8"
           {...rest}
         />
