@@ -1553,9 +1553,14 @@ export const uploadCompanyDocument = async (req, res, next) => {
             });
         }
 
-        const STORAGE_DIR = path.resolve('uploads/verification');
-        if (!fs.existsSync(STORAGE_DIR)) {
-            fs.mkdirSync(STORAGE_DIR, { recursive: true });
+        const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+        const STORAGE_DIR = path.join(uploadRoot, 'verification');
+        try {
+            if (!fs.existsSync(STORAGE_DIR)) {
+                fs.mkdirSync(STORAGE_DIR, { recursive: true });
+            }
+        } catch (err) {
+            console.error('Warning: Failed creating company storage directory:', err.message);
         }
 
         const fileExt = path.extname(req.file.originalname).toLowerCase();
@@ -1630,7 +1635,8 @@ export const deleteCompanyDocument = async (req, res, next) => {
 
         // Try deleting file from disk
         if (document.storageKey) {
-            const filePath = path.resolve('uploads/verification', document.storageKey);
+            const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+            const filePath = path.join(uploadRoot, 'verification', document.storageKey);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
             }

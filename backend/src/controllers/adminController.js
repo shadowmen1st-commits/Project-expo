@@ -929,7 +929,8 @@ export const viewCompanyVerificationDocument = async (req, res, next) => {
             });
         }
 
-        const STORAGE_DIR = path.resolve('uploads/verification');
+        const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+        const STORAGE_DIR = path.join(uploadRoot, 'verification');
         const filePath = path.join(STORAGE_DIR, storageKey);
 
         if (fs.existsSync(filePath)) {

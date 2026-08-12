@@ -5,7 +5,7 @@ export const AuthProvider=({children})=>{
  const [user,setUser]=useState(null);const [loading,setLoading]=useState(true);
   const restoreSession = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!token || token === 'null' || token === 'undefined' || !token.trim()) {
       setUser(null);
       setLoading(false);
       return;

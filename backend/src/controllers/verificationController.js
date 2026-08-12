@@ -18,9 +18,14 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Setup private storage directory
-const STORAGE_DIR = path.resolve(__dirname, '../../../uploads/verification');
-if (!fs.existsSync(STORAGE_DIR)) {
-    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+const STORAGE_DIR = path.join(uploadRoot, 'verification');
+try {
+    if (!fs.existsSync(STORAGE_DIR)) {
+        fs.mkdirSync(STORAGE_DIR, { recursive: true });
+    }
+} catch (err) {
+    console.error('Warning: Failed creating verification storage directory:', err.message);
 }
 
 // Age calculator helper
@@ -866,7 +871,8 @@ export const serveProfilePhoto = async (req, res, next) => {
         }
 
         // 2. Fallback to filesystem
-        const filePath = path.join(path.resolve(__dirname, '../../../uploads/profile-photos'), filename);
+        const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+        const filePath = path.join(uploadRoot, 'profile-photos', filename);
         if (fs.existsSync(filePath)) {
             let contentType = 'image/jpeg';
             const ext = path.extname(filename).toLowerCase();
