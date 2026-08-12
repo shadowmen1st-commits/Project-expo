@@ -55,7 +55,6 @@ export default function WorkersScreen() {
         setCategories(cats);
       }
     } catch (err: any) {
-      console.error('Error fetching workers:', err);
       setError('Unable to load worker listings. Please check connection and try again.');
     } finally {
       setLoading(false);

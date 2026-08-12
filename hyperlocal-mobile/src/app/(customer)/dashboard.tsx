@@ -58,7 +58,7 @@ export default function CustomerDashboard() {
         setRecentBookings(bList.slice(0, 2));
       }
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
+      // Ignore dashboard fetch error safely
     } finally {
       setLoading(false);
       setRefreshing(false);

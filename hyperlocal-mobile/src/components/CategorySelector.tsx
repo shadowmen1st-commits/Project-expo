@@ -55,7 +55,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         const list = Array.isArray(response.data) ? response.data : response.data?.categories || [];
         setCategories(list);
       } catch (err) {
-        console.error('Failed to load categories in selector:', err);
+        // Ignore category fetch error
       } finally {
         setLoading(false);
       }

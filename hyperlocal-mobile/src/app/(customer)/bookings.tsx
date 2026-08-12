@@ -34,7 +34,6 @@ export default function CustomerBookingsScreen() {
       const data = Array.isArray(res.data) ? res.data : res.data.bookings || res.data.data || [];
       setBookings(data);
     } catch (err: any) {
-      console.error('Error fetching customer bookings:', err);
       if (err.response?.status === 401) {
         setErrorState('AUTH_EXPIRED');
         setErrorMessage('Your session has expired. Please sign in again.');

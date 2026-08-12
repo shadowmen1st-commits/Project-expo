@@ -29,7 +29,6 @@ export default function ServicesScreen() {
       const data = Array.isArray(res.data) ? res.data : res.data.categories || res.data.data || [];
       setCategories(data);
     } catch (err: any) {
-      console.error('Failed fetching categories:', err);
       setError('Unable to load services. Please check network connection.');
     } finally {
       setLoading(false);

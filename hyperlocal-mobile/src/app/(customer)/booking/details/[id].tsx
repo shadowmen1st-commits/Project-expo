@@ -30,7 +30,7 @@ export default function BookingDetailsScreen() {
       const res = await api.get(`/bookings/${id}`);
       setBooking(res.data?.booking || res.data);
     } catch (err) {
-      console.error('Failed to load booking details:', err);
+      // Ignore fetch details error
     } finally {
       setLoading(false);
     }
