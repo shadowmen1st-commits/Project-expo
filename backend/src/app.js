@@ -55,15 +55,24 @@ export const createApp = () => {
             if (isOriginAllowed(origin)) {
                 callback(null, true);
             } else {
-                const error = new Error('Origin is not allowed.');
+                const error = new Error(`CORS origin not allowed: ${origin}`);
                 error.statusCode = 403;
                 error.errorCode = 'CORS_ORIGIN_REJECTED';
                 callback(error);
             }
         },
         credentials: true,
-        methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-        allowedHeaders: ['Content-Type','Authorization','Idempotency-Key','X-Request-Id']
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'Accept',
+            'Origin',
+            'X-Requested-With',
+            'Idempotency-Key',
+            'X-Request-Id'
+        ],
+        optionsSuccessStatus: 200
     }));
     app.use('/api/v1/webhooks', rawBodyMiddleware, webhookRoutes);
     app.use(browserOriginGuard(config.CORS_ALLOWED_ORIGINS));

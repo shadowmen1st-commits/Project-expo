@@ -6,6 +6,7 @@ export const API_BASE_URL = ENV_API_URL || 'https://project-expo-md70.onrender.c
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'

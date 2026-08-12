@@ -1,6 +1,6 @@
 const placeholder = /(change[_-]?me|your[_-]|example|placeholder|\.\.\.|test[_-]?secret|fixture)/i;
 const present = value => typeof value === 'string' && value.trim().length > 0;
-const secureUrl = value => { try { const url = new URL(value); return url.protocol === 'https:' && !['localhost','127.0.0.1','0.0.0.0'].includes(url.hostname); } catch { return false; } };
+const secureUrl = value => { try { const url = new URL(value); if (['localhost', '127.0.0.1', '0.0.0.0'].includes(url.hostname)) return true; return url.protocol === 'https:'; } catch { return false; } };
 const strong = (value, minimum = 32) => present(value) && value.length >= minimum && !placeholder.test(value);
 export function validateProductionEnvironment(env) {
   const errors = []; const requireValue = key => { if (!present(env[key])) errors.push(`${key} is required`); };

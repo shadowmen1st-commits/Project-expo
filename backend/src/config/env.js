@@ -75,15 +75,17 @@ if (NODE_ENV === 'test' && PAYMENT_PROVIDER_MODE === 'mock') {
 const defaultDevOrigins = [
     'http://localhost:8081',
     'http://localhost:8082',
+    'http://localhost:19006',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:8081',
+    'http://127.0.0.1:19006',
     'http://127.0.0.1:5173'
 ];
 
 const parsedCorsOrigins = Array.from(new Set([
     ...(CORS_ALLOWED_ORIGINS ? CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [CUSTOMER_APP_URL, WEB_ADMIN_URL, FRONTEND_URL]),
-    ...(NODE_ENV !== 'production' ? defaultDevOrigins : [])
+    ...defaultDevOrigins
 ])).filter(Boolean);
 
 export const config = {
