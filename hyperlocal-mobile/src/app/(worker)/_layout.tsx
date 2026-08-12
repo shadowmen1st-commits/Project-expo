@@ -1,26 +1,47 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../theme';
 
 export default function WorkerLayout() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace('/(auth)/login');
+      } else if (user.role !== 'WORKER' && user.role !== 'COMPANY') {
+        if (user.role === 'ADMIN') router.replace('/(admin)/dashboard');
+        else router.replace('/(customer)/dashboard');
+      }
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
+    return <LoadingState message="Verifying worker access..." />;
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#EA580C',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: colors.primaryDark,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#F1F5F9',
+          borderTopColor: colors.borderLight,
           height: 60,
           paddingBottom: 8,
-          paddingTop: 8
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600'
-        }
+          fontWeight: '600',
+        },
       }}
     >
       <Tabs.Screen
@@ -29,7 +50,7 @@ export default function WorkerLayout() {
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="speedometer-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -38,7 +59,7 @@ export default function WorkerLayout() {
           title: 'Jobs',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="briefcase-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -47,7 +68,7 @@ export default function WorkerLayout() {
           title: 'Earnings',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -56,7 +77,7 @@ export default function WorkerLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -65,7 +86,7 @@ export default function WorkerLayout() {
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
     </Tabs>

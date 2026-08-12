@@ -1,10 +1,31 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, shadows } from '../../theme';
 import { Platform } from 'react-native';
 
 export default function CustomerLayout() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace('/(auth)/login');
+      } else if (user.role === 'ADMIN') {
+        router.replace('/(admin)/dashboard');
+      } else if (user.role === 'WORKER') {
+        router.replace('/(worker)/dashboard');
+      }
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <LoadingState message="Verifying session..." />;
+  }
+
   return (
     <Tabs
       screenOptions={{

@@ -21,6 +21,7 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'CUSTOMER' | 'WORKER' | 'COMPANY'>('CUSTOMER');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -28,11 +29,34 @@ export default function SignupScreen() {
   const { registerUser } = useAuth();
   const router = useRouter();
 
-  const handleSignup = async () => {
+  const validateForm = (): boolean => {
     if (!name.trim() || !email.trim() || !password) {
       setErrorMessage('Please fill in all required fields.');
-      return;
+      return false;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMessage('Please enter a valid email address.');
+      return false;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.');
+      return false;
+    }
+
+    if (confirmPassword && password !== confirmPassword) {
+      setErrorMessage('Passwords do not match. Please check and try again.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignup = async () => {
+    if (loading) return; // Prevent double submission
+    if (!validateForm()) return;
 
     setErrorMessage('');
     setLoading(true);
@@ -152,10 +176,20 @@ export default function SignupScreen() {
               icon="lock-closed-outline"
             />
 
+            <AppInput
+              label="Confirm Password"
+              placeholder="Re-enter your password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              icon="lock-closed-outline"
+            />
+
             <AppButton
               title="Create Account"
               onPress={handleSignup}
               loading={loading}
+              disabled={loading}
               variant="primary"
               size="lg"
               style={styles.submitBtn}

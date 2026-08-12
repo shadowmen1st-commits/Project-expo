@@ -27,11 +27,18 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
 
   const handleLogin = async (loginEmail?: string, loginPass?: string) => {
+    if (loading) return; // Prevent double submission
     const targetEmail = (loginEmail || email).trim();
     const targetPass = loginPass || password;
 
     if (!targetEmail || !targetPass) {
       setErrorMessage('Please enter both email address and password.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(targetEmail)) {
+      setErrorMessage('Please enter a valid email address.');
       return;
     }
 
@@ -127,6 +134,7 @@ export default function LoginScreen() {
               title="Sign In"
               onPress={() => handleLogin()}
               loading={loading}
+              disabled={loading}
               variant="primary"
               size="lg"
               style={styles.submitBtn}

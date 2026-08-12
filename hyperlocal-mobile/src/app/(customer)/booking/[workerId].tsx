@@ -79,7 +79,7 @@ export default function CreateBookingScreen() {
           }
         }
       } catch (err) {
-        console.error('Failed loading booking initialization:', err);
+        // Ignore initialization error
       } finally {
         setLoadingWorker(false);
       }
@@ -96,6 +96,7 @@ export default function CreateBookingScreen() {
   const estimatedTotal = basePrice + platformFee;
 
   const handleConfirmBooking = async () => {
+    if (submitting) return; // Prevent double submission
     if (!houseNo.trim() || !street.trim() || !city.trim() || !pincode.trim()) {
       setErrorMsg('Please fill in all required address fields (House No, Street, City, Pincode).');
       return;

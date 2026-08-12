@@ -1,26 +1,50 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../theme';
 
 export default function AdminLayout() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace('/(auth)/login');
+      } else if (user.role !== 'ADMIN') {
+        if (user.role === 'WORKER') {
+          router.replace('/(worker)/dashboard');
+        } else {
+          router.replace('/(customer)/dashboard');
+        }
+      }
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user || user.role !== 'ADMIN') {
+    return <LoadingState message="Verifying admin authorization..." />;
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#EA580C',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: colors.primaryDark,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#F1F5F9',
+          borderTopColor: colors.borderLight,
           height: 60,
           paddingBottom: 8,
-          paddingTop: 8
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600'
-        }
+          fontWeight: '600',
+        },
       }}
     >
       <Tabs.Screen
@@ -29,7 +53,7 @@ export default function AdminLayout() {
           title: 'Overview',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pie-chart-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -38,7 +62,7 @@ export default function AdminLayout() {
           title: 'KYC Pros',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-done-circle-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -47,7 +71,7 @@ export default function AdminLayout() {
           title: 'Categories',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -56,7 +80,7 @@ export default function AdminLayout() {
           title: 'Bookings',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -65,7 +89,7 @@ export default function AdminLayout() {
           title: 'Users',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
       <Tabs.Screen
@@ -74,7 +98,7 @@ export default function AdminLayout() {
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
-          )
+          ),
         }}
       />
     </Tabs>
