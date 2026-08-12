@@ -17,8 +17,8 @@ const api = axios.create({
   withCredentials: true,
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use(
@@ -26,8 +26,14 @@ api.interceptors.request.use(
     const token = await storage.getItem('accessToken');
     if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
       config.headers.Authorization = `Bearer ${token.trim()}`;
+      if (__DEV__) {
+        console.log(`AUTH: Request to ${config.url} authorized: YES`);
+      }
     } else {
       delete config.headers.Authorization;
+      if (__DEV__) {
+        console.log(`AUTH: Request to ${config.url} authorized: NO (No access token)`);
+      }
     }
     return config;
   },
@@ -74,24 +80,57 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      if (__DEV__) {
+        console.log('AUTH: 401 encountered, refresh started');
+      }
+
       try {
         const refreshToken = await storage.getItem('refreshToken');
-        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
+        if (!refreshToken || refreshToken === 'null' || refreshToken === 'undefined' || !refreshToken.trim()) {
+          if (__DEV__) {
+            console.log('AUTH: Refresh failed - No refresh token available in storage.');
+          }
+          await storage.removeItem('accessToken');
+          await storage.removeItem('refreshToken');
+          processQueue(new Error('No refresh token available'), null);
+          return Promise.reject(error);
+        }
+
+        const res = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          { refreshToken: refreshToken.trim() },
+          { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+        );
+
         const newToken = res.data?.accessToken;
+        const newRefreshToken = res.data?.refreshToken;
 
         if (newToken) {
           await storage.setItem('accessToken', newToken);
+          if (__DEV__) console.log('AUTH: access token stored: YES');
+
+          if (newRefreshToken) {
+            await storage.setItem('refreshToken', newRefreshToken);
+            if (__DEV__) console.log('AUTH: refresh token stored: YES');
+          }
+
+          if (__DEV__) {
+            console.log('AUTH: refresh succeeded');
+          }
+
           api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           processQueue(null, newToken);
           return api(originalRequest);
         } else {
+          if (__DEV__) console.log('AUTH: refresh failed - Response missing access token');
           processQueue(new Error('Refresh failed'), null);
           await storage.removeItem('accessToken');
           await storage.removeItem('refreshToken');
           return Promise.reject(error);
         }
       } catch (refreshErr) {
+        if (__DEV__) console.log('AUTH: refresh failed');
         processQueue(refreshErr, null);
         await storage.removeItem('accessToken');
         await storage.removeItem('refreshToken');

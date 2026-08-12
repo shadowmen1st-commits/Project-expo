@@ -23,14 +23,28 @@ export default function CustomerBookingsScreen() {
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorState, setErrorState] = useState<'AUTH_EXPIRED' | 'NETWORK_ERROR' | 'SERVER_ERROR' | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const fetchBookings = useCallback(async () => {
+    setErrorState(null);
+    setErrorMessage('');
     try {
       const res = await api.get('/bookings/customer/my-bookings');
       const data = Array.isArray(res.data) ? res.data : res.data.bookings || res.data.data || [];
       setBookings(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching customer bookings:', err);
+      if (err.response?.status === 401) {
+        setErrorState('AUTH_EXPIRED');
+        setErrorMessage('Your session has expired. Please sign in again.');
+      } else if (!err.response) {
+        setErrorState('NETWORK_ERROR');
+        setErrorMessage('Unable to connect to the server. Please check your internet connection.');
+      } else {
+        setErrorState('SERVER_ERROR');
+        setErrorMessage(err.response?.data?.message || 'Failed to fetch bookings.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -76,6 +90,22 @@ export default function CustomerBookingsScreen() {
 
       {loading && !refreshing ? (
         <LoadingState message="Fetching your booking history..." />
+      ) : errorState === 'AUTH_EXPIRED' ? (
+        <EmptyState
+          icon="lock-closed-outline"
+          title="Session Expired"
+          description={errorMessage}
+          actionTitle="Sign In Again"
+          onAction={() => router.replace('/(auth)/login')}
+        />
+      ) : errorState === 'NETWORK_ERROR' || errorState === 'SERVER_ERROR' ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Connection Error"
+          description={errorMessage}
+          actionTitle="Try Again"
+          onAction={fetchBookings}
+        />
       ) : (
         <FlatList
           data={filteredBookings}

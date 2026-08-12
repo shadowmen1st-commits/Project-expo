@@ -36,13 +36,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
+      if (__DEV__) console.log('AUTH: Restoring session via /auth/me');
       const response = await api.get('/auth/me');
       if (response.data?.user) {
         setUser(response.data.user);
+        if (__DEV__) console.log('AUTH: Session restored successfully for', response.data.user.email);
       } else {
+        await storage.removeItem('accessToken');
+        await storage.removeItem('refreshToken');
         setUser(null);
       }
     } catch (err) {
+      if (__DEV__) console.log('AUTH: restoreSession failed, clearing session storage');
+      await storage.removeItem('accessToken');
+      await storage.removeItem('refreshToken');
       setUser(null);
     } finally {
       setLoading(false);
@@ -58,16 +65,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await api.post('/auth/login', {
         email: email.trim().toLowerCase(),
-        password
+        password,
       });
 
       const { accessToken, refreshToken, user: userData } = response.data;
 
       if (accessToken) {
         await storage.setItem('accessToken', accessToken);
+        if (__DEV__) console.log('AUTH: login access token stored: YES');
       }
       if (refreshToken) {
         await storage.setItem('refreshToken', refreshToken);
+        if (__DEV__) console.log('AUTH: login refresh token stored: YES');
       }
 
       setUser(userData);
@@ -82,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await api.post('/auth/register', {
         ...data,
-        email: data.email?.trim().toLowerCase()
+        email: data.email?.trim().toLowerCase(),
       });
 
       const { accessToken, refreshToken, user: userData } = response.data;
@@ -94,7 +103,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await storage.setItem('refreshToken', refreshToken);
       }
 
-      setUser(userData);
+      if (userData) {
+        setUser(userData);
+      }
       return userData;
     } finally {
       setLoading(false);
@@ -103,13 +114,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      const refreshToken = await storage.getItem('refreshToken');
+      await api.post('/auth/logout', { refreshToken });
     } catch (e) {
-      // Ignore logout API failure
+      // Ignore logout API network failure
     } finally {
       await storage.removeItem('accessToken');
       await storage.removeItem('refreshToken');
       setUser(null);
+      if (__DEV__) console.log('AUTH: Logout complete, storage tokens cleared');
     }
   };
 
@@ -126,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         registerUser,
         logout,
         restoreSession,
-        updateUser
+        updateUser,
       }}
     >
       {children}
