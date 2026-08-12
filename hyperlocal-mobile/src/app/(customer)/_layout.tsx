@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/LoadingState';
@@ -9,18 +9,21 @@ import { Platform } from 'react-native';
 export default function CustomerLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  // Use a ref to avoid including router in deps (router object identity changes every render)
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace('/(auth)/login');
-      } else if (user.role === 'ADMIN') {
-        router.replace('/(admin)/dashboard');
-      } else if (user.role === 'WORKER') {
-        router.replace('/(worker)/dashboard');
-      }
+    if (loading) return; // Wait for auth to finish initialising
+    if (!user) {
+      routerRef.current.replace('/(auth)/login');
+    } else if (user.role === 'ADMIN') {
+      routerRef.current.replace('/(admin)/dashboard');
+    } else if (user.role === 'WORKER') {
+      routerRef.current.replace('/(worker)/dashboard');
     }
-  }, [user, loading, router]);
+    // Only re-run when auth state actually changes, not when router ref changes
+  }, [user?.role, loading]);
 
   if (loading || !user) {
     return <LoadingState message="Verifying session..." />;

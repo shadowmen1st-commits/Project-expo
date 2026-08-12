@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/LoadingState';
@@ -8,20 +8,21 @@ import { colors } from '../../theme';
 export default function AdminLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace('/(auth)/login');
-      } else if (user.role !== 'ADMIN') {
-        if (user.role === 'WORKER') {
-          router.replace('/(worker)/dashboard');
-        } else {
-          router.replace('/(customer)/dashboard');
-        }
+    if (loading) return;
+    if (!user) {
+      routerRef.current.replace('/(auth)/login');
+    } else if (user.role !== 'ADMIN') {
+      if (user.role === 'WORKER') {
+        routerRef.current.replace('/(worker)/dashboard');
+      } else {
+        routerRef.current.replace('/(customer)/dashboard');
       }
     }
-  }, [user, loading, router]);
+  }, [user?.role, loading]);
 
   if (loading || !user || user.role !== 'ADMIN') {
     return <LoadingState message="Verifying admin authorization..." />;

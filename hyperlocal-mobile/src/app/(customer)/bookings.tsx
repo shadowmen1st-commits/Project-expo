@@ -14,10 +14,12 @@ import { LoadingState } from '../../components/LoadingState';
 import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function CustomerBookingsScreen() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   const [bookings, setBookings] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('ALL');
@@ -30,6 +32,7 @@ export default function CustomerBookingsScreen() {
     setErrorState(null);
     setErrorMessage('');
     try {
+      if (__DEV__) console.log('AUTH: Fetching customer bookings, user:', user?.email);
       const res = await api.get('/bookings/customer/my-bookings');
       const data = Array.isArray(res.data) ? res.data : res.data.bookings || res.data.data || [];
       setBookings(data);
@@ -48,11 +51,19 @@ export default function CustomerBookingsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user?._id]);
 
+  // CRITICAL: Do NOT fetch bookings until auth has finished loading AND user is set.
+  // Without this guard, the request fires before the accessToken is in storage.
   useEffect(() => {
+    if (authLoading) return;       // Auth restoration in progress — wait
+    if (!user) {
+      // Not authenticated — redirect to login
+      router.replace('/(auth)/login');
+      return;
+    }
     fetchBookings();
-  }, [fetchBookings]);
+  }, [authLoading, user?._id]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -66,6 +77,11 @@ export default function CustomerBookingsScreen() {
     if (activeTab === 'CANCELLED') return ['CANCELLED', 'REJECTED'].includes(b.status);
     return true;
   });
+
+  // Show loading while auth is still initializing
+  if (authLoading) {
+    return <LoadingState message="Verifying authentication..." />;
+  }
 
   return (
     <View style={styles.container}>

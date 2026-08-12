@@ -834,7 +834,7 @@ export const deleteProfilePhoto = async (req, res, next) => {
                     try {
                         await bucket.delete(files[0]._id);
                     } catch (e) {
-                        console.error('Failed deleting GridFS file:', e);
+                        // Ignore GridFS delete error during profile photo removal
                     }
                 }
             }
@@ -855,9 +855,14 @@ export const deleteProfilePhoto = async (req, res, next) => {
 export const serveProfilePhoto = async (req, res, next) => {
     try {
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Access-Control-Allow-Origin', '*');
         const { filename } = req.params;
 
-        // 1. Try GridFS
+        if (!filename || filename.trim() === '') {
+            return res.status(404).json({ statusCode: 404, errorCode: 'NOT_FOUND', message: 'Filename missing.' });
+        }
+
+        // Try GridFS (the only persistent storage on Render)
         const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
             bucketName: 'profilePhotos'
         });
@@ -867,26 +872,20 @@ export const serveProfilePhoto = async (req, res, next) => {
             res.setHeader('Content-Type', file.contentType || 'image/jpeg');
             res.setHeader('Cache-Control', 'public, max-age=86400');
             const downloadStream = bucket.openDownloadStreamByName(filename);
+            downloadStream.on('error', () => {
+                if (!res.headersSent) {
+                    res.status(404).json({ statusCode: 404, errorCode: 'FILE_READ_ERROR', message: 'Could not read profile photo.' });
+                }
+            });
             return downloadStream.pipe(res);
         }
 
-        // 2. Fallback to filesystem
-        const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-        const filePath = path.join(uploadRoot, 'profile-photos', filename);
-        if (fs.existsSync(filePath)) {
-            let contentType = 'image/jpeg';
-            const ext = path.extname(filename).toLowerCase();
-            if (ext === '.png') contentType = 'image/png';
-            else if (ext === '.webp') contentType = 'image/webp';
-            res.setHeader('Content-Type', contentType);
-            return fs.createReadStream(filePath).pipe(res);
-        }
-
-        // 3. Fallback to 1x1 transparent PNG
-        res.status(404);
-        res.setHeader('Content-Type', 'image/png');
-        const transparentPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
-        return res.send(transparentPng);
+        // File not found in GridFS — return clean 404 so frontend falls back to initials
+        return res.status(404).json({
+            statusCode: 404,
+            errorCode: 'PHOTO_NOT_FOUND',
+            message: 'Profile photo not found. Please re-upload.'
+        });
     } catch (error) {
         next(error);
     }

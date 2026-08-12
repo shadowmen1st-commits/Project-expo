@@ -97,8 +97,7 @@ export default function WorkerProfileScreen() {
         Alert.alert('Success', 'Worker profile photo updated successfully!');
       }
     } catch (err: any) {
-      console.error('Photo upload failed:', err);
-      Alert.alert('Upload Error', err.response?.data?.message || 'Failed to upload photo.');
+      Alert.alert('Upload Error', err.response?.data?.message || 'Failed to upload photo. Please try again.');
     } finally {
       setUploading(false);
     }

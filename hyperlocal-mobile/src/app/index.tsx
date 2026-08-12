@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -8,20 +8,21 @@ import { colors, spacing, typography, radius } from '../theme';
 export default function IndexScreen() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace('/(auth)/login');
-      } else if (user.role === 'WORKER') {
-        router.replace('/(worker)/dashboard');
-      } else if (user.role === 'ADMIN') {
-        router.replace('/(admin)/dashboard');
-      } else {
-        router.replace('/(customer)/dashboard');
-      }
+    if (loading) return;
+    if (!user) {
+      routerRef.current.replace('/(auth)/login');
+    } else if (user.role === 'WORKER') {
+      routerRef.current.replace('/(worker)/dashboard');
+    } else if (user.role === 'ADMIN') {
+      routerRef.current.replace('/(admin)/dashboard');
+    } else {
+      routerRef.current.replace('/(customer)/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user?.role, loading]);
 
   return (
     <View style={styles.container}>
