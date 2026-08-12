@@ -32,7 +32,7 @@ export default function WorkerEarningsScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Withdraw',
-            onPress: async (amount) => {
+            onPress: async (amount?: string) => {
               if (!amount || isNaN(Number(amount))) return;
               setWithdrawing(true);
               try {

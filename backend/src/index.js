@@ -20,6 +20,7 @@ export async function startServer(port = config.PORT) {
     }
     const actualPort = server.address().port;
     console.log(`Server successfully started on port ${actualPort} in ${config.NODE_ENV} mode.`);
+    console.log(`[AUTH ROUTE VERIFICATION] Registered Auth Endpoints: /api/auth/login, /api/v1/auth/login, /api/auth/register, /api/v1/auth/register, /api/auth/me, /api/v1/auth/me`);
     return { app, server, port: actualPort };
 }
 

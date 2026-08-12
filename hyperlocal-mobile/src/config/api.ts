@@ -1,8 +1,16 @@
 import axios from 'axios';
 import { storage } from '../utils/storage';
 
-const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL;
-export const API_BASE_URL = ENV_API_URL || 'https://project-expo-md70.onrender.com/api';
+const normalizeApiUrl = (url?: string) => {
+  if (!url) return 'https://project-expo-md70.onrender.com/api';
+  let cleaned = url.trim().replace(/\/+$/, '');
+  if (!cleaned.includes('/api')) {
+    cleaned += '/api';
+  }
+  return cleaned;
+};
+
+export const API_BASE_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

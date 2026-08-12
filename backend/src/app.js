@@ -80,6 +80,7 @@ export const createApp = () => {
     app.use(express.urlencoded({ extended: false, limit: '2mb' }));
     app.use('/api/', rateLimit({ windowMs: 60000, max: process.env.NODE_ENV === 'test' ? 100000 : 10000, standardHeaders: true, legacyHeaders: false, message: { statusCode: 429, errorCode: 'TOO_MANY_REQUESTS', message: 'Too many requests. Please slow down.' } }));
     app.use('/api/auth', authRoutes);
+    app.use('/api/v1/auth', authRoutes);
     app.use('/api/v1/dev', devRoutes);
     app.use('/api/workers', workerRoutes);
     app.use('/api/worker', workerRoutes);
