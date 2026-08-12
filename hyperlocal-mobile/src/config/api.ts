@@ -23,15 +23,20 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
+    const isPublicRoute = ['/auth/login', '/auth/register', '/auth/refresh', '/categories', '/services', '/workers/search', '/workers/profile'].some(
+      (path) => config.url?.includes(path)
+    );
+
     const token = await storage.getItem('accessToken');
     if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
       config.headers.Authorization = `Bearer ${token.trim()}`;
-      if (__DEV__) {
+      if (__DEV__ && !isPublicRoute) {
         console.log(`AUTH: Request to ${config.url} authorized: YES`);
       }
     } else {
       delete config.headers.Authorization;
-      if (__DEV__) {
+      // Only log "authorized: NO" for protected routes — not for login/register which never need a token
+      if (__DEV__ && !isPublicRoute) {
         console.log(`AUTH: Request to ${config.url} authorized: NO (No access token)`);
       }
     }

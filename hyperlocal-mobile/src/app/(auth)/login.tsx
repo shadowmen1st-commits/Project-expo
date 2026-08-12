@@ -146,25 +146,28 @@ export default function LoginScreen() {
             <Text style={styles.demoSectionTitle}>Demo Quick Sign-In</Text>
             <View style={styles.demoButtonsRow}>
               <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.accentLight }]}
+                style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
                 onPress={() => handleQuickLogin('CUSTOMER')}
                 activeOpacity={0.7}
+                disabled={loading}
               >
                 <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.primaryLight }]}
+                style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
                 onPress={() => handleQuickLogin('WORKER')}
                 activeOpacity={0.7}
+                disabled={loading}
               >
                 <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.successLight }]}
+                style={[styles.demoChip, { backgroundColor: colors.successLight, opacity: loading ? 0.5 : 1 }]}
                 onPress={() => handleQuickLogin('ADMIN')}
                 activeOpacity={0.7}
+                disabled={loading}
               >
                 <Text style={[styles.demoChipText, { color: colors.success }]}>Admin</Text>
               </TouchableOpacity>
