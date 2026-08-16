@@ -26,14 +26,30 @@ export default function AdminWorkersScreen() {
 
   const fetchWorkers = useCallback(async () => {
     try {
-      let res;
-      try {
-        res = await api.get('/admin/workers/pending');
-      } catch (e) {
-        res = await api.get('/v1/admin/worker-verifications');
+      const [pendingRes, allRes] = await Promise.allSettled([
+        api.get('/admin/workers/pending'),
+        api.get('/workers/search')
+      ]);
+
+      let combined: any[] = [];
+      if (pendingRes.status === 'fulfilled' && pendingRes.value.data) {
+        const pList = Array.isArray(pendingRes.value.data)
+          ? pendingRes.value.data
+          : pendingRes.value.data.workers || pendingRes.value.data.data || [];
+        combined = [...combined, ...pList];
       }
-      const data = Array.isArray(res.data) ? res.data : res.data?.workers || res.data?.submissions || res.data?.data || [];
-      setWorkers(data);
+      if (allRes.status === 'fulfilled' && allRes.value.data) {
+        const aList = Array.isArray(allRes.value.data)
+          ? allRes.value.data
+          : allRes.value.data.data || allRes.value.data.workers || [];
+        for (const item of aList) {
+          const itemWorkerId = item.workerId || item._id || item.id;
+          if (!combined.some((c) => (c.workerId || c._id || c.id) === itemWorkerId)) {
+            combined.push({ ...item, verificationStatus: item.verificationStatus || 'APPROVED' });
+          }
+        }
+      }
+      setWorkers(combined);
     } catch (err) {
       console.error('Error fetching admin worker submissions:', err);
     } finally {
@@ -54,11 +70,9 @@ export default function AdminWorkersScreen() {
   const handleApprove = async (id: string) => {
     setActionLoadingId(id);
     try {
-      try {
-        await api.patch(`/admin/workers/${id}/approve`);
-      } catch (e) {
-        await api.post(`/v1/admin/worker-verifications/${id}/approve`);
-      }
+      await api.post(`/admin/workers/verify/${id}`, { action: 'APPROVED', reason: 'Approved by admin' }).catch(() =>
+        api.patch(`/admin/workers/${id}/approve`)
+      );
       Alert.alert('Approved', 'Worker KYC has been approved.');
       fetchWorkers();
     } catch (err: any) {
@@ -69,29 +83,18 @@ export default function AdminWorkersScreen() {
   };
 
   const handleReject = async (id: string) => {
-    Alert.prompt('Reject Worker', 'Please provide a reason for rejection:', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Reject',
-        style: 'destructive',
-        onPress: async (reason) => {
-          setActionLoadingId(id);
-          try {
-            try {
-              await api.patch(`/admin/workers/${id}/reject`, { reason });
-            } catch (e) {
-              await api.post(`/v1/admin/worker-verifications/${id}/reject`, { reason });
-            }
-            Alert.alert('Rejected', 'Worker application rejected.');
-            fetchWorkers();
-          } catch (err: any) {
-            Alert.alert('Error', err.response?.data?.message || 'Rejection failed.');
-          } finally {
-            setActionLoadingId(null);
-          }
-        },
-      },
-    ]);
+    setActionLoadingId(id);
+    try {
+      await api.post(`/admin/workers/verify/${id}`, { action: 'REJECTED', reason: 'Documents incomplete' }).catch(() =>
+        api.patch(`/admin/workers/${id}/reject`, { reason: 'Documents incomplete' })
+      );
+      Alert.alert('Rejected', 'Worker application rejected.');
+      fetchWorkers();
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.message || 'Rejection failed.');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const filteredWorkers = workers.filter((w) => {

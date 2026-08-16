@@ -31,7 +31,7 @@ export default function WorkerDashboard() {
     try {
       const [profRes, jobRes] = await Promise.allSettled([
         api.get('/v1/worker/verification'),
-        api.get('/bookings/worker/my-jobs')
+        api.get('/bookings/worker').catch(() => api.get('/bookings/worker/my-jobs'))
       ]);
 
       if (profRes.status === 'fulfilled' && profRes.value.data) {

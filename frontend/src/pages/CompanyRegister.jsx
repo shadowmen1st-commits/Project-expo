@@ -72,10 +72,10 @@ export default function CompanyRegister() {
                 <div>
                     <div className="flex items-center gap-3 mb-12">
                         <div className="w-10 h-10 rounded-xl logo-gradient flex items-center justify-center shadow-md">
-                            <span className="text-[#111827] text-xl font-black">H</span>
+                            <span className="text-[#111827] text-xl font-black">J</span>
                         </div>
                         <span className="text-2xl font-bold tracking-tight text-[#111827]">
-                            HyperLocal<span className="text-[#F97316]">.</span>
+                            Jobnest<span className="text-[#F97316]">.</span>
                         </span>
                     </div>
 
@@ -107,7 +107,7 @@ export default function CompanyRegister() {
                 </div>
 
                 <div className="mt-12 text-xs text-[#9CA3AF]">
-                    © {new Date().getFullYear()} HyperLocal Marketplace Services Pvt. Ltd. All rights reserved.
+                    © {new Date().getFullYear()} Jobnest Marketplace Services Pvt. Ltd. All rights reserved.
                 </div>
             </div>
 

@@ -18,6 +18,184 @@ import Job from '../models/Job.js';
 import WorkerAssignment from '../models/WorkerAssignment.js';
 import CompanyPayment from '../models/CompanyPayment.js';
 import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
+import RefreshToken from '../models/RefreshToken.js';
+
+// ── Admin User Management ─────────────────────────────────────────────────────
+
+export const listUsers = async (req, res, next) => {
+    try {
+        const { role, status, search, page = 1, limit = 50 } = req.query;
+        const query = {};
+        if (role && ['CUSTOMER', 'WORKER', 'ADMIN', 'SUPER_ADMIN', 'COMPANY'].includes(role)) {
+            query.role = role;
+        }
+        if (status) query.status = status;
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { phone: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const [users, total] = await Promise.all([
+            User.find(query)
+                .select('name email phone role status emailVerified phoneVerified profileImage createdAt lastLoginAt')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean(),
+            User.countDocuments(query),
+        ]);
+
+        res.status(200).json({ success: true, users, total, page: parseInt(page), limit: parseInt(limit) });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const disableUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const actorId = req.user?.userId;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID.' });
+        }
+
+        // Prevent self-disable
+        if (id === actorId) {
+            return res.status(400).json({ success: false, message: 'You cannot disable your own account.' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+        if (['SUPER_ADMIN'].includes(user.role)) {
+            return res.status(403).json({ success: false, message: 'Super administrator accounts cannot be disabled.' });
+        }
+
+        const before = user.status;
+        user.status = 'INACTIVE';
+        await user.save();
+
+        // Revoke all active sessions
+        await RefreshToken.updateMany({ userId: id, isRevoked: false }, { isRevoked: true });
+
+        // Audit
+        await new AuditLog({
+            actor: actorId,
+            action: 'ADMIN_USER_DISABLED',
+            resourceType: 'User',
+            resourceId: id,
+            beforeSnapshot: { status: before },
+            afterSnapshot: { status: 'INACTIVE' },
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            requestId: req.requestId,
+        }).save();
+
+        res.status(200).json({ success: true, message: 'User account disabled successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const enableUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const actorId = req.user?.userId;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID.' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+        const before = user.status;
+        user.status = 'ACTIVE';
+        await user.save();
+
+        await new AuditLog({
+            actor: actorId,
+            action: 'ADMIN_USER_ENABLED',
+            resourceType: 'User',
+            resourceId: id,
+            beforeSnapshot: { status: before },
+            afterSnapshot: { status: 'ACTIVE' },
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            requestId: req.requestId,
+        }).save();
+
+        res.status(200).json({ success: true, message: 'User account enabled successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteUser = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const actorId = req.user?.userId;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid user ID.' });
+        }
+
+        // Prevent self-deletion
+        if (id === actorId) {
+            return res.status(400).json({ success: false, message: 'You cannot delete your own account.' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+        if (['SUPER_ADMIN'].includes(user.role)) {
+            return res.status(403).json({ success: false, message: 'Super administrator accounts cannot be deleted.' });
+        }
+
+        // Check for active bookings
+        const activeBooking = await Booking.findOne({
+            $or: [{ customerId: id }, { workerId: id }],
+            bookingStatus: { $in: ['PENDING', 'PAYMENT_PENDING', 'PAID', 'ACCEPTED', 'CONFIRMED', 'WORKER_EN_ROUTE', 'STARTED'] }
+        });
+        if (activeBooking) {
+            return res.status(409).json({
+                success: false,
+                message: 'Cannot delete user with active bookings. Resolve existing bookings first.'
+            });
+        }
+
+        // Soft-delete
+        const beforeSnapshot = { status: user.status, email: user.email };
+        user.status = 'DELETED';
+        user.deletedAt = new Date();
+        user.email = `deleted_${Date.now()}_${user.email}`; // prevent email conflict on re-registration
+        await user.save();
+
+        // Revoke all sessions
+        await RefreshToken.updateMany({ userId: id }, { isRevoked: true });
+
+        await new AuditLog({
+            actor: actorId,
+            action: 'ADMIN_USER_DELETED',
+            resourceType: 'User',
+            resourceId: id,
+            beforeSnapshot,
+            afterSnapshot: { status: 'DELETED', deletedAt: user.deletedAt },
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            requestId: req.requestId,
+        }).save();
+
+        res.status(200).json({ success: true, message: 'User account deleted successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getPendingWorkers = async (req, res, next) => {
     try {
         const pending = await WorkerProfile.find({

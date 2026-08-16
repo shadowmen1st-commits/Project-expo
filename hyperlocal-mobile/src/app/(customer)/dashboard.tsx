@@ -11,12 +11,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { WorkerCard } from '../../components/WorkerCard';
 import { ServiceCard } from '../../components/ServiceCard';
+import { WorkerSwipeStack } from '../../components/WorkerSwipeStack';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getCanonicalWorkerId } from '../../utils/workerUtils';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ export default function CustomerDashboard() {
       const [catRes, workerRes, bookingRes] = await Promise.allSettled([
         api.get('/categories'),
         api.get('/workers/search'),
-        api.get('/bookings/customer/my-bookings'),
+        api.get('/bookings/customer').catch(() => api.get('/bookings/customer/my-bookings')),
       ]);
 
       if (catRes.status === 'fulfilled' && catRes.value.data) {
@@ -48,7 +49,7 @@ export default function CustomerDashboard() {
         const wList = Array.isArray(workerRes.value.data)
           ? workerRes.value.data
           : workerRes.value.data.workers || workerRes.value.data.data || [];
-        setWorkers(wList.slice(0, 5));
+        setWorkers(wList);
       }
 
       if (bookingRes.status === 'fulfilled' && bookingRes.value.data) {
@@ -85,6 +86,20 @@ export default function CustomerDashboard() {
     return 'construct-outline';
   };
 
+  const handleSelectWorker = (worker: any) => {
+    const canonicalId = getCanonicalWorkerId(worker);
+    if (canonicalId) {
+      router.push(`/(customer)/worker/${canonicalId}`);
+    }
+  };
+
+  const handleBookWorker = (worker: any) => {
+    const canonicalId = getCanonicalWorkerId(worker);
+    if (canonicalId) {
+      router.push(`/(customer)/booking/${canonicalId}`);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -94,7 +109,7 @@ export default function CustomerDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
         }
       >
-        {/* User Greeting Header */}
+        {/* 1. Header Greeting & Location */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.locationPill}>
@@ -109,10 +124,10 @@ export default function CustomerDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Quick Search Bar */}
+        {/* 2. Search / Categories Quick Bar */}
         <TouchableOpacity
           style={styles.searchBar}
-          onPress={() => router.push('/(customer)/workers')}
+          onPress={() => router.push('/(customer)/services')}
           activeOpacity={0.85}
         >
           <Ionicons name="search-outline" size={20} color={colors.primaryDark} />
@@ -122,30 +137,16 @@ export default function CustomerDashboard() {
           </View>
         </TouchableOpacity>
 
-        {/* Promotional Banner */}
-        <View style={styles.promoBanner}>
-          <View style={styles.promoContent}>
-            <View style={styles.promoTag}>
-              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
-            </View>
-            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
-            <Text style={styles.promoSub}>Up to ₹500 off on first home service booking</Text>
-          </View>
-          <View style={styles.promoIconBox}>
-            <Ionicons name="shield-checkmark" size={48} color={colors.primaryDark} />
-          </View>
-        </View>
-
-        {/* Categories Section */}
+        {/* 3. Horizontal Categories Slider */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
+          <Text style={styles.sectionTitle}>Services & Categories</Text>
           <TouchableOpacity onPress={() => router.push('/(customer)/services')}>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>Explore All</Text>
           </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.xl }} />
+        {loading && categories.length === 0 ? (
+          <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.md }} />
         ) : (
           <ScrollView
             horizontal
@@ -165,16 +166,63 @@ export default function CustomerDashboard() {
                 key={cat._id || cat.id}
                 name={cat.name}
                 icon={getCategoryIcon(cat.name)}
-                onPress={() => router.push(`/(customer)/workers?category=${cat._id || cat.id}`)}
+                onPress={() => router.push('/(customer)/services')}
               />
             ))}
           </ScrollView>
         )}
 
-        {/* Recent Active Bookings Banner */}
+        {/* 4. Featured Promotional Card */}
+        <View style={styles.promoBanner}>
+          <View style={styles.promoContent}>
+            <View style={styles.promoTag}>
+              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
+            </View>
+            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
+            <Text style={styles.promoSub}>Swipe to discover top-rated experts in your neighborhood</Text>
+          </View>
+          <View style={styles.promoIconBox}>
+            <Ionicons name="shield-checkmark" size={44} color={colors.primaryDark} />
+          </View>
+        </View>
+
+        {/* 5. TINDER-STYLE WORKER CARD SLIDER */}
+        <View style={styles.tinderSection}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Top Professionals</Text>
+              <Text style={styles.sectionSubtitle}>Swipe right to shortlist, left to pass</Text>
+            </View>
+          </View>
+
+          {loading && workers.length === 0 ? (
+            <View style={styles.loaderArea}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loaderText}>Finding top professionals nearby...</Text>
+            </View>
+          ) : workers.length > 0 ? (
+            <WorkerSwipeStack
+              workers={workers}
+              onSelectWorker={handleSelectWorker}
+              onBookWorker={handleBookWorker}
+            />
+          ) : (
+            <View style={styles.emptyCard}>
+              <Ionicons name="people-outline" size={40} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No available verified workers found right now.</Text>
+            </View>
+          )}
+        </View>
+
+        {/* 6. Recent Active Bookings */}
         {recentBookings.length > 0 && (
           <View style={styles.recentBookingContainer}>
-            <Text style={styles.sectionTitle}>Recent Booking</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Booking</Text>
+              <TouchableOpacity onPress={() => router.push('/(customer)/bookings')}>
+                <Text style={styles.seeAllText}>View All</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               style={styles.recentBookingCard}
               onPress={() => router.push(`/(customer)/booking/details/${recentBookings[0]._id}`)}
@@ -182,14 +230,14 @@ export default function CustomerDashboard() {
             >
               <View style={styles.recentBookingRow}>
                 <View style={styles.bookingIconBox}>
-                  <Ionicons name="time-outline" size={22} color={colors.accent} />
+                  <Ionicons name="calendar-outline" size={22} color={colors.accent} />
                 </View>
                 <View style={{ flex: 1, marginLeft: spacing.md }}>
                   <Text style={styles.recentBookingTitle}>
                     {recentBookings[0].serviceCategoryName || 'Home Service Request'}
                   </Text>
                   <Text style={styles.recentBookingSub}>
-                    {new Date(recentBookings[0].bookingDate || Date.now()).toLocaleDateString()}
+                    {new Date(recentBookings[0].bookingDate || recentBookings[0].scheduledStart || Date.now()).toLocaleDateString()}
                   </Text>
                 </View>
                 <View style={styles.statusPill}>
@@ -200,32 +248,12 @@ export default function CustomerDashboard() {
           </View>
         )}
 
-        {/* Top Verified Workers */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top Verified Pros</Text>
-          <TouchableOpacity onPress={() => router.push('/(customer)/workers')}>
-            <Text style={styles.seeAllText}>Explore All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.workerListContainer}>
-          {loading ? (
-            <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.xl }} />
-          ) : workers.length > 0 ? (
-            workers.map((w) => (
-              <WorkerCard
-                key={w._id || w.id}
-                worker={w}
-                onPressProfile={() => router.push(`/(customer)/worker/${w._id || w.id}`)}
-                onPressBook={() => router.push(`/(customer)/booking/${w._id || w.id}`)}
-              />
-            ))
-          ) : (
-            <View style={styles.emptyCard}>
-              <Ionicons name="people-outline" size={36} color={colors.textMuted} />
-              <Text style={styles.emptyText}>No available verified workers at the moment.</Text>
-            </View>
-          )}
+        {/* 7. Footer Note */}
+        <View style={styles.footerNote}>
+          <Ionicons name="sparkles" size={16} color={colors.accent} />
+          <Text style={styles.footerNoteText}>
+            100% Background-Checked Professionals • Safe & Secure Payments
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -253,8 +281,8 @@ const styles = StyleSheet.create({
   locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
     gap: 4,
-    marginBottom: 2,
   },
   locationText: {
     fontSize: typography.sizes.xs,
@@ -271,111 +299,153 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
-    height: 50,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    paddingVertical: 12,
+    borderRadius: radius.full,
+    borderWidth: 1,
     borderColor: colors.borderLight,
+    marginBottom: spacing.md,
     ...shadows.sm,
   },
   searchPlaceholder: {
     flex: 1,
-    marginLeft: spacing.sm,
-    color: colors.textMuted,
     fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    marginLeft: spacing.sm,
   },
   filterChip: {
     width: 32,
     height: 32,
-    borderRadius: radius.sm,
+    borderRadius: 16,
     backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   promoBanner: {
-    flexDirection: 'row',
-    backgroundColor: colors.primaryLight,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    padding: spacing.lg,
+    backgroundColor: '#FEF3C7',
     borderRadius: radius.xl,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#FDE68A',
+    marginBottom: spacing.lg,
   },
   promoContent: {
     flex: 1,
+    paddingRight: spacing.sm,
   },
   promoTag: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.xs,
-    marginBottom: spacing.xs,
+    marginBottom: 6,
   },
   promoTagText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
+    color: colors.textInverted,
+    letterSpacing: 0.5,
   },
   promoTitle: {
-    fontSize: typography.sizes.md,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    marginBottom: 2,
+    color: colors.primaryDark,
+    lineHeight: 18,
   },
   promoSub: {
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
+    marginTop: 4,
   },
   promoIconBox: {
-    justifyContent: 'center',
+    width: 60,
+    height: 60,
     alignItems: 'center',
-    marginLeft: spacing.sm,
+    justifyContent: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
   },
+  sectionSubtitle: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
   seeAllText: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryDark,
+    color: colors.accent,
   },
   categoryScrollContent: {
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  tinderSection: {
+    marginTop: spacing.md,
     marginBottom: spacing.lg,
+  },
+  loaderArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+  },
+  loaderText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+  },
+  emptyCard: {
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
+  },
+  emptyText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
+    textAlign: 'center',
   },
   recentBookingContainer: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    paddingTop: spacing.xs,
   },
   recentBookingCard: {
-    backgroundColor: colors.accentLight,
-    borderWidth: 1,
-    borderColor: '#FFEDD5',
-    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
     padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
   },
   recentBookingRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   bookingIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -390,31 +460,29 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusPill: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.xs,
   },
   recentBookingStatus: {
     fontSize: 10,
     fontWeight: typography.weights.bold,
-    color: colors.textInverted,
-    textTransform: 'uppercase',
+    color: colors.accent,
   },
-  workerListContainer: {
-    paddingHorizontal: spacing.lg,
-  },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    padding: spacing.xxl,
-    borderRadius: radius.lg,
+  footerNote: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
-  emptyText: {
+  footerNoteText: {
+    fontSize: 11,
     color: colors.textMuted,
-    fontSize: typography.sizes.sm,
-    marginTop: spacing.sm,
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });

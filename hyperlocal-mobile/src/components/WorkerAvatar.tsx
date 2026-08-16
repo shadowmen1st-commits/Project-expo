@@ -57,12 +57,12 @@ export const WorkerAvatar: React.FC<WorkerAvatarProps> = ({
   const imageUrl = uri ? resolveWorkerImage(uri) : null;
 
   const getInitials = (n?: string) => {
-    if (!n) return 'W';
-    const parts = n.trim().split(' ');
-    if (parts.length >= 2) {
+    if (!n || typeof n !== 'string') return 'W';
+    const parts = n.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2 && parts[0] && parts[1]) {
       return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     }
-    return n.slice(0, 2).toUpperCase();
+    return (n.trim().slice(0, 2) || 'W').toUpperCase();
   };
 
   const showImage = Boolean(imageUrl && !hasError);

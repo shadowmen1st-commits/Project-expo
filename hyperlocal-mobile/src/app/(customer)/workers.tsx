@@ -17,6 +17,7 @@ import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { colors, spacing, typography, radius } from '../../theme';
+import { getCanonicalWorkerId } from '../../utils/workerUtils';
 
 export default function WorkersScreen() {
   const router = useRouter();
@@ -77,15 +78,26 @@ export default function WorkersScreen() {
   };
 
   const handleShortlistWorker = (worker: any) => {
+    const canonicalId = getCanonicalWorkerId(worker);
     setShortlistedWorkers((prev) => {
-      if (prev.some((w) => (w._id || w.id) === (worker._id || worker.id))) return prev;
+      if (prev.some((w) => getCanonicalWorkerId(w) === canonicalId)) return prev;
       return [...prev, worker];
     });
   };
 
+  const handleSelectWorker = (worker: any) => {
+    const canonicalId = getCanonicalWorkerId(worker);
+    if (canonicalId) router.push(`/(customer)/worker/${canonicalId}`);
+  };
+
+  const handleBookWorker = (worker: any) => {
+    const canonicalId = getCanonicalWorkerId(worker);
+    if (canonicalId) router.push(`/(customer)/booking/${canonicalId}`);
+  };
+
   return (
     <View style={styles.container}>
-      <MobileHeader title="Find Professionals" showBack={false} />
+      <MobileHeader title="Find Professionals" showBack />
 
       {/* Top Controls: Search Bar & View Mode Segment */}
       <View style={styles.topControlRow}>
@@ -98,12 +110,13 @@ export default function WorkersScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={fetchWorkers}
+            returnKeyType="search"
           />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
               <Ionicons name="close-circle" size={16} color={colors.textMuted} />
             </TouchableOpacity>
-          ) : null}
+          )}
         </View>
 
         {/* Swipe / List Mode Toggle Segment */}
@@ -113,7 +126,7 @@ export default function WorkersScreen() {
             onPress={() => setViewMode('swipe')}
             activeOpacity={0.8}
           >
-            <Ionicons name="cards-outline" size={18} color={viewMode === 'swipe' ? colors.accent : colors.textMuted} />
+            <Ionicons name="layers-outline" size={18} color={viewMode === 'swipe' ? colors.accent : colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -126,71 +139,50 @@ export default function WorkersScreen() {
         </View>
       </View>
 
-      {/* Category Filter Chips */}
-      {categories.length > 0 && (
-        <View style={styles.filterPillsContainer}>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={[{ _id: '', name: 'All Pros' }, ...categories]}
-            keyExtractor={(item) => item._id || item.id || 'all'}
-            contentContainerStyle={styles.filterList}
-            renderItem={({ item }) => {
-              const itemId = item._id || item.id || '';
-              const isActive = selectedCategory === itemId;
-              return (
-                <TouchableOpacity
-                  style={[styles.pill, isActive && styles.pillActive]}
-                  onPress={() => setSelectedCategory(itemId)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-      )}
-
-      {/* Shortlist Alert Counter Banner */}
-      {shortlistedWorkers.length > 0 && (
-        <View style={styles.shortlistBanner}>
-          <View style={styles.shortlistBannerLeft}>
-            <Ionicons name="heart" size={16} color={colors.accent} />
-            <Text style={styles.shortlistBannerText}>
-              {shortlistedWorkers.length} Shortlisted Professional{shortlistedWorkers.length > 1 ? 's' : ''}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              const firstWorker = shortlistedWorkers[shortlistedWorkers.length - 1];
-              router.push(`/(customer)/booking/${firstWorker._id || firstWorker.id}`);
-            }}
-          >
-            <Text style={styles.bookNowActionText}>Book Now →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Horizontal Category Filter Pills */}
+      <View style={styles.categoryFilterRow}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={[{ _id: '', name: 'All Pros' }, ...categories]}
+          keyExtractor={(item) => item._id || 'all'}
+          contentContainerStyle={styles.categoryPillsContainer}
+          renderItem={({ item }) => {
+            const isSelected = selectedCategory === item._id;
+            return (
+              <TouchableOpacity
+                style={[styles.categoryPill, isSelected && styles.categoryPillActive]}
+                onPress={() => {
+                  setSelectedCategory(item._id);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.categoryPillText, isSelected && styles.categoryPillTextActive]}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
 
       {/* Content View: Tinder Swipe Deck vs FlatList */}
-      {loading && !refreshing ? (
-        <LoadingState message="Searching available verified pros..." />
+      {loading ? (
+        <LoadingState message="Finding verified specialists..." />
       ) : error ? (
         <EmptyState
           icon="alert-circle-outline"
-          title="Listing Failed"
+          title="Listing Error"
           description={error}
           actionTitle="Retry Search"
           onAction={fetchWorkers}
         />
       ) : workers.length === 0 ? (
         <EmptyState
-          icon="people-outline"
+          icon="search-outline"
           title="No Professionals Found"
-          description="Try adjusting your search criteria or select a different category filter."
-          actionTitle="Reset Filters"
+          description="Try clearing search filters or choosing another category."
+          actionTitle="View All"
           onAction={() => {
             setSelectedCategory('');
             setSearchQuery('');
@@ -200,13 +192,13 @@ export default function WorkersScreen() {
         <WorkerSwipeStack
           workers={workers}
           onShortlist={handleShortlistWorker}
-          onSelectWorker={(w) => router.push(`/(customer)/worker/${w._id || w.id}`)}
-          onResetDeck={fetchWorkers}
+          onSelectWorker={handleSelectWorker}
+          onBookWorker={handleBookWorker}
         />
       ) : (
         <FlatList
           data={workers}
-          keyExtractor={(item) => item._id || item.id}
+          keyExtractor={(item, index) => getCanonicalWorkerId(item) || String(index)}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
@@ -214,8 +206,8 @@ export default function WorkersScreen() {
           renderItem={({ item }) => (
             <WorkerCard
               worker={item}
-              onPressProfile={() => router.push(`/(customer)/worker/${item._id || item.id}`)}
-              onPressBook={() => router.push(`/(customer)/booking/${item._id || item.id}`)}
+              onPressProfile={() => handleSelectWorker(item)}
+              onPressBook={() => handleBookWorker(item)}
             />
           )}
         />
@@ -249,84 +241,56 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    marginLeft: spacing.xs,
     fontSize: typography.sizes.sm,
     color: colors.textPrimary,
+    marginLeft: spacing.xs,
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: radius.md,
+    padding: 3,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: radius.md,
-    padding: 2,
   },
   segmentBtn: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.xs,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
   },
   segmentBtnActive: {
-    backgroundColor: colors.accentLight,
+    backgroundColor: colors.surface,
   },
-  filterPillsContainer: {
-    paddingVertical: spacing.xs,
+  categoryFilterRow: {
+    marginVertical: spacing.sm,
   },
-  filterList: {
+  categoryPillsContainer: {
     paddingHorizontal: spacing.lg,
     gap: spacing.xs,
   },
-  pill: {
+  categoryPill: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: 6,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
   },
-  pillActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  categoryPillActive: {
+    backgroundColor: colors.accentLight,
+    borderColor: colors.accent,
   },
-  pillText: {
+  categoryPillText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.textSecondary,
   },
-  pillTextActive: {
-    color: colors.textPrimary,
-    fontWeight: typography.weights.bold,
-  },
-  shortlistBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.accentLight,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: '#FFEDD5',
-  },
-  shortlistBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  shortlistBannerText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+  categoryPillTextActive: {
     color: colors.accent,
-  },
-  bookNowActionText: {
-    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
-    color: colors.accent,
   },
   listContent: {
     padding: spacing.lg,
-    paddingBottom: 120,
+    paddingBottom: spacing.xxxl * 2,
   },
 });

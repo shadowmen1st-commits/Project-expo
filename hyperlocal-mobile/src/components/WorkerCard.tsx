@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius, shadows } from '../theme';
 import { WorkerAvatar } from './WorkerAvatar';
 import { AppButton } from './AppButton';
+import { normalizeWorkerData } from '../utils/workerUtils';
+import { resolveWorkerImage } from '../utils/imageUtils';
 
 interface WorkerCardProps {
   worker: any;
@@ -18,54 +20,34 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
   onPressBook,
   layout = 'horizontal',
 }) => {
-  const name =
-    worker.fullName ||
-    worker.name ||
-    worker.user?.name ||
-    worker.user?.fullName ||
-    'Professional Specialist';
+  const normalized = normalizeWorkerData(worker);
+  if (!normalized) return null;
 
-  const profileImage =
-    worker.profileImage ||
-    worker.profilePhoto ||
-    worker.profileImageUrl ||
-    worker.profilePhotoUrl ||
-    worker.user?.profileImage ||
-    worker.user?.profilePhoto ||
-    worker.user?.avatar;
-
-  const categoryName =
-    worker.categoryName ||
-    worker.serviceCategory ||
-    worker.category?.name ||
-    worker.services?.[0]?.name ||
-    worker.skills?.[0] ||
-    'Home Services';
-
-  const hourlyRate =
-    worker.hourlyRate || worker.pricePerHour || worker.rate || (worker.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
-
-  const rating = worker.rating || worker.avgRating || worker.ratingAvg || 4.8;
-  const isVerified = worker.isVerified || worker.verified || worker.verificationStatus === 'APPROVED';
+  const profileImage = resolveWorkerImage(worker);
 
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
-        <WorkerAvatar uri={profileImage} name={name} size="lg" isVerified={isVerified} />
-        
+        <WorkerAvatar
+          uri={profileImage}
+          name={normalized.name}
+          size="lg"
+          isVerified={normalized.isVerified}
+        />
+
         <View style={styles.infoContainer}>
           <View style={styles.nameRow}>
             <Text numberOfLines={1} style={styles.nameText}>
-              {name}
+              {normalized.name}
             </Text>
           </View>
 
           <Text numberOfLines={1} style={styles.categoryText}>
-            {categoryName}
+            {normalized.categoryName}
           </Text>
 
           <View style={styles.badgeRow}>
-            {isVerified && (
+            {normalized.isVerified && (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark-circle" size={12} color={colors.success} />
                 <Text style={styles.verifiedText}>VERIFIED</Text>
@@ -73,14 +55,14 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
             )}
 
             <View style={styles.ratingBadge}>
-              <Ionicons name="star" size={12} color={colors.gold} />
-              <Text style={styles.ratingText}>{Number(rating).toFixed(1)}</Text>
+              <Ionicons name="star" size={12} color="#F59E0B" />
+              <Text style={styles.ratingText}>{normalized.rating.toFixed(1)}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.priceContainer}>
-          <Text style={styles.priceAmount}>₹{hourlyRate}</Text>
+          <Text style={styles.priceAmount}>₹{normalized.hourlyRate}</Text>
           <Text style={styles.priceUnit}>/hr</Text>
         </View>
       </View>

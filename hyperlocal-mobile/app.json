@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "hyperlocal-mobile",
-    "slug": "hyperlocal-mobile",
+    "name": "Jobnest",
+    "slug": "jobnest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "hyperlocalmobile",
+    "scheme": "jobnest",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

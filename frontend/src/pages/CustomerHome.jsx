@@ -401,9 +401,9 @@ export const CustomerHome = () => {
                 <div className="flex items-center justify-between w-full sm:w-auto">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
-                            H
+                            J
                         </div>
-                        <span className="font-extrabold text-[#111827] text-xl tracking-tight">HyperLocal<span className="text-[#F97316]">.</span></span>
+                        <span className="font-extrabold text-[#111827] text-xl tracking-tight">Jobnest<span className="text-[#F97316]">.</span></span>
                         <span className="bg-[#FFEDD5] text-[#F97316] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FED7AA] shadow-sm">
                             Customer
                         </span>

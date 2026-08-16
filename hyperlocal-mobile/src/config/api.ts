@@ -14,8 +14,7 @@ export const API_BASE_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
-  timeout: 15000,
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -14,6 +14,8 @@ import { LoadingState } from '../../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
+import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
+import { resolveWorkerImage } from '../../../utils/imageUtils';
 
 export default function WorkerDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -23,37 +25,53 @@ export default function WorkerDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const rawId = Array.isArray(id) ? id[0] : id;
+  const canonicalParamId = getCanonicalWorkerId(rawId);
+
   useEffect(() => {
     const fetchWorker = async () => {
+      if (!canonicalParamId || !isValidObjectId(canonicalParamId)) {
+        setError('Invalid worker ID parameter. Please select a valid professional.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await api.get(`/workers/${id}`);
-        if (res.data?.worker) {
-          setWorker(res.data.worker);
-        } else if (res.data) {
-          setWorker(res.data);
+        const res = await api
+          .get(`/workers/profile/${canonicalParamId}`)
+          .catch(() => api.get(`/workers/${canonicalParamId}`));
+
+        const data = res.data?.data || res.data?.worker || res.data;
+        if (data && (data.workerId || data._id || data.id || data.name)) {
+          setWorker(data);
+          setLoading(false);
+          return;
         }
       } catch (err: any) {
-        try {
-          const searchRes = await api.get('/workers/search');
-          const list = Array.isArray(searchRes.data)
-            ? searchRes.data
-            : searchRes.data.workers || [];
-          const found = list.find((w: any) => (w._id || w.id) === id);
-          if (found) {
-            setWorker(found);
-          } else {
-            setError('Worker profile not found.');
-          }
-        } catch {
-          setError('Unable to load worker profile.');
+        // Fallback to search list
+      }
+
+      try {
+        const searchRes = await api.get('/workers/search');
+        const list = Array.isArray(searchRes.data)
+          ? searchRes.data
+          : searchRes.data?.data || searchRes.data?.workers || [];
+
+        const found = list.find((w: any) => getCanonicalWorkerId(w) === canonicalParamId);
+        if (found) {
+          setWorker(found);
+        } else {
+          setError('Worker profile not found in active database.');
         }
+      } catch {
+        setError('Unable to load worker profile. Please check your connection.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchWorker();
-  }, [id]);
+    fetchWorker();
+  }, [canonicalParamId]);
 
   if (loading) {
     return (
@@ -79,34 +97,9 @@ export default function WorkerDetailScreen() {
     );
   }
 
-  const name =
-    worker.fullName ||
-    worker.name ||
-    worker.user?.name ||
-    worker.user?.fullName ||
-    'Professional Specialist';
-
-  const profileImage =
-    worker.profileImage ||
-    worker.profilePhoto ||
-    worker.profileImageUrl ||
-    worker.profilePhotoUrl ||
-    worker.user?.profileImage ||
-    worker.user?.profilePhoto;
-
-  const categoryName =
-    worker.categoryName ||
-    worker.serviceCategory ||
-    worker.category?.name ||
-    worker.services?.[0]?.name ||
-    'General Services';
-
-  const hourlyRate =
-    worker.hourlyRate || worker.pricePerHour || worker.rate || (worker.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
-
-  const rating = worker.rating || worker.avgRating || 4.8;
-  const experienceYears = worker.yearsOfExperience || worker.experience || 2;
-  const isVerified = worker.isVerified || worker.verified || worker.verificationStatus === 'APPROVED';
+  const normalized = normalizeWorkerData(worker);
+  const targetWorkerId = getCanonicalWorkerId(worker) || canonicalParamId;
+  const profileImage = resolveWorkerImage(worker);
 
   return (
     <View style={styles.container}>
@@ -115,67 +108,85 @@ export default function WorkerDetailScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Worker Hero Profile Card */}
         <View style={styles.profileHeroCard}>
-          <WorkerAvatar uri={profileImage} name={name} size="xxl" isVerified={isVerified} />
-          <Text style={styles.nameText}>{name}</Text>
-          <Text style={styles.categoryText}>{categoryName}</Text>
+          <WorkerAvatar
+            uri={profileImage}
+            name={normalized.name}
+            size="xl"
+            isVerified={normalized.isVerified}
+          />
 
-          {isVerified && (
+          <Text style={styles.nameText}>{normalized.name}</Text>
+          <Text style={styles.categoryText}>{normalized.categoryName}</Text>
+
+          {normalized.isVerified && (
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-              <Text style={styles.verifiedText}>SHADOW MEN VERIFIED PRO</Text>
+              <Text style={styles.verifiedText}>Verified Professional</Text>
             </View>
           )}
 
-          {/* Quick Stats Grid */}
+          {/* Quick Stats Row */}
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
-              <Ionicons name="star" size={20} color={colors.gold} />
-              <Text style={styles.statVal}>{Number(rating).toFixed(1)}</Text>
+              <Ionicons name="star" size={18} color="#F59E0B" />
+              <Text style={styles.statVal}>{normalized.rating.toFixed(1)}</Text>
               <Text style={styles.statLbl}>Rating</Text>
             </View>
 
             <View style={styles.statBox}>
-              <Ionicons name="briefcase-outline" size={20} color={colors.accent} />
-              <Text style={styles.statVal}>{experienceYears} Yrs</Text>
-              <Text style={styles.statLbl}>Experience</Text>
+              <Ionicons name="briefcase" size={18} color={colors.accent} />
+              <Text style={styles.statVal}>{normalized.completedJobs}</Text>
+              <Text style={styles.statLbl}>Jobs Done</Text>
             </View>
 
             <View style={styles.statBox}>
-              <Ionicons name="cash-outline" size={20} color={colors.success} />
-              <Text style={styles.statVal}>₹{hourlyRate}</Text>
-              <Text style={styles.statLbl}>Per Hour</Text>
+              <Ionicons name="ribbon" size={18} color={colors.primaryDark} />
+              <Text style={styles.statVal}>{normalized.experienceYears}+ yrs</Text>
+              <Text style={styles.statLbl}>Experience</Text>
             </View>
           </View>
         </View>
 
         {/* Bio Section */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>About Worker</Text>
-          <Text style={styles.bioText}>
-            {worker.bio ||
-              `${name} is a background-verified, experienced ${categoryName} specialist committed to quality, punctual service and clean workmanship.`}
-          </Text>
+          <Text style={styles.sectionTitle}>About Professional</Text>
+          <Text style={styles.bioText}>{normalized.bio}</Text>
         </View>
+
+        {/* Skills & Specialties */}
+        {normalized.skills && normalized.skills.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Skills & Specialties</Text>
+            <View style={styles.skillsRow}>
+              {normalized.skills.map((skill: string, index: number) => (
+                <View key={index} style={styles.skillChip}>
+                  <Ionicons name="checkmark" size={12} color={colors.accent} />
+                  <Text style={styles.skillChipText}>{skill}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Service Information Section */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Service Information</Text>
-          
+
           <View style={styles.infoRow}>
             <Ionicons name="grid-outline" size={18} color={colors.primaryDark} />
-            <Text style={styles.infoLabel}>Category:</Text>
-            <Text style={styles.infoValue}>{categoryName}</Text>
+            <Text style={styles.infoLabel}>Primary Service:</Text>
+            <Text style={styles.infoValue}>{normalized.categoryName}</Text>
           </View>
 
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={18} color={colors.primaryDark} />
             <Text style={styles.infoLabel}>Coverage Area:</Text>
-            <Text style={styles.infoValue}>{worker.city || 'Indiranagar & Nearby (5km)'}</Text>
+            <Text style={styles.infoValue}>{worker.city || 'Indiranagar & Nearby (10km)'}</Text>
           </View>
 
           <View style={styles.infoRow}>
             <Ionicons name="time-outline" size={18} color={colors.primaryDark} />
-            <Text style={styles.infoLabel}>Availability:</Text>
+            <Text style={styles.infoLabel}>Working Hours:</Text>
             <Text style={styles.infoValue}>Mon - Sat (8:00 AM - 8:00 PM)</Text>
           </View>
         </View>
@@ -186,7 +197,7 @@ export default function WorkerDetailScreen() {
         <View style={styles.priceColumn}>
           <Text style={styles.bottomPriceLabel}>Standard Rate</Text>
           <Text style={styles.bottomPriceValue}>
-            ₹{hourlyRate} <Text style={styles.unitText}>/ hr</Text>
+            ₹{normalized.hourlyRate} <Text style={styles.unitText}>/ hr</Text>
           </Text>
         </View>
 
@@ -194,7 +205,13 @@ export default function WorkerDetailScreen() {
           title="Book This Worker"
           variant="primary"
           icon="calendar-outline"
-          onPress={() => router.push(`/(customer)/booking/${worker._id || worker.id}`)}
+          onPress={() => {
+            if (targetWorkerId && isValidObjectId(targetWorkerId)) {
+              router.push(`/(customer)/booking/${targetWorkerId}`);
+            } else {
+              setError('Unable to book this worker due to missing canonical ID.');
+            }
+          }}
           fullWidth={false}
           style={styles.bookButton}
         />
@@ -290,6 +307,27 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
     lineHeight: 22,
+  },
+  skillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  skillChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  skillChipText: {
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontWeight: typography.weights.medium,
   },
   infoRow: {
     flexDirection: 'row',

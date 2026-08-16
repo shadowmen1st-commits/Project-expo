@@ -4,79 +4,67 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import { AppInput } from '../../components/AppInput';
 import { AppButton } from '../../components/AppButton';
+import { AppInput } from '../../components/AppInput';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   const { login } = useAuth();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
-  const handleLogin = async (loginEmail?: string, loginPass?: string) => {
-    if (loading) return; // Prevent double submission
-    const targetEmail = (loginEmail || email).trim();
-    const targetPass = loginPass || password;
+  const handleLogin = async (customEmail?: any, customPassword?: any) => {
+    // If called directly without explicit string arguments (e.g. from Pressable event), use state
+    const targetEmail = typeof customEmail === 'string' && customEmail.length > 0 ? customEmail : email;
+    const targetPassword = typeof customPassword === 'string' && customPassword.length > 0 ? customPassword : password;
 
-    if (!targetEmail || !targetPass) {
-      setErrorMessage('Please enter both email address and password.');
+    if (!targetEmail.trim() || !targetPassword.trim()) {
+      setError('Please enter both email and password.');
       return;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(targetEmail)) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
-    setErrorMessage('');
-    setLoading(true);
 
     try {
-      const user = await login(targetEmail, targetPass);
-      if (user.role === 'WORKER') {
-        router.replace('/(worker)/dashboard');
-      } else if (user.role === 'ADMIN') {
+      setError(null);
+      setLoading(true);
+
+      const loggedInUser = await login(targetEmail.trim(), targetPassword);
+
+      if (loggedInUser?.role === 'ADMIN') {
         router.replace('/(admin)/dashboard');
+      } else if (loggedInUser?.role === 'WORKER') {
+        router.replace('/(worker)/dashboard');
       } else {
         router.replace('/(customer)/dashboard');
       }
     } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || 'Login failed. Please check credentials.';
-      setErrorMessage(msg);
+      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickLogin = (role: 'CUSTOMER' | 'WORKER' | 'ADMIN') => {
-    if (role === 'CUSTOMER') {
-      setEmail('customer@example.com');
-      setPassword('Customer@123');
-      handleLogin('customer@example.com', 'Customer@123');
-    } else if (role === 'WORKER') {
-      setEmail('worker@example.com');
-      setPassword('Worker@123');
-      handleLogin('worker@example.com', 'Worker@123');
-    } else {
-      setEmail('admin@example.com');
-      setPassword('Admin@123');
-      handleLogin('admin@example.com', 'Admin@123');
+  const handleQuickLogin = (role: 'CUSTOMER' | 'WORKER') => {
+    let qEmail = 'customer@jobnest.com';
+    let qPass = 'Customer@12345';
+    if (role === 'WORKER') {
+      qEmail = 'worker@jobnest.com';
+      qPass = 'Worker@12345';
     }
+    setEmail(qEmail);
+    setPassword(qPass);
+    handleLogin(qEmail, qPass);
   };
 
   return (
@@ -86,31 +74,29 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingTop: Math.max(insets.top, 24) + spacing.lg },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Brand Header */}
-          <View style={styles.headerContainer}>
+          {/* Header Brand */}
+          <View style={styles.header}>
             <View style={styles.logoBadge}>
-              <Ionicons name="home-sharp" size={24} color={colors.primaryDark} />
+              <Ionicons name="home" size={28} color={colors.accent} />
             </View>
-            <Text style={styles.brandTitle}>HyperLocal</Text>
-            <Text style={styles.welcomeText}>Welcome back 👋</Text>
-            <Text style={styles.subtitleText}>Sign in to access your account & services</Text>
+            <Text style={styles.title}>Jobnest</Text>
+            <Text style={styles.subtitle}>Welcome back 👋</Text>
+            <Text style={styles.subtext}>Sign in to access your account & services</Text>
           </View>
 
-          {errorMessage ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={20} color={colors.error} />
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          ) : null}
-
+          {/* Form */}
           <View style={styles.formContainer}>
+            {error && (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
             <AppInput
               label="Email Address"
               placeholder="name@example.com"
@@ -141,45 +127,44 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Quick Test Login Section (Dev Only) */}
-          {__DEV__ && (
-            <View style={styles.demoSection}>
-              <Text style={styles.demoSectionTitle}>Quick Test Sign-In</Text>
-              <View style={styles.demoButtonsRow}>
-                <TouchableOpacity
-                  style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
-                  onPress={() => handleQuickLogin('CUSTOMER')}
-                  activeOpacity={0.7}
-                  disabled={loading}
-                >
-                  <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
-                </TouchableOpacity>
+          {/* Quick Demo Sign-In (Customer & Worker ONLY) */}
+          <View style={styles.demoSection}>
+            <Text style={styles.demoSectionTitle}>Demo / Quick Sign-In</Text>
+            <View style={styles.demoButtonsRow}>
+              <TouchableOpacity
+                style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
+                onPress={() => handleQuickLogin('CUSTOMER')}
+                activeOpacity={0.7}
+                disabled={loading}
+              >
+                <Ionicons name="person-outline" size={14} color={colors.accent} />
+                <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
-                  onPress={() => handleQuickLogin('WORKER')}
-                  activeOpacity={0.7}
-                  disabled={loading}
-                >
-                  <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.demoChip, { backgroundColor: colors.successLight, opacity: loading ? 0.5 : 1 }]}
-                  onPress={() => handleQuickLogin('ADMIN')}
-                  activeOpacity={0.7}
-                  disabled={loading}
-                >
-                  <Text style={[styles.demoChipText, { color: colors.success }]}>Admin</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
+                onPress={() => handleQuickLogin('WORKER')}
+                activeOpacity={0.7}
+                disabled={loading}
+              >
+                <Ionicons name="construct-outline" size={14} color={colors.primaryDark} />
+                <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
 
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
               <Text style={styles.signupLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.footerContainer, { marginTop: spacing.md }]}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/company-register')}>
+              <Text style={[styles.signupLink, { color: colors.accent, fontWeight: '700' }]}>
+                🏢 Register as a Company / Business
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -195,38 +180,41 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    padding: spacing.xl,
     justifyContent: 'center',
   },
-  headerContainer: {
+  header: {
     marginBottom: spacing.xl,
+    alignItems: 'flex-start',
   },
   logoBadge: {
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  brandTitle: {
-    fontSize: typography.sizes.xxl,
+  title: {
+    fontSize: typography.sizes.display,
     fontWeight: typography.weights.bold,
     color: colors.accent,
     letterSpacing: -0.5,
   },
-  welcomeText: {
+  subtitle: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     marginTop: spacing.xs,
   },
-  subtitleText: {
+  subtext: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
+  },
+  formContainer: {
+    gap: spacing.md,
   },
   errorBox: {
     flexDirection: 'row',
@@ -236,48 +224,49 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
     padding: spacing.md,
     borderRadius: radius.md,
-    marginBottom: spacing.lg,
     gap: spacing.sm,
   },
   errorText: {
     color: colors.error,
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
     flex: 1,
   },
-  formContainer: {
-    marginBottom: spacing.xl,
-  },
   submitBtn: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   demoSection: {
+    marginTop: spacing.xl,
+    padding: spacing.md,
     backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    alignItems: 'center',
     ...shadows.sm,
   },
   demoSectionTitle: {
     fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.semibold,
     color: colors.textMuted,
-    letterSpacing: 1,
-    marginBottom: spacing.md,
-    textAlign: 'center',
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   demoButtonsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    width: '100%',
+    justifyContent: 'center',
   },
   demoChip: {
     flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    gap: 6,
   },
   demoChipText: {
     fontSize: typography.sizes.sm,
@@ -287,14 +276,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: spacing.xl,
   },
   footerText: {
-    fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+    fontSize: typography.sizes.sm,
   },
   signupLink: {
+    color: colors.primaryDark,
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.accent,
   },
 });

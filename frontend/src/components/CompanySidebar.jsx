@@ -47,11 +47,11 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
                 <div className="flex items-center justify-between mb-6 lg:mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FBBF24] to-[#F97316] flex items-center justify-center shadow-xs">
-                            <span className="text-[#171717] text-xl font-black">H</span>
+                            <span className="text-[#171717] text-xl font-black">J</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-sm font-bold tracking-tight text-[#171717]">
-                                HyperLocal<span className="text-[#F97316]">.</span>
+                                Jobnest<span className="text-[#F97316]">.</span>
                             </span>
                             <span className="text-[10px] uppercase tracking-wider text-[#F97316] font-extrabold">COMPANY</span>
                         </div>

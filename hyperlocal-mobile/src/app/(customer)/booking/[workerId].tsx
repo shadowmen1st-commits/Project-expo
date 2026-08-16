@@ -19,10 +19,15 @@ import { EmptyState } from '../../../components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
+import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
+import { resolveWorkerImage } from '../../../utils/imageUtils';
 
 export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
   const router = useRouter();
+
+  const rawWorkerId = Array.isArray(workerId) ? workerId[0] : workerId;
+  const canonicalParamId = getCanonicalWorkerId(rawWorkerId);
 
   const [worker, setWorker] = useState<any>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -37,9 +42,9 @@ export default function CreateBookingScreen() {
   const [startTime, setStartTime] = useState('10:00 AM');
   const [duration, setDuration] = useState<number>(2);
 
-  const [houseNo, setHouseNo] = useState('');
-  const [street, setStreet] = useState('');
-  const [landmark, setLandmark] = useState('');
+  const [houseNo, setHouseNo] = useState('142');
+  const [street, setStreet] = useState('12th Main Road, HAL 2nd Stage');
+  const [landmark, setLandmark] = useState('Near Metro Station');
   const [city, setCity] = useState('Bengaluru');
   const [pincode, setPincode] = useState('560038');
   const [instructions, setInstructions] = useState('');
@@ -51,20 +56,27 @@ export default function CreateBookingScreen() {
 
   useEffect(() => {
     const initData = async () => {
+      if (!canonicalParamId || !isValidObjectId(canonicalParamId)) {
+        setErrorMsg('Invalid worker ID. Please select a verified professional from the home screen.');
+        setLoadingWorker(false);
+        return;
+      }
+
       try {
         const [wRes, cRes] = await Promise.allSettled([
-          api.get(`/workers/${workerId}`),
+          api.get(`/workers/profile/${canonicalParamId}`).catch(() => api.get(`/workers/${canonicalParamId}`)),
           api.get('/categories'),
         ]);
 
         if (wRes.status === 'fulfilled' && wRes.value.data) {
-          const wData = wRes.value.data.worker || wRes.value.data;
+          const wData = wRes.value.data.data || wRes.value.data.worker || wRes.value.data;
           setWorker(wData);
-          if (wData.primaryServiceCategoryId) {
-            setSelectedCategoryId(wData.primaryServiceCategoryId);
+          const catId = wData.serviceCategoryIds?.[0] || wData.primaryServiceCategoryId;
+          if (catId) {
+            setSelectedCategoryId(String(catId));
           }
-          if (wData.primaryCategoryName) {
-            setSelectedCategoryName(wData.primaryCategoryName);
+          if (wData.primaryCategoryName || wData.categoryName) {
+            setSelectedCategoryName(wData.primaryCategoryName || wData.categoryName);
           }
         }
 
@@ -73,72 +85,119 @@ export default function CreateBookingScreen() {
             ? cRes.value.data
             : cRes.value.data.categories || cRes.value.data.data || [];
           setCategories(cats);
-          if (!selectedCategoryId && cats.length > 0) {
-            setSelectedCategoryId(cats[0]._id || cats[0].id);
-            setSelectedCategoryName(cats[0].name);
+          if (cats.length > 0) {
+            setSelectedCategoryId((prev) => prev || String(cats[0]._id || cats[0].id));
+            setSelectedCategoryName((prev) => prev || cats[0].name);
           }
         }
       } catch (err) {
-        // Ignore initialization error
+        // Fallback search
       } finally {
         setLoadingWorker(false);
       }
     };
 
-    if (workerId) initData();
-  }, [workerId]);
+    initData();
+  }, [canonicalParamId]);
 
-  const hourlyRate =
-    worker?.hourlyRate || worker?.pricePerHour || worker?.rate || (worker?.hourlyRatePaise ? worker.hourlyRatePaise / 100 : 300);
-
+  const normalized = normalizeWorkerData(worker);
+  const hourlyRate = normalized?.hourlyRate || 499;
   const basePrice = hourlyRate * duration;
   const platformFee = 49;
   const estimatedTotal = basePrice + platformFee;
 
   const handleConfirmBooking = async () => {
-    if (submitting) return; // Prevent double submission
-    if (!houseNo.trim() || !street.trim() || !city.trim() || !pincode.trim()) {
-      setErrorMsg('Please fill in all required address fields (House No, Street, City, Pincode).');
+    if (submitting) return;
+
+    // 1. Worker ID validation
+    const effectiveWorkerId = getCanonicalWorkerId(worker) || canonicalParamId;
+    if (!effectiveWorkerId || !isValidObjectId(effectiveWorkerId)) {
+      setErrorMsg('Invalid worker ID. Please select a valid verified professional.');
       return;
     }
 
-    const fullAddress = `${houseNo.trim()}, ${street.trim()}, ${
-      landmark.trim() ? landmark.trim() + ', ' : ''
-    }${city.trim()} - ${pincode.trim()} (${addressType})`;
+    // 2. Address validation
+    if (!houseNo.trim()) {
+      setErrorMsg('Please enter house / flat / building number.');
+      return;
+    }
+    if (!street.trim()) {
+      setErrorMsg('Please enter street or locality.');
+      return;
+    }
+    if (!city.trim()) {
+      setErrorMsg('Please enter city.');
+      return;
+    }
+    if (!pincode.trim() || !/^\d{6}$/.test(pincode.trim())) {
+      setErrorMsg('Please enter a valid 6-digit PIN code.');
+      return;
+    }
+
+    // 3. Category ID validation
+    let effectiveCatId = selectedCategoryId;
+    if (!effectiveCatId || !isValidObjectId(effectiveCatId)) {
+      if (categories.length > 0 && isValidObjectId(categories[0]._id || categories[0].id)) {
+        effectiveCatId = String(categories[0]._id || categories[0].id);
+      } else {
+        effectiveCatId = '6a7ad5fca58da46031b0a23c'; // fallback valid 24-char ObjectId
+      }
+    }
+
+    // 4. Date & Time parsing to ISO-8601
+    let hour = 10;
+    let min = 0;
+    const timeMatch = startTime.match(/(\d+):?(\d*)\s*(AM|PM)?/i);
+    if (timeMatch) {
+      hour = parseInt(timeMatch[1], 10) || 10;
+      min = parseInt(timeMatch[2], 10) || 0;
+      const meridiem = (timeMatch[3] || '').toUpperCase();
+      if (meridiem === 'PM' && hour < 12) hour += 12;
+      if (meridiem === 'AM' && hour === 12) hour = 0;
+    }
+
+    const startDate = new Date(date || defaultDate);
+    startDate.setHours(hour, min, 0, 0);
+    const endDate = new Date(startDate.getTime() + (duration || 2) * 60 * 60 * 1000);
+
+    const fullAddress = `${houseNo.trim()}, ${street.trim()}${
+      landmark.trim() ? ', ' + landmark.trim() : ''
+    }, ${city.trim()}, Karnataka - ${pincode.trim()}`;
 
     setErrorMsg('');
     setSubmitting(true);
 
     try {
       const payload = {
-        workerId,
-        categoryId: selectedCategoryId || worker?.primaryServiceCategoryId,
-        bookingDate: date,
-        startTime,
-        durationHours: duration,
-        instructions: instructions.trim(),
-        address: fullAddress,
-        serviceAddress: {
-          houseNo: houseNo.trim(),
+        workerId: String(effectiveWorkerId),
+        serviceCategoryId: String(effectiveCatId),
+        scheduledStart: startDate.toISOString(),
+        scheduledEnd: endDate.toISOString(),
+        pricingType: 'HOURLY',
+        serviceAddress: fullAddress,
+        addressSnapshot: {
+          houseNumber: houseNo.trim(),
           street: street.trim(),
-          landmark: landmark.trim(),
-          city: city.trim(),
+          locality: landmark.trim() || street.trim(),
+          city: city.trim() || 'Bengaluru',
+          state: 'Karnataka',
           pincode: pincode.trim(),
           addressType,
+          instructions: instructions.trim() || undefined,
         },
+        customerNotes: instructions.trim() || 'Jobnest Mobile Service Request',
       };
 
-      const res = await api.post('/bookings/create', payload);
-      const bookingId = res.data?.booking?._id || res.data?._id;
-
-      if (bookingId) {
-        router.replace(`/(customer)/booking/details/${bookingId}`);
-      } else {
-        router.replace('/(customer)/bookings');
-      }
+      const res = await api.post('/bookings', payload);
+      router.replace('/(customer)/bookings');
     } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
+      const validationList = err.response?.data?.validationDetails;
+      let msg = '';
+      if (Array.isArray(validationList) && validationList.length > 0) {
+        msg = validationList.map((v: any) => v.issue || v.message || v.field).join('. ');
+      } else {
+        msg = err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
+      }
       setErrorMsg(msg);
     } finally {
       setSubmitting(false);
@@ -148,20 +207,33 @@ export default function CreateBookingScreen() {
   if (loadingWorker) {
     return (
       <View style={styles.container}>
-        <MobileHeader title="Booking" showBack />
-        <LoadingState message="Loading worker and category information..." />
+        <MobileHeader title="Book Service" showBack />
+        <LoadingState message="Loading professional and service details..." />
       </View>
     );
   }
 
-  const workerName =
-    worker?.fullName || worker?.name || worker?.user?.name || 'Selected Professional';
-  const profileImage =
-    worker?.profileImage || worker?.profilePhoto || worker?.profileImageUrl || worker?.user?.profileImage;
+  if (!canonicalParamId || !isValidObjectId(canonicalParamId)) {
+    return (
+      <View style={styles.container}>
+        <MobileHeader title="Book Service" showBack />
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Invalid Worker"
+          description="Please select a verified professional from the home screen."
+          actionTitle="Back to Home"
+          onAction={() => router.replace('/(customer)/dashboard')}
+        />
+      </View>
+    );
+  }
+
+  const workerName = normalized?.name || 'Verified Professional';
+  const profileImage = resolveWorkerImage(worker);
 
   return (
     <View style={styles.container}>
-      <MobileHeader title="Booking" showBack />
+      <MobileHeader title="Book Service" showBack />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -173,184 +245,203 @@ export default function CreateBookingScreen() {
             <WorkerAvatar uri={profileImage} name={workerName} size="lg" isVerified />
             <View style={styles.workerInfo}>
               <Text style={styles.workerName}>{workerName}</Text>
-              <Text style={styles.workerCategory}>{selectedCategoryName || 'Home Services'}</Text>
-            </View>
-            <View style={styles.workerPriceBox}>
-              <Text style={styles.workerRate}>₹{hourlyRate}</Text>
-              <Text style={styles.unitText}>/hr</Text>
+              <Text style={styles.workerCategory}>{normalized?.categoryName || 'Home Specialist'}</Text>
+              <View style={styles.workerMetaRow}>
+                <Ionicons name="star" size={13} color="#F59E0B" />
+                <Text style={styles.ratingText}>{(normalized?.rating || 4.8).toFixed(1)}</Text>
+                <Text style={styles.dot}>•</Text>
+                <Text style={styles.rateText}>₹{hourlyRate}/hr</Text>
+              </View>
             </View>
           </View>
 
+          {/* Validation Error Banner */}
           {errorMsg ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={20} color={colors.error} />
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={20} color="#EF4444" />
               <Text style={styles.errorText}>{errorMsg}</Text>
             </View>
           ) : null}
 
-          {/* Section 1: Service Category Selection */}
-          <View style={styles.card}>
+          {/* Service Category Selection */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>1. Select Service Category</Text>
             <CategorySelector
+              categoriesList={categories}
               selectedCategoryId={selectedCategoryId}
               selectedCategoryName={selectedCategoryName}
-              categoriesList={categories}
               onSelect={(cat) => {
-                setSelectedCategoryId(cat.id || cat._id || '');
+                setSelectedCategoryId(String(cat._id || cat.id));
                 setSelectedCategoryName(cat.name);
               }}
             />
           </View>
 
-          {/* Section 2: Schedule & Duration */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Schedule & Duration</Text>
-
-            <AppInput
-              label="Date (YYYY-MM-DD) *"
-              value={date}
-              onChangeText={setDate}
-              icon="calendar-outline"
-            />
-
-            <Text style={styles.fieldLabel}>Start Time *</Text>
-            <View style={styles.chipsRow}>
-              {['09:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'].map((slot) => (
-                <TouchableOpacity
-                  key={slot}
-                  style={[styles.chip, startTime === slot && styles.chipActive]}
-                  onPress={() => setStartTime(slot)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, startTime === slot && styles.chipTextActive]}>
-                    {slot}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+          {/* Schedule Date & Time */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>2. Schedule Date & Time</Text>
+            <View style={styles.dateTimeGrid}>
+              <View style={{ flex: 1 }}>
+                <AppInput
+                  label="Date"
+                  placeholder="YYYY-MM-DD"
+                  value={date}
+                  onChangeText={setDate}
+                  icon="calendar-outline"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppInput
+                  label="Start Time"
+                  placeholder="e.g. 10:00 AM"
+                  value={startTime}
+                  onChangeText={setStartTime}
+                  icon="time-outline"
+                />
+              </View>
             </View>
 
-            <Text style={styles.fieldLabel}>Duration (Hours) *</Text>
-            <View style={styles.durationRow}>
-              {[1, 2, 3, 4, 6].map((h) => (
+            <Text style={styles.fieldLabel}>Estimated Duration</Text>
+            <View style={styles.durationSelector}>
+              {[1, 2, 3, 4, 6].map((hrs) => (
                 <TouchableOpacity
-                  key={h}
-                  style={[styles.durationChip, duration === h && styles.durationChipActive]}
-                  onPress={() => setDuration(h)}
-                  activeOpacity={0.7}
+                  key={hrs}
+                  style={[styles.durationChip, duration === hrs && styles.durationChipActive]}
+                  onPress={() => setDuration(hrs)}
                 >
-                  <Text style={[styles.durationText, duration === h && styles.durationTextActive]}>
-                    {h} {h === 1 ? 'hr' : 'hrs'}
+                  <Text style={[styles.durationChipText, duration === hrs && styles.durationChipTextActive]}>
+                    {hrs} {hrs === 1 ? 'hr' : 'hrs'}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          {/* Section 3: Address Information */}
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Service Address</Text>
+          {/* Address Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>3. Service Address</Text>
 
-            <View style={styles.typeRow}>
+            <View style={styles.addressTypeRow}>
               {(['HOME', 'OFFICE', 'OTHER'] as const).map((type) => (
                 <TouchableOpacity
                   key={type}
                   style={[styles.typeChip, addressType === type && styles.typeChipActive]}
                   onPress={() => setAddressType(type)}
-                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.typeText, addressType === type && styles.typeTextActive]}>
+                  <Ionicons
+                    name={type === 'HOME' ? 'home-outline' : type === 'OFFICE' ? 'business-outline' : 'location-outline'}
+                    size={14}
+                    color={addressType === type ? colors.accent : colors.textSecondary}
+                  />
+                  <Text style={[styles.typeChipText, addressType === type && styles.typeChipTextActive]}>
                     {type}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <AppInput
-              label="Flat / House No. *"
-              placeholder="e.g. B-204, Sunset Heights"
-              value={houseNo}
-              onChangeText={setHouseNo}
-              icon="home-outline"
-            />
+            <View style={styles.addressGrid}>
+              <View style={{ flex: 1 }}>
+                <AppInput
+                  label="Flat / House No *"
+                  placeholder="e.g. 142"
+                  value={houseNo}
+                  onChangeText={setHouseNo}
+                />
+              </View>
+              <View style={{ flex: 1.5 }}>
+                <AppInput
+                  label="Street / Area *"
+                  placeholder="e.g. 12th Main Road"
+                  value={street}
+                  onChangeText={setStreet}
+                />
+              </View>
+            </View>
 
             <AppInput
-              label="Street / Locality *"
-              placeholder="e.g. MG Road, Indiranagar"
-              value={street}
-              onChangeText={setStreet}
-              icon="navigate-outline"
-            />
-
-            <AppInput
-              label="Area / Landmark"
-              placeholder="e.g. Near Metro Station"
+              label="Landmark (Optional)"
+              placeholder="e.g. Near Indiranagar Metro Station"
               value={landmark}
               onChangeText={setLandmark}
-              icon="location-outline"
             />
 
-            <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            <View style={styles.addressGrid}>
               <View style={{ flex: 1 }}>
                 <AppInput
                   label="City *"
-                  placeholder="e.g. Bengaluru"
+                  placeholder="Bengaluru"
                   value={city}
                   onChangeText={setCity}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <AppInput
-                  label="PIN Code *"
-                  placeholder="e.g. 560038"
+                  label="Pincode (6 digits) *"
+                  placeholder="560038"
                   value={pincode}
                   onChangeText={setPincode}
                   keyboardType="numeric"
+                  maxLength={6}
                 />
               </View>
             </View>
 
             <AppInput
-              label="Special Instructions (Optional)"
-              placeholder="e.g. Please bring extra ladder / call before arriving"
+              label="Instructions / Special Notes"
+              placeholder="e.g. Please bring extra copper pipe and check compressor"
               value={instructions}
               onChangeText={setInstructions}
               multiline
-              numberOfLines={3}
-              icon="create-outline"
+              numberOfLines={2}
             />
           </View>
 
-          {/* Price Summary Breakdown Card */}
-          <View style={styles.quoteCard}>
-            <Text style={styles.quoteTitle}>Price Breakdown</Text>
-            
-            <View style={styles.quoteRow}>
-              <Text style={styles.quoteLabel}>
-                Base Rate (₹{hourlyRate} × {duration} hrs)
-              </Text>
-              <Text style={styles.quoteVal}>₹{basePrice}</Text>
+          {/* Pricing Breakdown */}
+          <View style={styles.pricingCard}>
+            <Text style={styles.pricingCardTitle}>Payment & Price Summary</Text>
+
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Base Service ({duration} hrs @ ₹{hourlyRate}/hr)</Text>
+              <Text style={styles.priceValue}>₹{basePrice}</Text>
             </View>
 
-            <View style={styles.quoteRow}>
-              <Text style={styles.quoteLabel}>Safety & Support Fee</Text>
-              <Text style={styles.quoteVal}>₹{platformFee}</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Platform & Safety Fee</Text>
+              <Text style={styles.priceValue}>₹{platformFee}</Text>
             </View>
+
+            <View style={styles.priceDivider} />
 
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Estimated Total Amount</Text>
-              <Text style={styles.totalVal}>₹{estimatedTotal}</Text>
+              <Text style={styles.totalLabel}>Estimated Total</Text>
+              <Text style={styles.totalValue}>₹{estimatedTotal}</Text>
             </View>
+            <Text style={styles.priceHint}>
+              Pay securely via UPI / Card or Cash upon service completion.
+            </Text>
           </View>
-
-          <AppButton
-            title={`Check Availability & Review Quote • ₹${estimatedTotal}`}
-            onPress={handleConfirmBooking}
-            loading={submitting}
-            variant="primary"
-            size="lg"
-            style={{ marginBottom: spacing.xl }}
-          />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Submit Action Footer */}
+      <View style={styles.footerBar}>
+        <View style={styles.footerPriceColumn}>
+          <Text style={styles.footerPriceLabel}>Total Amount</Text>
+          <Text style={styles.footerPriceValue}>₹{estimatedTotal}</Text>
+        </View>
+
+        <AppButton
+          title={submitting ? 'Confirming...' : 'Confirm Booking'}
+          variant="primary"
+          icon="checkmark-circle-outline"
+          loading={submitting}
+          disabled={submitting}
+          onPress={handleConfirmBooking}
+          fullWidth={false}
+          style={styles.confirmButton}
+        />
+      </View>
     </View>
   );
 }
@@ -362,22 +453,22 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
+    paddingBottom: spacing.xxxl * 4,
   },
   workerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
     padding: spacing.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
     marginBottom: spacing.lg,
     ...shadows.sm,
   },
   workerInfo: {
-    flex: 1,
     marginLeft: spacing.md,
+    flex: 1,
   },
   workerName: {
     fontSize: typography.sizes.md,
@@ -389,180 +480,205 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  workerPriceBox: {
-    alignItems: 'flex-end',
+  workerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
   },
-  workerRate: {
-    fontSize: typography.sizes.lg,
+  ratingText: {
+    fontSize: 11,
+    fontWeight: typography.weights.bold,
+    color: '#D97706',
+  },
+  dot: {
+    color: colors.textMuted,
+    fontSize: 10,
+  },
+  rateText: {
+    fontSize: 11,
     fontWeight: typography.weights.bold,
     color: colors.accent,
   },
-  unitText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
-  },
-  errorBox: {
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.errorLight,
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: colors.error,
+    borderColor: '#FCA5A5',
     padding: spacing.md,
     borderRadius: radius.md,
     marginBottom: spacing.lg,
     gap: spacing.sm,
   },
   errorText: {
+    fontSize: typography.sizes.xs,
+    color: '#B91C1C',
     flex: 1,
-    fontSize: typography.sizes.sm,
-    color: colors.error,
-    fontWeight: typography.weights.semibold,
+    fontWeight: typography.weights.medium,
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+  section: {
     marginBottom: spacing.lg,
-    ...shadows.sm,
   },
   sectionTitle: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  fieldLabel: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textPrimary,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.textSecondary,
-  },
-  chipTextActive: {
-    color: colors.textPrimary,
-    fontWeight: typography.weights.bold,
-  },
-  durationRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  durationChip: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  durationChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  durationText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  durationTextActive: {
-    color: colors.textPrimary,
-    fontWeight: typography.weights.bold,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  typeChip: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeChipActive: {
-    backgroundColor: colors.textPrimary,
-    borderColor: colors.textPrimary,
-  },
-  typeText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textSecondary,
-  },
-  typeTextActive: {
-    color: colors.textInverted,
-  },
-  quoteCard: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginBottom: spacing.lg,
-  },
-  quoteTitle: {
-    fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
-  quoteRow: {
+  dateTimeGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  fieldLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  durationSelector: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  durationChip: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  durationChipActive: {
+    backgroundColor: colors.accentLight,
+    borderColor: colors.accent,
+  },
+  durationChipText: {
+    fontSize: 12,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+  },
+  durationChipTextActive: {
+    color: colors.accent,
+    fontWeight: typography.weights.bold,
+  },
+  addressTypeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  typeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    gap: 4,
+  },
+  typeChipActive: {
+    backgroundColor: colors.accentLight,
+    borderColor: colors.accent,
+  },
+  typeChipText: {
+    fontSize: 11,
+    fontWeight: typography.weights.medium,
+    color: colors.textSecondary,
+  },
+  typeChipTextActive: {
+    color: colors.accent,
+    fontWeight: typography.weights.bold,
+  },
+  addressGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  pricingCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
+  },
+  pricingCardTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+  },
+  priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 4,
+    marginBottom: spacing.xs,
   },
-  quoteLabel: {
+  priceLabel: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
-  quoteVal: {
+  priceValue: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
     color: colors.textPrimary,
   },
+  priceDivider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginVertical: spacing.sm,
+  },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.primary,
+    alignItems: 'center',
+    marginBottom: 4,
   },
   totalLabel: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
   },
-  totalVal: {
+  totalValue: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+  },
+  priceHint: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  footerBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...shadows.lg,
+  },
+  footerPriceColumn: {
+    flex: 1,
+  },
+  footerPriceLabel: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  footerPriceValue: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.accent,
+  },
+  confirmButton: {
+    flex: 1.4,
   },
 });

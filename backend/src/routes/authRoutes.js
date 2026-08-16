@@ -27,6 +27,7 @@ router.post('/login', limiter(10), login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authMiddleware, me);
+router.put('/me', authMiddleware, updateProfile);
 router.put('/profile', authMiddleware, updateProfile);
 router.put('/change-password', authMiddleware, changePassword);
 router.post('/profile-image', authMiddleware, upload.single('file'), uploadProfileImage);

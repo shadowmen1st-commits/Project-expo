@@ -94,8 +94,8 @@ export default function SignupScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.headerContainer}>
-            <Text style={styles.welcomeText}>Join HyperLocal 🚀</Text>
-            <Text style={styles.subtitleText}>Create your account to start booking services</Text>
+            <Text style={styles.welcomeText}>Join Jobnest 🚀</Text>
+            <Text style={styles.subtitleText}>Create your account to start booking or offering services</Text>
           </View>
 
           {errorMessage ? (
@@ -200,6 +200,14 @@ export default function SignupScreen() {
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
               <Text style={styles.loginLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.footerContainer, { marginTop: spacing.md }]}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/company-register')}>
+              <Text style={[styles.loginLink, { color: colors.accent, fontWeight: '700' }]}>
+                🏢 Register as a Company / Business
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

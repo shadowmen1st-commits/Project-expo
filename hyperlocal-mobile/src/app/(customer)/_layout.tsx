@@ -3,20 +3,18 @@ import { Tabs, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, shadows, getTabBarStyle } from '../../theme';
-import { Platform } from 'react-native';
+import { colors, typography, getTabBarStyle } from '../../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CustomerLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  // Use a ref to avoid including router in deps (router object identity changes every render)
   const routerRef = useRef(router);
   routerRef.current = router;
 
   useEffect(() => {
-    if (loading) return; // Wait for auth to finish initialising
+    if (loading) return;
     if (!user) {
       routerRef.current.replace('/(auth)/login');
     } else if (user.role === 'ADMIN') {
@@ -24,7 +22,6 @@ export default function CustomerLayout() {
     } else if (user.role === 'WORKER') {
       routerRef.current.replace('/(worker)/dashboard');
     }
-    // Only re-run when auth state actually changes, not when router ref changes
   }, [user?.role, loading]);
 
   if (loading || !user) {
@@ -44,6 +41,7 @@ export default function CustomerLayout() {
         },
       }}
     >
+      {/* 1. Home / Dashboard */}
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -53,6 +51,8 @@ export default function CustomerLayout() {
           ),
         }}
       />
+
+      {/* 2. Categories / Services */}
       <Tabs.Screen
         name="services"
         options={{
@@ -62,15 +62,8 @@ export default function CustomerLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="workers"
-        options={{
-          title: 'Workers',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color} />
-          ),
-        }}
-      />
+
+      {/* 3. Customer Bookings */}
       <Tabs.Screen
         name="bookings"
         options={{
@@ -80,6 +73,8 @@ export default function CustomerLayout() {
           ),
         }}
       />
+
+      {/* 4. Customer Profile */}
       <Tabs.Screen
         name="profile"
         options={{
@@ -90,7 +85,8 @@ export default function CustomerLayout() {
         }}
       />
 
-      {/* Hidden nested stack routes */}
+      {/* Hidden routes without bottom tabs */}
+      <Tabs.Screen name="workers" options={{ href: null }} />
       <Tabs.Screen name="worker/[id]" options={{ href: null }} />
       <Tabs.Screen name="booking/[workerId]" options={{ href: null }} />
       <Tabs.Screen name="booking/details/[id]" options={{ href: null }} />

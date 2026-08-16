@@ -33,8 +33,8 @@ export default function CustomerBookingsScreen() {
     setErrorMessage('');
     try {
       if (__DEV__) console.log('AUTH: Fetching customer bookings, user:', user?.email);
-      const res = await api.get('/bookings/customer/my-bookings');
-      const data = Array.isArray(res.data) ? res.data : res.data.bookings || res.data.data || [];
+      const res = await api.get('/bookings/customer').catch(() => api.get('/bookings/customer/my-bookings'));
+      const data = Array.isArray(res.data) ? res.data : res.data?.bookings || res.data?.data || [];
       setBookings(data);
     } catch (err: any) {
       if (err.response?.status === 401) {

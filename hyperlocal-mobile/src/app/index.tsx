@@ -30,8 +30,8 @@ export default function IndexScreen() {
         <View style={styles.logoBox}>
           <Ionicons name="home-sharp" size={32} color={colors.primaryDark} />
         </View>
-        <Text style={styles.logoText}>HyperLocal</Text>
-        <Text style={styles.tagline}>Services & Caregiver Marketplace</Text>
+        <Text style={styles.logoText}>Jobnest</Text>
+        <Text style={styles.tagline}>Services & Job Marketplace</Text>
         <ActivityIndicator size="large" color={colors.primaryDark} style={styles.spinner} />
       </View>
     </View>

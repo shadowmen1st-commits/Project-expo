@@ -25,6 +25,12 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const [auditLogs, setAuditLogs] = useState([]);
     const [payoutRequests, setPayoutRequests] = useState([]);
 
+    // User management state
+    const [managedUsers, setManagedUsers] = useState([]);
+    const [userMgmtFilter, setUserMgmtFilter] = useState('ALL');
+    const [userActionLoading, setUserActionLoading] = useState(null);
+    const [userDeleteConfirm, setUserDeleteConfirm] = useState(null); // { id, name }
+
     // Category delete modal
     const [deleteModal, setDeleteModal] = useState({ open: false, id: null, name: '' });
     const [deletingCategory, setDeletingCategory] = useState(false);
@@ -162,19 +168,20 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
             fetchLedgerData();
         } else if (activeSection === 'payouts') {
             fetchPayoutsList();
-        } else if (activeSection === 'audit') {
-            fetchAuditLogsList();
+        } else if (activeSection === 'users-mgmt') {
+            fetchUsersList();
         }
     }, [activeSection]);
 
-    const fetchAuditLogsList = async () => {
+
+    const fetchUsersList = async () => {
         try {
-            const res = await api.get('/admin/audit-logs');
+            const res = await api.get('/admin/users');
             if (res.data.success) {
-                setAuditLogs(res.data.logs || []);
+                setManagedUsers(res.data.users || []);
             }
         } catch (err) {
-            console.error(err);
+            console.error('fetchUsersList error:', err);
         }
     };
 
@@ -466,9 +473,9 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                 <div className="space-y-6">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base shadow-sm">
-                            H
+                            J
                         </div>
-                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">HyperLocal<span className="text-[#EAB308]">.</span></span>
+                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">Jobnest<span className="text-[#EAB308]">.</span></span>
                         <span className="bg-[#FEF2F2] text-[#DC2626] text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border border-[#FCA5A5]">
                             Admin
                         </span>
@@ -509,9 +516,9 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                                 </span>
                             )}
                         </button>
-                        <button onClick={() => { setActiveSection('audit'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'audit' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
-                            <ShieldCheck className="w-4 h-4"/>
-                            System Audit Logs
+                        <button onClick={() => { setActiveSection('users-mgmt'); setError(''); setSuccess(''); fetchUsersList(); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'users-mgmt' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
+                            <Users className="w-4 h-4"/>
+                            User Management
                         </button>
                         <button onClick={() => { setActiveSection('ledger'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'ledger' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <FileText className="w-4 h-4"/>
@@ -1319,39 +1326,172 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                     {activeSection === 'chat-moderation' && <AdminChatModerationPanel />}
                     {activeSection === 'companies' && <AdminCompanies />}
 
-                    {/* Audit Logs Section */}
-                    {activeSection === 'audit' && (
-                        <div className="space-y-6">
-                            <h1 className="text-xl font-extrabold text-[#1C1917]">System Security Audit Trail</h1>
 
-                            {auditLogs.length === 0 ? (
-                                <div className="bg-white border border-[#E7E0D8] rounded-3xl p-8 text-center text-[#78716C] text-sm shadow-sm">
-                                    No security audit logs recorded yet.
+                    {/* User Management Section */}
+                    {activeSection === 'users-mgmt' && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-xl font-extrabold text-[#1C1917]">User Management</h1>
+                                    <p className="text-xs text-[#78716C] mt-0.5">Manage customers, workers, companies and admin accounts.</p>
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {auditLogs.map((log) => (
-                                        <div key={log._id} className="bg-white border border-[#E7E0D8] rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2.5 rounded-xl bg-[#FEFCE8] text-[#EAB308]">
-                                                    <ShieldCheck className="w-4 h-4"/>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-[#1C1917] text-xs">{log.action}</h4>
-                                                    <p className="text-[#78716C] text-[11px] mt-0.5">{log.details || log.reason || 'System action executed.'}</p>
-                                                </div>
-                                            </div>
-                                            <span className="text-[10px] text-[#A8A29E] font-medium">
-                                                {new Date(log.createdAt).toLocaleString()}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                <button onClick={fetchUsersList} className="p-2 bg-white border border-[#FEF3C7] rounded-xl hover:bg-[#FFFBEB] cursor-pointer">
+                                    <RotateCw className="w-4 h-4 text-[#F97316]" />
+                                </button>
+                            </div>
+
+                            {/* Role filter tabs */}
+                            <div className="flex gap-2 flex-wrap">
+                                {['ALL','CUSTOMER','WORKER','COMPANY','ADMIN'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setUserMgmtFilter(tab)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                                            userMgmtFilter === tab
+                                                ? 'bg-[#EA580C] text-white border-[#EA580C]'
+                                                : 'bg-white text-[#64748B] border-[#E2E8F0] hover:bg-[#FFF7ED]'
+                                        }`}
+                                    >{tab}</button>
+                                ))}
+                            </div>
+
+                            {/* Users table */}
+                            <div className="bg-white border border-[#FEF3C7] rounded-2xl overflow-hidden shadow-sm">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-[#FFFBEB] text-[#4B5563] text-xs uppercase border-b border-[#FEF3C7]">
+                                            <th className="p-4">User</th>
+                                            <th className="p-4">Contact</th>
+                                            <th className="p-4">Role</th>
+                                            <th className="p-4">Status</th>
+                                            <th className="p-4">Joined</th>
+                                            <th className="p-4 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#FEF3C7] text-sm">
+                                        {managedUsers
+                                            .filter(u => userMgmtFilter === 'ALL' || u.role === userMgmtFilter)
+                                            .map(u => {
+                                                const isMe = u._id === user?.id || u._id === user?._id;
+                                                const canAct = !isMe && u.role !== 'SUPER_ADMIN';
+                                                const isActive = u.status === 'ACTIVE';
+                                                return (
+                                                    <tr key={u._id} className="hover:bg-[#FFFBEB]/30">
+                                                        <td className="p-4">
+                                                            <div className="font-bold text-[#1C1917]">{u.name}</div>
+                                                            {isMe && <span className="text-[9px] font-bold bg-[#EA580C] text-white px-1.5 py-0.5 rounded">YOU</span>}
+                                                        </td>
+                                                        <td className="p-4 text-xs">
+                                                            <div>{u.email}</div>
+                                                            {u.phone && <div className="text-[#9CA3AF]">{u.phone}</div>}
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFF7ED] text-[#C2410C] border border-[#FED7AA]">{u.role}</span>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                                                isActive
+                                                                    ? 'bg-green-50 border-green-200 text-green-700'
+                                                                    : 'bg-red-50 border-red-200 text-red-700'
+                                                            }`}>{u.status}</span>
+                                                        </td>
+                                                        <td className="p-4 text-xs text-[#9CA3AF]">
+                                                            {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '—'}
+                                                        </td>
+                                                        <td className="p-4 text-right space-x-2">
+                                                            {canAct && (
+                                                                <>
+                                                                    {isActive ? (
+                                                                        <button
+                                                                            disabled={userActionLoading === u._id}
+                                                                            onClick={async () => {
+                                                                                setUserActionLoading(u._id);
+                                                                                try {
+                                                                                    await api.post(`/admin/users/${u._id}/disable`);
+                                                                                    setManagedUsers(prev => prev.map(x => x._id === u._id ? {...x, status:'INACTIVE'} : x));
+                                                                                    setSuccess(`${u.name} disabled.`);
+                                                                                } catch(e) { setError(e.response?.data?.message || 'Failed.'); }
+                                                                                setUserActionLoading(null);
+                                                                            }}
+                                                                            className="text-xs bg-yellow-50 border border-yellow-200 text-yellow-700 font-bold px-2.5 py-1 rounded-lg hover:bg-yellow-100 cursor-pointer disabled:opacity-50"
+                                                                        >Disable</button>
+                                                                    ) : (
+                                                                        <button
+                                                                            disabled={userActionLoading === u._id}
+                                                                            onClick={async () => {
+                                                                                setUserActionLoading(u._id);
+                                                                                try {
+                                                                                    await api.post(`/admin/users/${u._id}/enable`);
+                                                                                    setManagedUsers(prev => prev.map(x => x._id === u._id ? {...x, status:'ACTIVE'} : x));
+                                                                                    setSuccess(`${u.name} enabled.`);
+                                                                                } catch(e) { setError(e.response?.data?.message || 'Failed.'); }
+                                                                                setUserActionLoading(null);
+                                                                            }}
+                                                                            className="text-xs bg-green-50 border border-green-200 text-green-700 font-bold px-2.5 py-1 rounded-lg hover:bg-green-100 cursor-pointer disabled:opacity-50"
+                                                                        >Enable</button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => setUserDeleteConfirm({ id: u._id, name: u.name, email: u.email })}
+                                                                        className="text-xs bg-red-50 border border-red-200 text-red-600 font-bold px-2.5 py-1 rounded-lg hover:bg-red-100 cursor-pointer"
+                                                                    >Delete</button>
+                                                                </>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        }
+                                    </tbody>
+                                </table>
+                                {managedUsers.filter(u => userMgmtFilter === 'ALL' || u.role === userMgmtFilter).length === 0 && (
+                                    <div className="p-8 text-center text-sm text-[#9CA3AF]">No users found for this filter.</div>
+                                )}
+                            </div>
                         </div>
                     )}
+
                 </div>
             </main>
+
+            {/* ── Delete User Confirmation Modal ──────────────────────────── */}
+            {userDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-7 border border-[#E7E0D8]">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-2xl bg-[#FEF2F2] flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-5 h-5 text-[#EF4444]" />
+                            </div>
+                            <h2 className="font-extrabold text-[#1C1917] text-base">Delete User?</h2>
+                        </div>
+                        <p className="text-[#78716C] text-sm leading-relaxed mb-1">
+                            <span className="font-bold text-[#1C1917]">{userDeleteConfirm.name}</span> ({userDeleteConfirm.email})
+                        </p>
+                        <p className="text-xs text-[#A8A29E] mb-6">This action cannot be undone. All sessions will be revoked immediately.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setUserDeleteConfirm(null)}
+                                className="flex-1 bg-[#FAF6F0] border border-[#E7E0D8] text-[#44403C] font-bold text-xs py-2.5 rounded-xl hover:bg-[#F0EBE3] transition-colors cursor-pointer"
+                            >Cancel</button>
+                            <button
+                                onClick={async () => {
+                                    const { id, name } = userDeleteConfirm;
+                                    setUserDeleteConfirm(null);
+                                    setUserActionLoading(id);
+                                    try {
+                                        await api.delete(`/admin/users/${id}`);
+                                        setManagedUsers(prev => prev.filter(u => u._id !== id));
+                                        setSuccess(`${name} deleted successfully.`);
+                                    } catch(e) {
+                                        setError(e.response?.data?.message || 'Failed to delete user.');
+                                    }
+                                    setUserActionLoading(null);
+                                }}
+                                className="flex-1 bg-[#EF4444] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#DC2626] transition-colors cursor-pointer"
+                            >Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Delete Confirmation Modal ────────────────────────────────── */}
             {deleteModal.open && (

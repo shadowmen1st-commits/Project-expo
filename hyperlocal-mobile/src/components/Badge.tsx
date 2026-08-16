@@ -11,7 +11,7 @@ export const Badge: React.FC<BadgeProps> = ({ status, size = 'md' }) => {
 
   let bg = '#F1F5F9';
   let text = '#475569';
-  let label = status;
+  let label = status || 'PENDING';
 
   if (['APPROVED', 'COMPLETED', 'ACTIVE', 'PAID', 'CONFIRMED', 'VERIFIED'].includes(normalized)) {
     bg = '#DCFCE7';
@@ -32,7 +32,7 @@ export const Badge: React.FC<BadgeProps> = ({ status, size = 'md' }) => {
   return (
     <View style={[styles.badge, { backgroundColor: bg }, isSm && styles.badgeSm]}>
       <Text style={[styles.text, { color: text }, isSm && styles.textSm]}>
-        {label.replace(/_/g, ' ')}
+        {(label || '').replace(/_/g, ' ')}
       </Text>
     </View>
   );

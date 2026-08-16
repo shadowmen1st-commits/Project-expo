@@ -5,7 +5,8 @@ import {
     getAnalytics, getAuditLogs, getPayoutRequests, processPayout,
     getCompanies, getCompanyVerificationsList, verifyCompany, rejectCompany, suspendCompany, activateCompany,
     getCompanyJobsAdmin, getCompanyWorkersAdmin, getCompanyPaymentsAdmin,
-    getCompanyVerificationAdmin, requestInfoCompanyVerification, viewCompanyVerificationDocument
+    getCompanyVerificationAdmin, requestInfoCompanyVerification, viewCompanyVerificationDocument,
+    listUsers, disableUser, enableUser, deleteUser
 } from '../controllers/adminController.js';
 import {
     listPayments, getPaymentDetail, reconcilePayment,
@@ -113,6 +114,12 @@ router.post('/ledger/reconcile-all', requirePermission('payments.manage'), recon
 router.post('/ledger/reverse/:transactionId', requirePermission('payments.manage'), reverseLedgerTransaction);
 router.post('/ledger/manual', requirePermission('payments.manage'), postManualJournalEntry);
 
+// ── User Management ────────────────────────────────────────────────────────────
+router.get('/users', requirePermission('users.read'), listUsers);
+router.post('/users/:id/disable', requirePermission('users.manage'), disableUser);
+router.post('/users/:id/enable', requirePermission('users.manage'), enableUser);
+router.delete('/users/:id', requirePermission('users.manage'), deleteUser);
+
 // ── Company Administration ───────────────────────────────────────────────────
 router.get('/companies', requirePermission('users.read'), getCompanies);
 router.get('/company-verifications', requirePermission('users.read'), getCompanyVerificationsList);
@@ -127,8 +134,11 @@ router.get('/companies/:id/verification', requirePermission('users.read'), getCo
 router.patch('/companies/:id/verification/approve', requirePermission('users.manage'), verifyCompany);
 router.patch('/companies/:id/verification/request-information', requirePermission('users.manage'), requestInfoCompanyVerification);
 router.patch('/companies/:id/verification/reject', requirePermission('users.manage'), rejectCompany);
+// Support both PATCH and POST for company suspend (frontend compatibility)
 router.patch('/companies/:id/suspend', requirePermission('users.manage'), suspendCompany);
+router.post('/companies/:id/suspend', requirePermission('users.manage'), suspendCompany);
 router.post('/companies/:id/activate', requirePermission('users.manage'), activateCompany);
+router.patch('/companies/:id/activate', requirePermission('users.manage'), activateCompany);
 router.get('/companies/:id/jobs', requirePermission('users.read'), getCompanyJobsAdmin);
 router.get('/companies/:id/workers', requirePermission('users.read'), getCompanyWorkersAdmin);
 router.get('/companies/:id/payments', requirePermission('users.read'), getCompanyPaymentsAdmin);

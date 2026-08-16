@@ -22,6 +22,8 @@ import api from '../../config/api';
 export default function WorkerProfileScreen() {
   const { user, updateUser, logout } = useAuth();
 
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [profile, setProfile] = useState<any>(null);
   const [bio, setBio] = useState('');
   const [hourlyRate, setHourlyRate] = useState('');
@@ -30,6 +32,13 @@ export default function WorkerProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.phone) setPhone(user.phone);
+    }
+  }, [user?.name, user?.phone]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -106,12 +115,18 @@ export default function WorkerProfileScreen() {
   const handleSaveDetails = async () => {
     setSaving(true);
     try {
+      if (name.trim()) {
+        const uRes = await api.put('/auth/profile', { name: name.trim(), phone: phone.trim() });
+        const updatedUser = uRes.data?.user || uRes.data;
+        if (updatedUser) updateUser(updatedUser);
+      }
+
       await api.put('/v1/worker/verification/professional-details', {
         bio,
-        hourlyRate: Number(hourlyRate),
-        yearsOfExperience: Number(experience)
+        hourlyRate: Number(hourlyRate) || 250,
+        yearsOfExperience: Number(experience) || 1
       });
-      Alert.alert('Success', 'Professional details updated successfully.');
+      Alert.alert('Success', 'Worker profile details updated successfully.');
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to update details.');
     } finally {
@@ -153,6 +168,26 @@ export default function WorkerProfileScreen() {
           <View style={{ marginTop: 8 }}>
             <Badge status={verificationStatus} />
           </View>
+        </View>
+
+        {/* Edit Personal Details */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+
+          <Input
+            label="Full Name *"
+            value={name}
+            onChangeText={setName}
+            icon={<Ionicons name="person-outline" size={20} color="#64748B" />}
+          />
+
+          <Input
+            label="Phone Number"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            icon={<Ionicons name="call-outline" size={20} color="#64748B" />}
+          />
         </View>
 
         {/* Edit Professional Details */}

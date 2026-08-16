@@ -93,39 +93,45 @@ export default function AdminBookingsScreen() {
               description="There are currently no bookings placed across the platform."
             />
           }
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.categoryTitle}>
-                  {item.serviceCategoryName || item.categoryName || 'Service Booking'}
-                </Text>
-                <Badge status={item.status} />
-              </View>
+          renderItem={({ item }) => {
+            const status = item.bookingStatus || item.status || 'PENDING';
+            const category = item.category?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
+            const customerName = item.customer?.name || item.customerId?.name || item.customerName || 'Customer';
+            const workerName = item.worker?.name || item.workerId?.name || item.workerName || 'Assigned Worker';
+            const amount = typeof item.totalAmount === 'number' ? item.totalAmount : (item.totalAmountPaise ? item.totalAmountPaise / 100 : 500);
+            const dateStr = item.scheduledStart || item.bookingDate || item.createdAt || Date.now();
 
-              <View style={styles.detailRow}>
-                <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.detailText}>
-                  Customer: {item.customerId?.name || item.customerName || 'Customer'}
-                </Text>
-              </View>
+            return (
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View>
+                    <Text style={styles.categoryTitle}>{category}</Text>
+                    {item.bookingNumber ? (
+                      <Text style={styles.bookingNumberText}>{item.bookingNumber}</Text>
+                    ) : null}
+                  </View>
+                  <Badge status={status} />
+                </View>
 
-              <View style={styles.detailRow}>
-                <Ionicons name="briefcase-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.detailText}>
-                  Worker: {item.workerId?.name || item.workerName || 'Assigned Worker'}
-                </Text>
-              </View>
+                <View style={styles.detailRow}>
+                  <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>Customer: {customerName}</Text>
+                </View>
 
-              <View style={styles.cardFooter}>
-                <Text style={styles.priceText}>
-                  ₹{item.totalAmount || item.estimatedPrice || 500}
-                </Text>
-                <Text style={styles.dateText}>
-                  {new Date(item.bookingDate || Date.now()).toLocaleDateString()}
-                </Text>
+                <View style={styles.detailRow}>
+                  <Ionicons name="briefcase-outline" size={16} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>Worker: {workerName}</Text>
+                </View>
+
+                <View style={styles.cardFooter}>
+                  <Text style={styles.priceText}>₹{amount}</Text>
+                  <Text style={styles.dateText}>
+                    {new Date(dateStr).toLocaleDateString()}
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
+            );
+          }}
         />
       )}
     </View>
@@ -160,6 +166,11 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
+  },
+  bookingNumberText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   detailRow: {
     flexDirection: 'row',

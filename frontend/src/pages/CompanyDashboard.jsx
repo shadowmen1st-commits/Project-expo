@@ -473,10 +473,10 @@ export default function CompanyDashboard() {
                             </button>
                             <div className="lg:hidden flex items-center gap-2 shrink-0">
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FBBF24] to-[#F97316] flex items-center justify-center shadow-xs">
-                                    <span className="text-[#171717] text-base font-black">H</span>
+                                    <span className="text-[#171717] text-base font-black">J</span>
                                 </div>
                                 <span className="text-sm font-bold tracking-tight text-[#171717]">
-                                    HyperLocal<span className="text-[#F97316]">.</span>
+                                    Jobnest<span className="text-[#F97316]">.</span>
                                 </span>
                             </div>
                             {companyInfo?.verificationStatus === 'VERIFIED' ? (

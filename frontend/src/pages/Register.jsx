@@ -82,16 +82,16 @@ export const Register = () => {
                 <div>
                     <div className="flex items-center gap-3 mb-12">
                         <div className="w-10 h-10 rounded-xl logo-gradient flex items-center justify-center shadow-md">
-                            <span className="text-[#111827] text-xl font-black">H</span>
+                            <span className="text-[#111827] text-xl font-black">J</span>
                         </div>
                         <span className="text-2xl font-bold tracking-tight text-[#111827]">
-                            HyperLocal<span className="text-[#F97316]">.</span>
+                            Jobnest<span className="text-[#F97316]">.</span>
                         </span>
                     </div>
 
                     <div className="max-w-md my-auto">
                         <h1 className="text-3xl lg:text-4xl font-extrabold text-[#111827] tracking-tight leading-tight mb-4">
-                            Create your <span className="text-highlight-gradient">HyperLocal</span> account
+                            Create your <span className="text-highlight-gradient">Jobnest</span> account
                         </h1>
                         <p className="text-[#4B5563] text-base leading-relaxed mb-8">
                             Book reliable local services or start your journey as a verified professional.
@@ -117,7 +117,7 @@ export const Register = () => {
                 </div>
 
                 <div className="mt-12 text-xs text-[#9CA3AF]">
-                    © {new Date().getFullYear()} HyperLocal Marketplace Services Pvt. Ltd. All rights reserved.
+                    © {new Date().getFullYear()} Jobnest Marketplace Services Pvt. Ltd. All rights reserved.
                 </div>
             </div>
 
@@ -126,7 +126,7 @@ export const Register = () => {
                 <div className="w-full max-w-md space-y-6 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
                     <div>
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-[#111827] tracking-tight">Create Account</h2>
-                        <p className="text-sm text-[#4B5563] mt-1">Join HyperLocal to book or offer local services.</p>
+                        <p className="text-sm text-[#4B5563] mt-1">Join Jobnest to book or offer local services.</p>
                     </div>
 
                     {error && (

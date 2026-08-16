@@ -29,6 +29,13 @@ export default function CustomerProfileScreen() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  React.useEffect(() => {
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.phone) setPhone(user.phone);
+    }
+  }, [user?.name, user?.phone]);
+
   const handlePickPhotoOptions = () => {
     Alert.alert(
       'Profile Photo',
@@ -120,9 +127,10 @@ export default function CustomerProfileScreen() {
 
     setSaving(true);
     try {
-      const res = await api.put('/auth/me', { name: name.trim(), phone: phone.trim() });
-      if (res.data?.user) {
-        updateUser(res.data.user);
+      const res = await api.put('/auth/profile', { name: name.trim(), phone: phone.trim() });
+      const updatedUser = res.data?.user || res.data;
+      if (updatedUser) {
+        updateUser(updatedUser);
       }
       Alert.alert('Success', 'Profile details updated successfully.');
     } catch (err: any) {

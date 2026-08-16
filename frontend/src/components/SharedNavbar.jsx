@@ -30,9 +30,9 @@ export const SharedNavbar = () => {
                     {isHome ? (
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-xl logo-gradient flex items-center justify-center shadow-sm">
-                                <span className="text-gray-900 text-sm font-black">H</span>
+                                <span className="text-gray-900 text-sm font-black">J</span>
                             </div>
-                            <span className="text-[#111827] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#F97316]">.</span></span>
+                            <span className="text-[#111827] font-bold text-lg tracking-tight">Jobnest<span className="text-[#F97316]">.</span></span>
                         </div>
                     ) : (
                         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#F97316] font-semibold text-sm cursor-pointer outline-none">
@@ -59,9 +59,9 @@ export const SharedNavbar = () => {
                     {/* Logo */}
                     <button onClick={() => { navigate('/'); setMobileMenuOpen(false); }} className="flex items-center gap-2.5 cursor-pointer outline-none">
                         <div className="w-8 h-8 rounded-xl logo-gradient flex items-center justify-center shadow-md">
-                            <span className="text-gray-900 text-sm font-black">H</span>
+                            <span className="text-gray-900 text-sm font-black">J</span>
                         </div>
-                        <span className="text-[#111827] font-bold text-lg tracking-tight">HyperLocal<span className="text-[#F97316]">.</span></span>
+                        <span className="text-[#111827] font-bold text-lg tracking-tight">Jobnest<span className="text-[#F97316]">.</span></span>
                     </button>
 
                     {/* Desktop Nav links */}
