@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center'
   },
-  scrollContent: {
+  listContent: {
     padding: 16,
     paddingBottom: 110
   },

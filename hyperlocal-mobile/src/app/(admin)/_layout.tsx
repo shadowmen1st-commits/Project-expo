@@ -47,7 +47,7 @@ export default function AdminLayout() {
         name="dashboard"
         options={{
           title: 'Overview',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="pie-chart-outline" size={size} color={color} />
           ),
         }}
@@ -56,7 +56,7 @@ export default function AdminLayout() {
         name="workers"
         options={{
           title: 'KYC Pros',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="checkmark-done-circle-outline" size={size} color={color} />
           ),
         }}
@@ -65,7 +65,7 @@ export default function AdminLayout() {
         name="services"
         options={{
           title: 'Categories',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="grid-outline" size={size} color={color} />
           ),
         }}
@@ -74,7 +74,7 @@ export default function AdminLayout() {
         name="bookings"
         options={{
           title: 'Bookings',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
@@ -83,7 +83,7 @@ export default function AdminLayout() {
         name="users"
         options={{
           title: 'Users',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
@@ -92,7 +92,7 @@ export default function AdminLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: any; size: number }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
