@@ -3,11 +3,13 @@ import { Tabs, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, getTabBarStyle } from '../../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WorkerLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const routerRef = useRef(router);
   routerRef.current = router;
 
@@ -31,14 +33,7 @@ export default function WorkerLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primaryDark,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: colors.borderLight,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
+        tabBarStyle: getTabBarStyle(insets),
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',

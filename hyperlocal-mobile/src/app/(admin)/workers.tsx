@@ -26,8 +26,13 @@ export default function AdminWorkersScreen() {
 
   const fetchWorkers = useCallback(async () => {
     try {
-      const res = await api.get('/v1/admin/worker-verifications');
-      const data = Array.isArray(res.data) ? res.data : res.data.submissions || res.data.data || [];
+      let res;
+      try {
+        res = await api.get('/admin/workers/pending');
+      } catch (e) {
+        res = await api.get('/v1/admin/worker-verifications');
+      }
+      const data = Array.isArray(res.data) ? res.data : res.data?.workers || res.data?.submissions || res.data?.data || [];
       setWorkers(data);
     } catch (err) {
       console.error('Error fetching admin worker submissions:', err);
@@ -49,7 +54,11 @@ export default function AdminWorkersScreen() {
   const handleApprove = async (id: string) => {
     setActionLoadingId(id);
     try {
-      await api.post(`/v1/admin/worker-verifications/${id}/approve`);
+      try {
+        await api.patch(`/admin/workers/${id}/approve`);
+      } catch (e) {
+        await api.post(`/v1/admin/worker-verifications/${id}/approve`);
+      }
       Alert.alert('Approved', 'Worker KYC has been approved.');
       fetchWorkers();
     } catch (err: any) {
@@ -60,26 +69,28 @@ export default function AdminWorkersScreen() {
   };
 
   const handleReject = async (id: string) => {
-    Alert.alert('Reject Verification', 'Confirm rejection of worker verification application?', [
+    Alert.prompt('Reject Worker', 'Please provide a reason for rejection:', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Reject',
         style: 'destructive',
-        onPress: async () => {
+        onPress: async (reason) => {
           setActionLoadingId(id);
           try {
-            await api.post(`/v1/admin/worker-verifications/${id}/reject`, {
-              rejectionReason: 'ID verification documents require resubmission.'
-            });
-            Alert.alert('Rejected', 'Worker KYC application rejected.');
+            try {
+              await api.patch(`/admin/workers/${id}/reject`, { reason });
+            } catch (e) {
+              await api.post(`/v1/admin/worker-verifications/${id}/reject`, { reason });
+            }
+            Alert.alert('Rejected', 'Worker application rejected.');
             fetchWorkers();
           } catch (err: any) {
             Alert.alert('Error', err.response?.data?.message || 'Rejection failed.');
           } finally {
             setActionLoadingId(null);
           }
-        }
-      }
+        },
+      },
     ]);
   };
 

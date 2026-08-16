@@ -3,12 +3,14 @@ import { Tabs, useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/LoadingState';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, shadows } from '../../theme';
+import { colors, typography, shadows, getTabBarStyle } from '../../theme';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CustomerLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   // Use a ref to avoid including router in deps (router object identity changes every render)
   const routerRef = useRef(router);
   routerRef.current = router;
@@ -35,15 +37,7 @@ export default function CustomerLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: colors.borderLight,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 8,
-          ...shadows.md,
-        },
+        tabBarStyle: getTabBarStyle(insets),
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: typography.weights.bold,

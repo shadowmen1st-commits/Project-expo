@@ -141,38 +141,40 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Quick Demo Login Section */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoSectionTitle}>Demo Quick Sign-In</Text>
-            <View style={styles.demoButtonsRow}>
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('CUSTOMER')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
-              </TouchableOpacity>
+          {/* Quick Test Login Section (Dev Only) */}
+          {__DEV__ && (
+            <View style={styles.demoSection}>
+              <Text style={styles.demoSectionTitle}>Quick Test Sign-In</Text>
+              <View style={styles.demoButtonsRow}>
+                <TouchableOpacity
+                  style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
+                  onPress={() => handleQuickLogin('CUSTOMER')}
+                  activeOpacity={0.7}
+                  disabled={loading}
+                >
+                  <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('WORKER')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
+                  onPress={() => handleQuickLogin('WORKER')}
+                  activeOpacity={0.7}
+                  disabled={loading}
+                >
+                  <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.successLight, opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('ADMIN')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Text style={[styles.demoChipText, { color: colors.success }]}>Admin</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.demoChip, { backgroundColor: colors.successLight, opacity: loading ? 0.5 : 1 }]}
+                  onPress={() => handleQuickLogin('ADMIN')}
+                  activeOpacity={0.7}
+                  disabled={loading}
+                >
+                  <Text style={[styles.demoChipText, { color: colors.success }]}>Admin</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
 
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>Don't have an account? </Text>

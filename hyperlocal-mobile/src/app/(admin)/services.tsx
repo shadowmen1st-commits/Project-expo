@@ -142,9 +142,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center'
   },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 110
   },
   card: {
     flexDirection: 'row',

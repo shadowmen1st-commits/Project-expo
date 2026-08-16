@@ -118,7 +118,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFDF9'
   },
   scrollContent: {
-    padding: 16
+    padding: 16,
+    paddingBottom: 110
   },
   balanceCard: {
     backgroundColor: '#0F172A',

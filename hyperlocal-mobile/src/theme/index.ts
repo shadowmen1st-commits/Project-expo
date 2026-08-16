@@ -4,6 +4,9 @@ import { typography } from './typography';
 import { radius } from './radius';
 import { shadows } from './shadows';
 
-export { colors, spacing, typography, radius, shadows };
-export const theme = { colors, spacing, typography, radius, shadows };
+import { getTabBarStyle } from './navigation';
+
+export { colors, spacing, typography, radius, shadows, getTabBarStyle };
+export const theme = { colors, spacing, typography, radius, shadows, getTabBarStyle };
 export default theme;
+
