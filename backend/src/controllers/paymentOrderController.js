@@ -74,6 +74,14 @@ export const createOrder = async (req, res, next) => {
             requestId: req.requestId,
         });
 
+        console.log('[PAYMENT:ORDER_CREATED]', {
+            bookingId: validated.bookingId,
+            internalPaymentOrderId: result.internalPaymentOrderId,
+            razorpayOrderId: result.razorpayOrderId,
+            amount: result.amount,
+            currency: result.currency,
+        });
+
         return res.status(201).json({
             success: true,
             data: result,
@@ -117,6 +125,12 @@ export const verifyPayment = async (req, res, next) => {
         }
 
         const validated = verifySchema.parse(req.body);
+
+        console.log('[PAYMENT:VERIFY_START]', {
+            internalPaymentOrderId: validated.internalPaymentOrderId,
+            razorpay_order_id: validated.razorpay_order_id,
+            razorpay_payment_id: validated.razorpay_payment_id,
+        });
 
         const result = await verifyCheckoutCallback({
             internalPaymentOrderId: validated.internalPaymentOrderId,

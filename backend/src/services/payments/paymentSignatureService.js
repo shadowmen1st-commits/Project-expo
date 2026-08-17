@@ -105,6 +105,11 @@ export async function verifyCheckoutCallback({
         throw err;
     }
 
+    console.log('[PAYMENT:VERIFY_SUCCESS]', {
+        razorpayOrderId,
+        razorpayPaymentId,
+    });
+
     // ── 8. Fetch payment details from Razorpay for amount/currency reconciliation ─
     let providerPayment = null;
     if (razorpayProvider.isConfigured()) {

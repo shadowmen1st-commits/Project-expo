@@ -160,6 +160,12 @@ class VerifiedPaymentServiceClass {
             escrowStatus: 'HELD',
         }, { new: true });
 
+        console.log('[PAYMENT:BOOKING_UPDATED]', {
+            bookingId: booking._id.toString(),
+            paymentStatus: updatedBooking.paymentStatus,
+            bookingStatus: updatedBooking.bookingStatus,
+        });
+
         // Post ledger captured payment
         await LedgerPostingService.postPaymentCaptured(updatedBooking, freshOrder._id, transaction._id, providerPaymentId, requestMeta);
 

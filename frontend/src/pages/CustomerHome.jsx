@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import {
     Search, Star, AlertCircle, ShoppingBag, X, Car, Home, Heart, Activity,
     Smile, Utensils, Leaf, Sparkles, Wrench, Zap, Sparkle, Clock, CheckCircle2,
-    Calendar, ShieldAlert, User, Eye
+    Calendar, ShieldAlert, User, Eye, Navigation, CreditCard
 } from 'lucide-react';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
@@ -30,6 +31,7 @@ const getCategoryIcon = (name) => {
 };
 
 export const CustomerHome = () => {
+    const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [categories, setCategories] = useState([]);
@@ -346,13 +348,155 @@ export const CustomerHome = () => {
             });
 
             if (res.data.success) {
-                setCreatedBooking(res.data.booking);
+                const b = res.data.booking;
+                console.log('[PAYMENT:BOOKING_CREATED]', {
+                    bookingId: b?.id || b?._id,
+                    bookingNumber: b?.bookingNumber,
+                    status: b?.bookingStatus,
+                });
+                setCreatedBooking(b);
                 setSuccess(res.data.message || 'Booking created successfully. Payment setup pending.');
                 fetchBookings();
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create booking.');
         } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleInitiatePayment = async (bookingItem) => {
+        if (!bookingItem || (!bookingItem.id && !bookingItem._id)) {
+            setError('Booking ID is missing. Cannot initiate payment.');
+            return;
+        }
+        const bId = bookingItem.id || bookingItem._id;
+        console.log('[PAYMENT:ORDER_CREATE_START]', { bookingId: bId });
+        setError('');
+        setSuccess('');
+        setLoading(true);
+        try {
+            // 1. Get payment order from backend
+            const randKey = `idemp-${bId}-${Date.now()}`;
+            const res = await api.post('/v1/payments/orders', 
+                { bookingId: bId },
+                { headers: { 'Idempotency-Key': randKey } }
+            );
+            if (!res.data?.success || !res.data?.data) {
+                throw new Error(res.data?.message || 'Failed to create payment order');
+            }
+            const orderData = res.data.data;
+            console.log('[PAYMENT:ORDER_CREATED]', {
+                internalPaymentOrderId: orderData.internalPaymentOrderId,
+                razorpayOrderId: orderData.razorpayOrderId,
+            });
+            
+            // 2. Load Razorpay script if not present
+            if (!window.Razorpay) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                    script.async = true;
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load Razorpay checkout script.'));
+                    document.body.appendChild(script);
+                });
+            }
+
+            // 3. Open Razorpay options
+            const options = {
+                key: orderData.publicKeyId,
+                amount: orderData.amount,
+                currency: orderData.currency || 'INR',
+                name: 'JobNest Services',
+                description: `Payment for booking #${orderData.bookingNumber}`,
+                order_id: orderData.razorpayOrderId,
+                prefill: {
+                    name: user?.name || '',
+                    email: user?.email || '',
+                    contact: user?.phone || ''
+                },
+                notes: {
+                    bookingId: bId,
+                    bookingNumber: orderData.bookingNumber
+                },
+                theme: { color: '#F97316' },
+                modal: {
+                    ondismiss: function () {
+                        console.warn('[PAYMENT:CANCELLED]', { bookingId: bId });
+                        setError('Payment cancelled. You can retry payment from your booking.');
+                        setLoading(false);
+                    }
+                },
+                handler: async function (response) {
+                    console.log('[PAYMENT:SUCCESS_CALLBACK]', {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id
+                    });
+                    console.log('[PAYMENT:VERIFY_START]', {
+                        internalPaymentOrderId: orderData.internalPaymentOrderId,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id
+                    });
+                    setLoading(true);
+                    try {
+                        const verifyRes = await api.post('/v1/payments/verify', {
+                            internalPaymentOrderId: orderData.internalPaymentOrderId,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        if (verifyRes.data?.success) {
+                            console.log('[PAYMENT:VERIFY_SUCCESS]', {
+                                bookingId: verifyRes.data?.data?.bookingId || bId
+                            });
+                            console.log('[PAYMENT:BOOKING_UPDATED]', {
+                                bookingId: bId,
+                                paymentStatus: 'PAID'
+                            });
+                            setSuccess('Payment verified successfully! Booking confirmed.');
+                            setCreatedBooking(null);
+                            setSelectedWorker(null);
+                            await fetchBookings();
+                            await fetchWallet();
+                        } else {
+                            console.error('[PAYMENT:VERIFY_FAILED]', {
+                                reason: verifyRes.data?.message || 'Verification rejected'
+                            });
+                            setError(verifyRes.data?.message || 'Payment verification could not be completed.');
+                        }
+                    } catch (verifyErr) {
+                        console.error('[PAYMENT:VERIFY_FAILED]', {
+                            error: verifyErr.response?.data?.message || verifyErr.message
+                        });
+                        setError(verifyErr.response?.data?.message || 'Payment verification failed on server.');
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (resp) {
+                console.error('[PAYMENT:VERIFY_FAILED]', {
+                    code: resp.error?.code,
+                    description: resp.error?.description,
+                    reason: resp.error?.reason
+                });
+                setError('Payment failed. Your booking has not been confirmed.');
+                setLoading(false);
+            });
+
+            console.log('[PAYMENT:RAZORPAY_OPENED]', {
+                orderId: orderData.razorpayOrderId,
+                key: orderData.publicKeyId
+            });
+            rzp.open();
+        } catch (err) {
+            console.error('[PAYMENT:VERIFY_FAILED]', {
+                error: err.response?.data?.message || err.message
+            });
+            setError(err.response?.data?.message || err.message || 'Payment initiation failed.');
             setLoading(false);
         }
     };
@@ -657,74 +801,19 @@ export const CustomerHome = () => {
                                                     <Clock className="w-3.5 h-3.5 flex-shrink-0"/>
                                                     <span>Booking created. Secure payment setup is pending.</span>
                                                 </div>
+                                                {import.meta.env.DEV && (
+                                                    <div className="bg-slate-900 text-slate-200 text-[9px] p-2 rounded-xl border border-slate-700 space-y-0.5">
+                                                        <div className="font-bold text-amber-400 flex items-center gap-1">
+                                                            <CreditCard className="w-3 h-3" />
+                                                            <span>Test Mode Tip:</span>
+                                                        </div>
+                                                        <p className="text-slate-300">
+                                                            In Razorpay popup, use <strong>Card</strong> (4111 1111 1111 1111, OTP 123456) or <strong>Netbanking Simulator</strong>.
+                                                        </p>
+                                                    </div>
+                                                )}
                                                 <button
-                                                    onClick={async () => {
-                                                        setError('');
-                                                        setSuccess('');
-                                                        try {
-                                                            // 1. Get payment order from backend
-                                                            const randKey = `idemp-${b.id}-${Date.now()}`;
-                                                            const res = await api.post('/v1/payments/orders', 
-                                                                { bookingId: b.id },
-                                                                { headers: { 'Idempotency-Key': randKey } }
-                                                            );
-                                                            if (!res.data.success) {
-                                                                throw new Error(res.data.message || 'Failed to create payment order');
-                                                            }
-                                                            const orderData = res.data.data;
-                                                            
-                                                            // 2. Load Razorpay script if not present
-                                                            if (!window.Razorpay) {
-                                                                await new Promise((resolve, reject) => {
-                                                                    const script = document.createElement('script');
-                                                                    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-                                                                    script.async = true;
-                                                                    script.onload = resolve;
-                                                                    script.onerror = reject;
-                                                                    document.body.appendChild(script);
-                                                                });
-                                                            }
-
-                                                            // 3. Open Razorpay options
-                                                            const options = {
-                                                                key: orderData.publicKeyId,
-                                                                amount: orderData.amount,
-                                                                currency: orderData.currency,
-                                                                name: 'HyperLocal Service',
-                                                                description: `Payment for booking ${orderData.bookingNumber}`,
-                                                                order_id: orderData.razorpayOrderId,
-                                                                handler: async function (response) {
-                                                                    setLoading(true);
-                                                                    try {
-                                                                        const verifyRes = await api.post('/v1/payments/verify', {
-                                                                            internalPaymentOrderId: orderData.internalPaymentOrderId,
-                                                                            razorpay_order_id: response.razorpay_order_id,
-                                                                            razorpay_payment_id: response.razorpay_payment_id,
-                                                                            razorpay_signature: response.razorpay_signature
-                                                                        });
-                                                                        if (verifyRes.data.success) {
-                                                                            setSuccess('Payment verified successfully! Refreshing status...');
-                                                                            fetchBookings();
-                                                                        }
-                                                                    } catch (err) {
-                                                                        setError(err.response?.data?.message || 'Payment verification failed.');
-                                                                    } finally {
-                                                                        setLoading(false);
-                                                                    }
-                                                                },
-                                                                modal: {
-                                                                    ondismiss: function () {
-                                                                        setError('Payment checkout cancelled.');
-                                                                    }
-                                                                },
-                                                                theme: { color: '#F97316' }
-                                                            };
-                                                            const rzp = new window.Razorpay(options);
-                                                            rzp.open();
-                                                        } catch (err) {
-                                                            setError(err.response?.data?.message || err.message || 'Payment initiation failed.');
-                                                        }
-                                                    }}
+                                                    onClick={() => handleInitiatePayment(b)}
                                                     disabled={loading}
                                                     className="w-full btn-primary-gradient font-bold text-[10px] py-1.5 rounded-lg cursor-pointer"
                                                 >
@@ -736,12 +825,25 @@ export const CustomerHome = () => {
                                         {b.paymentStatus === 'PAID' && (
                                             <div className="bg-[#F0FDF4] border border-[#86EFAC] p-2 rounded-xl text-[10px] text-[#16A34A] flex items-center gap-1.5">
                                                 <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0"/>
-                                                <span>Payment verified. Pending worker acceptance.</span>
+                                                <span>Payment verified. {b.bookingStatus === 'CONFIRMED' || b.bookingStatus === 'ACCEPTED' ? 'Booking confirmed.' : 'Pending worker acceptance.'}</span>
                                             </div>
                                         )}
 
-                                        <div className="flex gap-2 pt-1 border-t border-[#E7E0D8]">
-                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(b.bookingStatus)&&<button onClick={()=>setChatBooking(b)} className="w-full bg-white border border-[#F97316] text-[#F97316] hover:bg-[#FFEDD5] font-bold text-[10px] py-1.5 rounded-lg">Chat</button>}
+                                        <div className="flex flex-wrap gap-2 pt-1 border-t border-[#E7E0D8]">
+                                            {['ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','STARTED','COMPLETION_REQUESTED','COMPLETED','DISPUTED'].includes(b.bookingStatus) && (
+                                                <button onClick={() => setChatBooking(b)} className="flex-1 bg-white border border-[#F97316] text-[#F97316] hover:bg-[#FFEDD5] font-bold text-[10px] py-1.5 rounded-lg">
+                                                    Chat
+                                                </button>
+                                            )}
+                                            {['PAID','ACCEPTED','CONFIRMED','WORKER_EN_ROUTE','ARRIVED','STARTED','COMPLETION_REQUESTED','COMPLETED'].includes(b.bookingStatus) && (
+                                                <button
+                                                    onClick={() => navigate(`/booking/${b.id}/tracking`)}
+                                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] py-1.5 rounded-lg flex items-center justify-center gap-1 cursor-pointer transition shadow-sm"
+                                                >
+                                                    <Navigation className="w-3 h-3"/>
+                                                    <span>Live Tracking</span>
+                                                </button>
+                                            )}
                                             {['PAYMENT_PENDING', 'REQUESTED', 'PAID', 'ACCEPTED', 'CONFIRMED'].includes(b.bookingStatus) && (
                                                 <button onClick={() => handleCancelBooking(b.id)} className="w-full bg-[#DC2626]/10 hover:bg-[#DC2626]/20 text-[#DC2626] border border-[#DC2626]/30 font-bold text-[10px] py-1.5 rounded-lg cursor-pointer">
                                                     Cancel Booking
@@ -981,11 +1083,45 @@ export const CustomerHome = () => {
                                     </div>
 
                                     {createdBooking ? (
-                                        <div className="bg-[#FFEDD5] border border-[#FED7AA] p-4 rounded-2xl text-center space-y-2">
-                                            <Clock className="w-6 h-6 text-[#F97316] mx-auto"/>
-                                            <h4 className="font-bold text-xs text-[#111827]">Booking Confirmed!</h4>
-                                            <p className="text-[10px] text-[#4B5563]">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> created.</p>
-                                            <div className="text-[10px] font-semibold text-[#F97316] pt-1">Proceed to My Bookings to complete payment.</div>
+                                        <div className="bg-[#FFEDD5] border border-[#FED7AA] p-5 rounded-2xl text-center space-y-3">
+                                            <Clock className="w-8 h-8 text-[#F97316] mx-auto animate-pulse"/>
+                                            <div>
+                                                <h4 className="font-bold text-sm text-[#111827]">Booking Created Successfully!</h4>
+                                                <p className="text-xs text-[#4B5563] mt-1">Booking number <span className="font-mono font-bold text-[#1C1917]">{createdBooking.bookingNumber}</span> is pending secure payment.</p>
+                                            </div>
+                                            {import.meta.env.DEV && (
+                                                <div className="bg-slate-900 text-slate-200 text-[10px] p-2.5 rounded-xl border border-slate-700 text-left space-y-1">
+                                                    <div className="font-bold text-amber-400 flex items-center gap-1">
+                                                        <CreditCard className="w-3.5 h-3.5" />
+                                                        <span>Razorpay Test Mode Instructions:</span>
+                                                    </div>
+                                                    <p className="text-slate-300">
+                                                        • <strong>Card:</strong> <code>4111 1111 1111 1111</code>, any future date, CVV <code>123</code>, OTP <code>123456</code><br />
+                                                        • <strong>Netbanking:</strong> Select any bank & click "Success" in simulator<br />
+                                                        • <strong>UPI (if supported):</strong> Enter UPI ID <code>success@razorpay</code>
+                                                    </p>
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2 pt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCreatedBooking(null);
+                                                        setSelectedWorker(null);
+                                                    }}
+                                                    className="w-1/3 bg-white border border-[#E7E0D8] text-[#44403C] hover:bg-[#FEFCE8] font-bold text-xs py-2.5 rounded-xl cursor-pointer"
+                                                >
+                                                    Pay Later
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleInitiatePayment(createdBooking)}
+                                                    disabled={loading}
+                                                    className="w-2/3 btn-primary-gradient font-bold text-xs py-2.5 rounded-xl cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                                                >
+                                                    <span>{loading ? 'Opening Payment...' : 'Pay Now via Razorpay'}</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex gap-2">
