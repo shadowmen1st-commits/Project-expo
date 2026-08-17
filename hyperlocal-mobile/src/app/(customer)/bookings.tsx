@@ -170,9 +170,20 @@ export default function CustomerBookingsScreen() {
                 <Text style={styles.priceText}>
                   ₹{item.totalAmount || item.estimatedPrice || 500}
                 </Text>
-                <View style={styles.linkRow}>
-                  <Text style={styles.viewDetailsLink}>View Details</Text>
-                  <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  {(item.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(item.status || item.bookingStatus)) && (
+                    <TouchableOpacity
+                      style={styles.trackingBtn}
+                      onPress={() => router.push(`/(customer)/booking/tracking/${item._id || item.id}` as any)}
+                    >
+                      <Ionicons name="navigate" size={12} color="#10B981" />
+                      <Text style={styles.trackingBtnText}>Track Live</Text>
+                    </TouchableOpacity>
+                  )}
+                  <View style={styles.linkRow}>
+                    <Text style={styles.viewDetailsLink}>Details</Text>
+                    <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -272,5 +283,21 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.accent,
+  },
+  trackingBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.md,
+  },
+  trackingBtnText: {
+    fontSize: 11,
+    fontWeight: typography.weights.bold,
+    color: '#059669',
   },
 });

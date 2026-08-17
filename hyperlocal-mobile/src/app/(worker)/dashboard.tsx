@@ -160,9 +160,27 @@ export default function WorkerDashboard() {
               </Text>
               <View style={styles.jobFooter}>
                 <Text style={styles.jobPrice}>₹{job.totalAmount || 600}</Text>
-                <Text style={styles.jobTime}>
-                  {new Date(job.bookingDate || Date.now()).toLocaleDateString()}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {['CONFIRMED', 'IN_PROGRESS', 'PAID', 'WORKER_EN_ROUTE', 'STARTED'].includes(job.status) && (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push(`/(worker)/tracking/${job._id || job.id}` as any);
+                      }}
+                      style={{
+                        backgroundColor: '#EA580C',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>GPS Share</Text>
+                    </TouchableOpacity>
+                  )}
+                  <Text style={styles.jobTime}>
+                    {new Date(job.bookingDate || Date.now()).toLocaleDateString()}
+                  </Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))

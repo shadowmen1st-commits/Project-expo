@@ -155,6 +155,16 @@ export default function BookingDetailsScreen() {
           </View>
         </View>
 
+        {/* Live Tracking Action */}
+        {(booking.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(booking.status || booking.bookingStatus)) && (
+          <AppButton
+            title="Track Live Location"
+            variant="primary"
+            onPress={() => router.push(`/(customer)/booking/tracking/${id}` as any)}
+            style={{ marginTop: spacing.md }}
+          />
+        )}
+
         {canCancel && (
           <AppButton
             title="Cancel Booking"

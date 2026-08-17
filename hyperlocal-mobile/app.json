@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.hyperlocalmobile"
+      "package": "com.anonymous.hyperlocalmobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -35,7 +39,14 @@
         }
       ],
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location for live service tracking.",
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to track worker arrival."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

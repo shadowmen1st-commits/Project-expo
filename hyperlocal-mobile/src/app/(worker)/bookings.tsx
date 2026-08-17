@@ -179,13 +179,23 @@ export default function WorkerBookingsScreen() {
                       loading={isProcessing}
                     />
                   ) : isActive ? (
-                    <AppButton
-                      title="Complete Work"
-                      size="sm"
-                      variant="secondary"
-                      onPress={() => handleUpdateJobStatus(item._id || item.id, 'confirm-completion')}
-                      loading={isProcessing}
-                    />
+                    <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                      <AppButton
+                        title="Share GPS"
+                        size="sm"
+                        variant="primary"
+                        onPress={() => router.push(`/(worker)/tracking/${item._id || item.id}` as any)}
+                        style={{ flex: 1 }}
+                      />
+                      <AppButton
+                        title="Complete"
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => handleUpdateJobStatus(item._id || item.id, 'confirm-completion')}
+                        loading={isProcessing}
+                        style={{ flex: 1 }}
+                      />
+                    </View>
                   ) : null}
                 </View>
               </View>
