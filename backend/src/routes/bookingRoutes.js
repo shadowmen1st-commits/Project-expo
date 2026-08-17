@@ -16,6 +16,9 @@ import {
     disputeBooking,
     overrideBookingStatus,
     updateBookingStatus,
+    getBookingTracking,
+    updateWorkerLocation,
+    getWorkerLocation,
 } from '../controllers/bookingController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -32,6 +35,13 @@ router.get('/customer', getCustomerBookings);
 router.get('/worker', getWorkerBookings);
 router.get('/list', getBookings);
 router.get('/', getBookings);
+
+// Live Tracking & GPS
+router.get('/:id/tracking', getBookingTracking);
+router.get('/:id/location', getWorkerLocation);
+router.post('/:id/location', updateWorkerLocation);
+router.patch('/:id/location', updateWorkerLocation);
+
 router.get('/details/:id', getBookingDetails);
 router.get('/:id', getBookingDetails);
 

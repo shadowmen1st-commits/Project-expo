@@ -50,6 +50,42 @@ export const initializeSocket = (server) => {
             }
         });
 
+        // Handle joining tracking room
+        socket.on('join_tracking', async ({ bookingId }, callback) => {
+            try {
+                if (!bookingId) throw new Error('bookingId required');
+                const roomName = `tracking:${bookingId}`;
+                socket.join(roomName);
+                if (callback) callback({ success: true, room: roomName });
+            } catch (error) {
+                console.warn('Socket join_tracking rejected:', error.message);
+                if (callback) callback({ error: error.message });
+            }
+        });
+
+        socket.on('leave_tracking', ({ bookingId }) => {
+            if (bookingId) {
+                socket.leave(`tracking:${bookingId}`);
+            }
+        });
+
+        // Worker emits direct location update over socket
+        socket.on('location:update', ({ bookingId, latitude, longitude, heading = 0, speed = 0, accuracy = 0 }) => {
+            if (bookingId && typeof latitude === 'number' && typeof longitude === 'number') {
+                const payload = {
+                    bookingId: String(bookingId),
+                    latitude,
+                    longitude,
+                    heading,
+                    speed,
+                    accuracy,
+                    timestamp: new Date().toISOString(),
+                };
+                io.to(`tracking:${bookingId}`).emit('location:updated', payload);
+                io.to(`conversation:${bookingId}`).emit('location:updated', payload);
+            }
+        });
+
         // Handle leaving conversation room
         socket.on('leave_conversation', ({ roomId }) => {
             if (roomId) {

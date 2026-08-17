@@ -3,6 +3,8 @@ import Booking from '../models/Booking.js';
 import PriceQuote from '../models/PriceQuote.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import BookingLocation from '../models/BookingLocation.js';
+import { getIO } from '../socketServer.js';
 import {
     availabilityCheckSchema,
     bookingCreateSchema,
@@ -719,3 +721,234 @@ export const updateBookingStatus = async (req, res, next) => {
         next(error);
     }
 };
+
+/**
+ * Get Booking Tracking Data
+ * GET /api/v1/bookings/:id/tracking
+ */
+export const getBookingTracking = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ success: false, statusCode: 401, message: 'Authentication required' });
+        }
+
+        const booking = await Booking.findById(id)
+            .populate('customerId', 'name phone email profileImage')
+            .populate('workerId', 'name phone email profileImage')
+            .populate('serviceCategoryId', 'name icon description');
+
+        if (!booking) {
+            return res.status(404).json({ success: false, statusCode: 404, message: 'Booking not found.' });
+        }
+
+        const customerIdStr = booking.customerId?._id?.toString() || booking.customerId?.toString();
+        const workerIdStr = booking.workerId?._id?.toString() || booking.workerId?.toString();
+        const userIdStr = user.id || user._id || user.userId;
+
+        const isCustomer = userIdStr === customerIdStr;
+        const isWorker = userIdStr === workerIdStr;
+        const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+        const isCompany = user.role === 'COMPANY';
+
+        if (!isCustomer && !isWorker && !isAdmin && !isCompany) {
+            return res.status(403).json({ success: false, statusCode: 403, message: 'Access denied to this booking tracking.' });
+        }
+
+        // Get latest location ping
+        const latestLocationDoc = await BookingLocation.findOne({ bookingId: booking._id }).sort({ createdAt: -1 });
+        
+        let latestLocation = null;
+        if (latestLocationDoc) {
+            latestLocation = {
+                latitude: latestLocationDoc.latitude,
+                longitude: latestLocationDoc.longitude,
+                heading: latestLocationDoc.heading,
+                speed: latestLocationDoc.speed,
+                accuracy: latestLocationDoc.accuracy,
+                timestamp: latestLocationDoc.timestamp || latestLocationDoc.createdAt,
+            };
+        } else {
+            // Fallback to worker profile location if available
+            const workerProf = await WorkerProfile.findOne({ userId: booking.workerId?._id || booking.workerId });
+            if (workerProf && workerProf.location?.coordinates?.length === 2) {
+                latestLocation = {
+                    longitude: workerProf.location.coordinates[0],
+                    latitude: workerProf.location.coordinates[1],
+                    heading: 0,
+                    speed: 0,
+                    accuracy: 10,
+                    timestamp: workerProf.updatedAt || new Date(),
+                };
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            booking: toSafeBookingDTO(booking),
+            serviceAddress: booking.serviceAddress,
+            addressSnapshot: booking.addressSnapshot,
+            latestLocation,
+            trackingEnabled: ['PAID', 'ACCEPTED', 'CONFIRMED', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'COMPLETION_REQUESTED', 'COMPLETED'].includes(booking.bookingStatus),
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * Update Worker GPS Location
+ * POST /api/v1/bookings/:id/location
+ */
+export const updateWorkerLocation = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ success: false, statusCode: 401, message: 'Authentication required' });
+        }
+
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            return res.status(404).json({ success: false, statusCode: 404, message: 'Booking not found.' });
+        }
+
+        const workerIdStr = booking.workerId?._id?.toString() || booking.workerId?.toString();
+        const userIdStr = user.id || user._id || user.userId;
+
+        if (userIdStr !== workerIdStr && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+            return res.status(403).json({ success: false, statusCode: 403, message: 'Only the assigned worker can update location.' });
+        }
+
+        const { latitude, longitude, heading = 0, speed = 0, accuracy = 0 } = req.body;
+        if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+            return res.status(400).json({ success: false, statusCode: 400, message: 'Valid latitude and longitude are required.' });
+        }
+
+        const locationPing = await BookingLocation.create({
+            bookingId: booking._id,
+            workerId: booking.workerId,
+            latitude,
+            longitude,
+            heading,
+            speed,
+            accuracy,
+            timestamp: new Date(),
+        });
+
+        // Also update WorkerProfile location for discovery
+        await WorkerProfile.findOneAndUpdate(
+            { userId: booking.workerId },
+            {
+                location: {
+                    type: 'Point',
+                    coordinates: [longitude, latitude],
+                },
+            }
+        );
+
+        // Emit Socket.IO event to booking tracking room
+        try {
+            const io = getIO();
+            const payload = {
+                bookingId: booking._id.toString(),
+                latitude,
+                longitude,
+                heading,
+                speed,
+                accuracy,
+                timestamp: locationPing.timestamp,
+            };
+            io.to(`tracking:${booking._id.toString()}`).emit('location:updated', payload);
+            io.to(`conversation:${booking._id.toString()}`).emit('location:updated', payload);
+        } catch (socketErr) {
+            // Non-blocking socket broadcast error
+        }
+
+        return res.status(200).json({
+            success: true,
+            location: {
+                latitude,
+                longitude,
+                heading,
+                speed,
+                accuracy,
+                timestamp: locationPing.timestamp,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * Get Current Worker GPS Location Ping
+ * GET /api/v1/bookings/:id/location
+ */
+export const getWorkerLocation = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ success: false, statusCode: 401, message: 'Authentication required' });
+        }
+
+        const booking = await Booking.findById(id);
+        if (!booking) {
+            return res.status(404).json({ success: false, statusCode: 404, message: 'Booking not found.' });
+        }
+
+        const customerIdStr = booking.customerId?._id?.toString() || booking.customerId?.toString();
+        const workerIdStr = booking.workerId?._id?.toString() || booking.workerId?.toString();
+        const userIdStr = user.id || user._id || user.userId;
+
+        const isCustomer = userIdStr === customerIdStr;
+        const isWorker = userIdStr === workerIdStr;
+        const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+        const isCompany = user.role === 'COMPANY';
+
+        if (!isCustomer && !isWorker && !isAdmin && !isCompany) {
+            return res.status(403).json({ success: false, statusCode: 403, message: 'Access denied.' });
+        }
+
+        const latestLocationDoc = await BookingLocation.findOne({ bookingId: booking._id }).sort({ createdAt: -1 });
+        if (latestLocationDoc) {
+            return res.status(200).json({
+                success: true,
+                location: {
+                    latitude: latestLocationDoc.latitude,
+                    longitude: latestLocationDoc.longitude,
+                    heading: latestLocationDoc.heading,
+                    speed: latestLocationDoc.speed,
+                    accuracy: latestLocationDoc.accuracy,
+                    timestamp: latestLocationDoc.timestamp,
+                },
+            });
+        }
+
+        const workerProf = await WorkerProfile.findOne({ userId: booking.workerId });
+        if (workerProf && workerProf.location?.coordinates?.length === 2) {
+            return res.status(200).json({
+                success: true,
+                location: {
+                    longitude: workerProf.location.coordinates[0],
+                    latitude: workerProf.location.coordinates[1],
+                    heading: 0,
+                    speed: 0,
+                    accuracy: 10,
+                    timestamp: workerProf.updatedAt,
+                },
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            location: null,
+            message: 'No location ping recorded yet.',
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
