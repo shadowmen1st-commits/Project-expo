@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { LoadingState } from '../../../components/LoadingState';
 import { EmptyState } from '../../../components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
+import { useAuth } from '../../../context/AuthContext';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
 import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
 import { resolveWorkerImage } from '../../../utils/imageUtils';
@@ -25,6 +26,7 @@ import { resolveWorkerImage } from '../../../utils/imageUtils';
 export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   const rawWorkerId = Array.isArray(workerId) ? workerId[0] : workerId;
   const canonicalParamId = getCanonicalWorkerId(rawWorkerId);
@@ -53,6 +55,9 @@ export default function CreateBookingScreen() {
   const [loadingWorker, setLoadingWorker] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const hasNavigatedRef = useRef(false);
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
     const initData = async () => {
@@ -107,7 +112,7 @@ export default function CreateBookingScreen() {
   const estimatedTotal = basePrice + platformFee;
 
   const handleConfirmBooking = async () => {
-    if (submitting) return;
+    if (submitting || isProcessingRef.current) return;
 
     // 1. Worker ID validation
     const effectiveWorkerId = getCanonicalWorkerId(worker) || canonicalParamId;
@@ -166,8 +171,10 @@ export default function CreateBookingScreen() {
 
     setErrorMsg('');
     setSubmitting(true);
+    hasNavigatedRef.current = false;
 
     try {
+      // 1. Create Booking on backend
       const payload = {
         workerId: String(effectiveWorkerId),
         serviceCategoryId: String(effectiveCatId),
@@ -189,7 +196,122 @@ export default function CreateBookingScreen() {
       };
 
       const res = await api.post('/bookings', payload);
-      router.replace('/(customer)/bookings');
+      const createdBooking = res.data?.booking || res.data;
+      const bookingId =
+        createdBooking?.id ??
+        createdBooking?._id ??
+        res.data?.id ??
+        res.data?._id;
+
+      if (!bookingId) {
+        throw new Error('Booking was created, but server did not return a booking ID.');
+      }
+
+      console.log('[PAYMENT:BOOKING_CREATED]', {
+        bookingId,
+        bookingNumber: createdBooking?.bookingNumber,
+        status: createdBooking?.bookingStatus || createdBooking?.status,
+      });
+
+      // 2. Initiate Payment Order
+      try {
+        const randKey = `idemp-${bookingId}-${Date.now()}`;
+        const orderRes = await api.post(
+          '/payments/orders',
+          { bookingId },
+          { headers: { 'Idempotency-Key': randKey } }
+        );
+
+        const orderData = orderRes.data?.data || orderRes.data;
+
+        if (orderData && typeof window !== 'undefined' && (Platform.OS === 'web' || (window as any).document)) {
+          // Load Razorpay checkout script if not present
+          if (!(window as any).Razorpay) {
+            await new Promise<void>((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+              script.async = true;
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error('Failed to load Razorpay checkout script.'));
+              document.body.appendChild(script);
+            });
+          }
+
+          const options = {
+            key: orderData.publicKeyId,
+            amount: orderData.amount,
+            currency: orderData.currency || 'INR',
+            name: 'JobNest Services',
+            description: `Payment for booking #${orderData.bookingNumber || bookingId}`,
+            order_id: orderData.razorpayOrderId,
+            prefill: {
+              name: user?.name || '',
+              email: user?.email || '',
+              contact: user?.phone || '',
+            },
+            notes: {
+              bookingId,
+              bookingNumber: orderData.bookingNumber,
+            },
+            theme: { color: '#F97316' },
+            modal: {
+              ondismiss: function () {
+                console.warn('[PAYMENT:CANCELLED]', { bookingId });
+                setErrorMsg('Payment cancelled. You can retry payment anytime from your booking details.');
+                setSubmitting(false);
+                // Do not mark as paid or navigate as paid
+              },
+            },
+            handler: async function (paymentResponse: any) {
+              if (isProcessingRef.current) return;
+              isProcessingRef.current = true;
+              setSubmitting(true);
+              try {
+                const verifyRes = await api.post('/payments/verify', {
+                  internalPaymentOrderId: orderData.internalPaymentOrderId,
+                  razorpay_order_id: paymentResponse.razorpay_order_id,
+                  razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                  razorpay_signature: paymentResponse.razorpay_signature,
+                });
+
+                if (verifyRes.data?.success) {
+                  console.log('[PAYMENT:VERIFY_SUCCESS]', { bookingId });
+                  if (!hasNavigatedRef.current) {
+                    hasNavigatedRef.current = true;
+                    router.replace(`/(customer)/booking/details/${bookingId}` as any);
+                  }
+                } else {
+                  setErrorMsg(verifyRes.data?.message || 'Payment verification could not be completed.');
+                  setSubmitting(false);
+                  isProcessingRef.current = false;
+                }
+              } catch (verifyErr: any) {
+                console.error('[PAYMENT:VERIFY_FAILED]', verifyErr);
+                setErrorMsg(verifyErr.response?.data?.message || 'Payment verification failed on server.');
+                setSubmitting(false);
+                isProcessingRef.current = false;
+              }
+            },
+          };
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (resp: any) {
+            console.error('[PAYMENT:FAILED]', resp?.error);
+            setErrorMsg(resp?.error?.description || 'Payment failed. Your booking has not been confirmed.');
+            setSubmitting(false);
+          });
+          rzp.open();
+          return;
+        }
+      } catch (payErr: any) {
+        console.warn('[PAYMENT:ORDER_INITIATE_WARNING]', payErr?.response?.data || payErr?.message);
+      }
+
+      // If outside web/browser or direct flow: navigate directly to the exact booking details
+      if (!hasNavigatedRef.current) {
+        hasNavigatedRef.current = true;
+        router.replace(`/(customer)/booking/details/${bookingId}` as any);
+      }
     } catch (err: any) {
       const validationList = err.response?.data?.validationDetails;
       let msg = '';
@@ -199,7 +321,6 @@ export default function CreateBookingScreen() {
         msg = err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
       }
       setErrorMsg(msg);
-    } finally {
       setSubmitting(false);
     }
   };

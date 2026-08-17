@@ -90,6 +90,7 @@ export default function CustomerLayout() {
       <Tabs.Screen name="worker/[id]" options={{ href: null }} />
       <Tabs.Screen name="booking/[workerId]" options={{ href: null }} />
       <Tabs.Screen name="booking/details/[id]" options={{ href: null }} />
+      <Tabs.Screen name="booking/tracking/[id]" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );

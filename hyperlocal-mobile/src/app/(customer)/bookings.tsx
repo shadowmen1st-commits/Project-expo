@@ -71,10 +71,11 @@ export default function CustomerBookingsScreen() {
   };
 
   const filteredBookings = bookings.filter((b) => {
+    const status = b.bookingStatus || b.status;
     if (activeTab === 'ALL') return true;
-    if (activeTab === 'ACTIVE') return ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(b.status);
-    if (activeTab === 'COMPLETED') return b.status === 'COMPLETED';
-    if (activeTab === 'CANCELLED') return ['CANCELLED', 'REJECTED'].includes(b.status);
+    if (activeTab === 'ACTIVE') return ['PENDING', 'PAYMENT_PENDING', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(status);
+    if (activeTab === 'COMPLETED') return status === 'COMPLETED';
+    if (activeTab === 'CANCELLED') return ['CANCELLED', 'REJECTED'].includes(status);
     return true;
   });
 
@@ -138,56 +139,63 @@ export default function CustomerBookingsScreen() {
               onAction={() => router.push('/(customer)/workers')}
             />
           }
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => router.push(`/(customer)/booking/details/${item._id || item.id}`)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.cardHeader}>
-                <Text style={styles.categoryTitle}>
-                  {item.serviceCategoryName || item.categoryName || 'Service Booking'}
-                </Text>
-                <Badge status={item.status} />
-              </View>
+          renderItem={({ item }) => {
+            const bookingId = item._id || item.id;
+            const currentStatus = item.bookingStatus || item.status;
+            const isPaid = item.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(currentStatus);
+            const categoryName = item.serviceCategoryId?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
+            const workerName = item.workerId?.name || item.worker?.name || item.workerName || 'Assigned Professional';
+            const scheduledDate = item.scheduledStart || item.bookingDate;
+            const dateStr = scheduledDate ? new Date(scheduledDate).toLocaleDateString() : 'Scheduled Date';
+            const timeStr = item.startTime || (scheduledDate ? new Date(scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM');
+            const durationStr = item.durationMinutes ? `${Math.round(item.durationMinutes / 60)} hrs` : `${item.durationHours || 2} hrs`;
 
-              <View style={styles.detailsRow}>
-                <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.detailText}>
-                  {item.workerId?.name || item.workerName || 'Assigned Professional'}
-                </Text>
-              </View>
+            return (
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => router.push(`/(customer)/booking/details/${bookingId}`)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.categoryTitle}>{categoryName}</Text>
+                  <Badge status={currentStatus} />
+                </View>
 
-              <View style={styles.detailsRow}>
-                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.detailText}>
-                  {new Date(item.bookingDate || Date.now()).toLocaleDateString()} at{' '}
-                  {item.startTime || '10:00 AM'} ({item.durationHours || 2} hrs)
-                </Text>
-              </View>
+                <View style={styles.detailsRow}>
+                  <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>{workerName}</Text>
+                </View>
 
-              <View style={styles.cardFooter}>
-                <Text style={styles.priceText}>
-                  ₹{item.totalAmount || item.estimatedPrice || 500}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  {(item.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(item.status || item.bookingStatus)) && (
-                    <TouchableOpacity
-                      style={styles.trackingBtn}
-                      onPress={() => router.push(`/(customer)/booking/tracking/${item._id || item.id}` as any)}
-                    >
-                      <Ionicons name="navigate" size={12} color="#10B981" />
-                      <Text style={styles.trackingBtnText}>Track Live</Text>
-                    </TouchableOpacity>
-                  )}
-                  <View style={styles.linkRow}>
-                    <Text style={styles.viewDetailsLink}>Details</Text>
-                    <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+                <View style={styles.detailsRow}>
+                  <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>
+                    {dateStr} at {timeStr} ({durationStr})
+                  </Text>
+                </View>
+
+                <View style={styles.cardFooter}>
+                  <Text style={styles.priceText}>
+                    ₹{item.totalAmount || item.estimatedPrice || 500}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    {isPaid && (
+                      <TouchableOpacity
+                        style={styles.trackingBtn}
+                        onPress={() => router.push(`/(customer)/booking/tracking/${bookingId}` as any)}
+                      >
+                        <Ionicons name="navigate" size={12} color="#10B981" />
+                        <Text style={styles.trackingBtnText}>Track Live</Text>
+                      </TouchableOpacity>
+                    )}
+                    <View style={styles.linkRow}>
+                      <Text style={styles.viewDetailsLink}>Details</Text>
+                      <Ionicons name="arrow-forward" size={14} color={colors.accent} />
+                    </View>
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
     </View>
