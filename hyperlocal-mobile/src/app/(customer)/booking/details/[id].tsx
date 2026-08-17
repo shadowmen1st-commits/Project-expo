@@ -207,11 +207,23 @@ export default function BookingDetailsScreen() {
 
   const scheduledDate = booking.scheduledStart || booking.bookingDate;
   const formattedDate = scheduledDate
-    ? new Date(scheduledDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(new Date(scheduledDate))
     : 'Scheduled Date';
-  const formattedTime =
-    booking.startTime ||
-    (scheduledDate ? new Date(scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM');
+
+  const formattedTime = scheduledDate
+    ? new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(new Date(scheduledDate))
+    : booking.startTime || '10:00 AM';
 
   const displayAddress =
     booking.serviceAddress ||
@@ -284,6 +296,19 @@ export default function BookingDetailsScreen() {
           </View>
         </View>
 
+        {/* Service Category */}
+        {(booking.serviceCategoryId || booking.category) && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Service Category</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Category</Text>
+              <Text style={styles.priceVal}>
+                {booking.serviceCategoryId?.name || booking.category?.name || 'Home Service'}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Payment & Amount Breakdown */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Payment Details</Text>
@@ -292,6 +317,20 @@ export default function BookingDetailsScreen() {
             <Text style={styles.priceLabel}>Service Duration</Text>
             <Text style={styles.priceVal}>{durationText}</Text>
           </View>
+
+          {booking.baseAmount != null && (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Base Service Fee</Text>
+              <Text style={styles.priceVal}>₹{booking.baseAmount}</Text>
+            </View>
+          )}
+
+          {booking.platformFee != null && (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Platform Fee</Text>
+              <Text style={styles.priceVal}>₹{booking.platformFee}</Text>
+            </View>
+          )}
 
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Payment Status</Text>

@@ -19,6 +19,7 @@ import Badge from '../../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api, { API_BASE_URL } from '../../../../config/api';
 import { storage } from '../../../../utils/storage';
+import { useLocation } from '../../../../hooks/useLocation';
 import { colors, spacing, typography, radius, shadows } from '../../../../theme';
 
 const { width } = Dimensions.get('window');
@@ -50,6 +51,7 @@ const estimateEtaMinutes = (distanceKm: number | null): number | null => {
 export default function CustomerLiveTrackingScreen() {
   const { id: bookingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { location: deviceLocation } = useLocation(true);
 
   const [booking, setBooking] = useState<any>(null);
   const [workerLocation, setWorkerLocation] = useState<{
@@ -91,6 +93,8 @@ export default function CustomerLiveTrackingScreen() {
         const addr = res.data.addressSnapshot;
         if (addr?.latitude && addr?.longitude) {
           setCustomerCoords({ latitude: addr.latitude, longitude: addr.longitude });
+        } else if (deviceLocation) {
+          setCustomerCoords({ latitude: deviceLocation.latitude, longitude: deviceLocation.longitude });
         } else {
           setCustomerCoords({ latitude: 12.9716, longitude: 77.5946 });
         }

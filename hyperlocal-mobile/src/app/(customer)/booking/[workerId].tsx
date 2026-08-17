@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MobileHeader } from '../../../components/MobileHeader';
@@ -24,6 +26,101 @@ import { colors, spacing, typography, radius, shadows } from '../../../theme';
 import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
 import { resolveWorkerImage } from '../../../utils/imageUtils';
 
+export interface SlotAvailability {
+  time: string; // e.g. "11:30 AM"
+  startIso: string;
+  endIso: string;
+  available: boolean;
+  reason?: string;
+  isPast?: boolean;
+}
+
+/**
+ * Deterministic conversion of a date string (YYYY-MM-DD) and a time string (e.g. "11:30 AM")
+ * in Asia/Kolkata (+05:30) timezone into an ISO-8601 UTC string.
+ */
+export function formatToISTIsoString(dateStr: string, timeStr: string): string {
+  let hours = 10;
+  let minutes = 0;
+  const match = timeStr.match(/(\d+):?(\d*)\s*(AM|PM)?/i);
+  if (match) {
+    hours = parseInt(match[1], 10) || 10;
+    minutes = parseInt(match[2], 10) || 0;
+    const meridiem = (match[3] || '').toUpperCase();
+    if (meridiem === 'PM' && hours < 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+  }
+
+  const [yearStr, monthStr, dayStr] = dateStr.split('-');
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10) - 1; // 0-indexed month
+  const day = parseInt(dayStr, 10);
+
+  // IST offset is UTC+5:30 (+330 minutes)
+  const totalUTCMinutes = hours * 60 + minutes - 330;
+  const utcDate = new Date(Date.UTC(year, month, day, 0, totalUTCMinutes, 0, 0));
+  return utcDate.toISOString();
+}
+
+/**
+ * Calculates end ISO string from start ISO and duration in hours.
+ */
+export function calculateScheduledEndIso(startIso: string, durationHours: number): string {
+  const startDate = new Date(startIso);
+  const endDate = new Date(startDate.getTime() + durationHours * 60 * 60 * 1000);
+  return endDate.toISOString();
+}
+
+/**
+ * Formats a Date/ISO into 12-hour AM/PM in IST.
+ */
+export function formatTimeInIST(isoStr: string): string {
+  try {
+    const d = new Date(isoStr);
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Checks if a slot on a given date is in the past relative to current IST time.
+ */
+export function isSlotPassedInIST(dateStr: string, timeStr: string): boolean {
+  try {
+    const now = Date.now();
+    const slotUtcMs = new Date(formatToISTIsoString(dateStr, timeStr)).getTime();
+    return slotUtcMs <= now + 60000; // 1 min buffer
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Helper to generate 30-minute interval time slots between opening and closing hours
+ */
+export function generateCandidateTimeSlots(openingHour = 9, closingHour = 18, intervalMinutes = 30): string[] {
+  const slots: string[] = [];
+  let totalMinutes = openingHour * 60;
+  const endMinutes = closingHour * 60;
+
+  while (totalMinutes <= endMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const meridiem = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+    const displayMinutes = mins < 10 ? `0${mins}` : `${mins}`;
+    slots.push(`${displayHour < 10 ? '0' : ''}${displayHour}:${displayMinutes} ${meridiem}`);
+    totalMinutes += intervalMinutes;
+  }
+  return slots;
+}
+
 export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
   const router = useRouter();
@@ -38,6 +135,7 @@ export default function CreateBookingScreen() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
 
+  // Default to tomorrow's date
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const defaultDate = tomorrow.toISOString().split('T')[0];
@@ -45,7 +143,14 @@ export default function CreateBookingScreen() {
   const [date, setDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState('10:00 AM');
   const [duration, setDuration] = useState<number>(2);
+  const [showTimeModal, setShowTimeModal] = useState(false);
 
+  // Dynamic Availability State
+  const [slotAvailabilities, setSlotAvailabilities] = useState<SlotAvailability[]>([]);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityWarning, setAvailabilityWarning] = useState('');
+
+  // Address State
   const [houseNo, setHouseNo] = useState('142');
   const [street, setStreet] = useState('12th Main Road, HAL 2nd Stage');
   const [landmark, setLandmark] = useState('Near Metro Station');
@@ -61,6 +166,7 @@ export default function CreateBookingScreen() {
   const hasNavigatedRef = useRef(false);
   const isProcessingRef = useRef(false);
 
+  // 1. Load Worker Profile and Service Categories
   useEffect(() => {
     const initData = async () => {
       if (!canonicalParamId || !isValidObjectId(canonicalParamId)) {
@@ -98,7 +204,7 @@ export default function CreateBookingScreen() {
           }
         }
       } catch (err) {
-        // Fallback search
+        console.error('Error loading worker info:', err);
       } finally {
         setLoadingWorker(false);
       }
@@ -106,6 +212,127 @@ export default function CreateBookingScreen() {
 
     initData();
   }, [canonicalParamId]);
+
+  // 2. Fetch Dynamic Slot Availability from Backend
+  const checkSlotAvailability = useCallback(
+    async (targetDate: string, targetDuration: number) => {
+      const effectiveWorkerId = getCanonicalWorkerId(worker) || canonicalParamId;
+      if (!effectiveWorkerId || !isValidObjectId(effectiveWorkerId) || !targetDate) return;
+
+      const effectiveCatId =
+        selectedCategoryId && isValidObjectId(selectedCategoryId)
+          ? selectedCategoryId
+          : categories.length > 0 && isValidObjectId(categories[0]._id || categories[0].id)
+          ? String(categories[0]._id || categories[0].id)
+          : '6a7a91e194884cf983721a9a';
+
+      setCheckingAvailability(true);
+      setAvailabilityWarning('');
+
+      try {
+        const rawSlots = generateCandidateTimeSlots(9, 18, 30);
+        const slotChecks: SlotAvailability[] = [];
+
+        // Evaluate candidate slots
+        for (const slotStr of rawSlots) {
+          const isPast = isSlotPassedInIST(targetDate, slotStr);
+          const startIso = formatToISTIsoString(targetDate, slotStr);
+          const endIso = calculateScheduledEndIso(startIso, targetDuration);
+
+          if (isPast) {
+            slotChecks.push({
+              time: slotStr,
+              startIso,
+              endIso,
+              available: false,
+              isPast: true,
+              reason: 'Time has already passed',
+            });
+            continue;
+          }
+
+          slotChecks.push({
+            time: slotStr,
+            startIso,
+            endIso,
+            available: true,
+          });
+        }
+
+        // Query backend for non-past slots in parallel
+        const checkedSlots = await Promise.all(
+          slotChecks.map(async (slot) => {
+            if (!slot.available) return slot;
+
+            try {
+              const res = await api.post('/bookings/availability/check', {
+                workerId: String(effectiveWorkerId),
+                serviceCategoryId: String(effectiveCatId),
+                scheduledStart: slot.startIso,
+                scheduledEnd: slot.endIso,
+                pricingType: 'HOURLY',
+              });
+
+              const isAvail = res.data?.success && res.data?.available !== false;
+              return {
+                ...slot,
+                available: isAvail,
+                reason: isAvail ? undefined : res.data?.message || 'Slot unavailable',
+              };
+            } catch (err: any) {
+              const msg = err.response?.data?.message || 'Conflict with another booking or buffer';
+              return {
+                ...slot,
+                available: false,
+                reason: msg,
+              };
+            }
+          })
+        );
+
+        setSlotAvailabilities(checkedSlots);
+
+        // Verify if currently selected startTime is available
+        const currentSlotObj = checkedSlots.find((s) => s.time === startTime);
+        if (!currentSlotObj || !currentSlotObj.available) {
+          const firstAvailable = checkedSlots.find((s) => s.available);
+          if (firstAvailable) {
+            setStartTime(firstAvailable.time);
+            setAvailabilityWarning(
+              `Previously selected time was unavailable. Switched to ${firstAvailable.time}.`
+            );
+          } else {
+            setStartTime('');
+            setAvailabilityWarning(
+              `No available slots on ${targetDate} for ${targetDuration} hr(s). Please try another date or duration.`
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Availability scan error:', err);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    },
+    [worker, canonicalParamId, selectedCategoryId, categories, startTime]
+  );
+
+  // Trigger availability refresh on date, duration, category, or worker change
+  useEffect(() => {
+    if (canonicalParamId && date && duration) {
+      checkSlotAvailability(date, duration);
+    }
+  }, [date, duration, canonicalParamId, selectedCategoryId]);
+
+  const handleDateChange = (newDate: string) => {
+    setDate(newDate);
+    setErrorMsg('');
+  };
+
+  const handleDurationChange = (newDuration: number) => {
+    setDuration(newDuration);
+    setErrorMsg('');
+  };
 
   const normalized = normalizeWorkerData(worker);
   const hourlyRate = normalized?.hourlyRate || 499;
@@ -147,25 +374,27 @@ export default function CreateBookingScreen() {
       if (categories.length > 0 && isValidObjectId(categories[0]._id || categories[0].id)) {
         effectiveCatId = String(categories[0]._id || categories[0].id);
       } else {
-        effectiveCatId = '6a7ad5fca58da46031b0a23c'; // fallback valid 24-char ObjectId
+        effectiveCatId = '6a7a91e194884cf983721a9a';
       }
     }
 
-    // 4. Date & Time parsing to ISO-8601
-    let hour = 10;
-    let min = 0;
-    const timeMatch = startTime.match(/(\d+):?(\d*)\s*(AM|PM)?/i);
-    if (timeMatch) {
-      hour = parseInt(timeMatch[1], 10) || 10;
-      min = parseInt(timeMatch[2], 10) || 0;
-      const meridiem = (timeMatch[3] || '').toUpperCase();
-      if (meridiem === 'PM' && hour < 12) hour += 12;
-      if (meridiem === 'AM' && hour === 12) hour = 0;
+    // 4. Date & Time validation and parsing
+    if (!date.trim()) {
+      setErrorMsg('Please select a valid service date.');
+      return;
+    }
+    if (!startTime.trim()) {
+      setErrorMsg('Please select an available start time slot.');
+      return;
+    }
+    if (isSlotPassedInIST(date, startTime)) {
+      setErrorMsg('The selected start time has already passed. Please select a future time slot.');
+      return;
     }
 
-    const startDate = new Date(date || defaultDate);
-    startDate.setHours(hour, min, 0, 0);
-    const endDate = new Date(startDate.getTime() + (duration || 2) * 60 * 60 * 1000);
+    // Convert to strict IST ISO strings
+    const startIso = formatToISTIsoString(date, startTime);
+    const endIso = calculateScheduledEndIso(startIso, duration || 2);
 
     const fullAddress = `${houseNo.trim()}, ${street.trim()}${
       landmark.trim() ? ', ' + landmark.trim() : ''
@@ -180,14 +409,15 @@ export default function CreateBookingScreen() {
       const payload = {
         workerId: String(effectiveWorkerId),
         serviceCategoryId: String(effectiveCatId),
-        scheduledStart: startDate.toISOString(),
-        scheduledEnd: endDate.toISOString(),
+        scheduledStart: startIso,
+        scheduledEnd: endIso,
         pricingType: 'HOURLY',
         serviceAddress: fullAddress,
         addressSnapshot: {
           houseNumber: houseNo.trim(),
           street: street.trim(),
           locality: landmark.trim() || street.trim(),
+          landmark: landmark.trim() || undefined,
           city: city.trim() || 'Bengaluru',
           state: 'Karnataka',
           pincode: pincode.trim(),
@@ -233,7 +463,6 @@ export default function CreateBookingScreen() {
         const orderData = orderRes.data?.data || orderRes.data;
 
         if (orderData && typeof window !== 'undefined' && (Platform.OS === 'web' || (window as any).document)) {
-          // Load Razorpay checkout script if not present
           if (!(window as any).Razorpay) {
             await new Promise<void>((resolve, reject) => {
               const script = document.createElement('script');
@@ -267,7 +496,6 @@ export default function CreateBookingScreen() {
                 console.warn('[PAYMENT:CANCELLED]', { bookingId });
                 setErrorMsg('Payment cancelled. You can retry payment anytime from your booking details.');
                 setSubmitting(false);
-                // Do not mark as paid or navigate as paid
               },
             },
             handler: async function (paymentResponse: any) {
@@ -315,16 +543,21 @@ export default function CreateBookingScreen() {
         console.warn('[PAYMENT:ORDER_INITIATE_WARNING]', payErr?.response?.data || payErr?.message);
       }
 
-      // If outside web/browser or direct flow: navigate directly to the exact booking details
+      // If outside web or direct mobile flow: navigate directly to the exact booking details
       if (!hasNavigatedRef.current) {
         hasNavigatedRef.current = true;
         router.replace(`/(customer)/booking/details/${bookingId}` as any);
       }
     } catch (err: any) {
+      const status = err.response?.status;
       const validationList = err.response?.data?.validationDetails;
       let msg = '';
       if (Array.isArray(validationList) && validationList.length > 0) {
         msg = validationList.map((v: any) => v.issue || v.message || v.field).join('. ');
+      } else if (status === 409) {
+        msg = 'Selected time slot overlaps with an existing booking or buffer window. Please choose another available time.';
+      } else if (status === 400) {
+        msg = err.response?.data?.message || 'Please check your booking details and try again.';
       } else {
         msg = err.response?.data?.message || err.message || 'Failed to create booking. Please try again.';
       }
@@ -359,6 +592,7 @@ export default function CreateBookingScreen() {
 
   const workerName = normalized?.name || 'Verified Professional';
   const profileImage = resolveWorkerImage(worker);
+  const availableSlotsCount = slotAvailabilities.filter((s) => s.available).length;
 
   return (
     <View style={styles.container}>
@@ -383,6 +617,14 @@ export default function CreateBookingScreen() {
               </View>
             </View>
           </View>
+
+          {/* Availability Notice / Warning Banner */}
+          {availabilityWarning ? (
+            <View style={styles.infoBanner}>
+              <Ionicons name="information-circle-outline" size={18} color="#2563EB" />
+              <Text style={styles.infoText}>{availabilityWarning}</Text>
+            </View>
+          ) : null}
 
           {/* Validation Error Banner */}
           {errorMsg ? (
@@ -415,19 +657,65 @@ export default function CreateBookingScreen() {
                   label="Date"
                   placeholder="YYYY-MM-DD"
                   value={date}
-                  onChangeText={setDate}
+                  onChangeText={handleDateChange}
                   icon="calendar-outline"
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <AppInput
-                  label="Start Time"
-                  placeholder="e.g. 10:00 AM"
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  icon="time-outline"
-                />
+                <Text style={styles.fieldLabel}>Start Time</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.timeDropdownButton,
+                    checkingAvailability && styles.timeDropdownDisabled,
+                  ]}
+                  onPress={() => setShowTimeModal(true)}
+                  activeOpacity={0.7}
+                  disabled={checkingAvailability}
+                >
+                  <View style={styles.timeDropdownContent}>
+                    {checkingAvailability ? (
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    ) : (
+                      <Ionicons
+                        name="time-outline"
+                        size={16}
+                        color={startTime ? colors.accent : colors.textMuted}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.timeDropdownText,
+                        !startTime && styles.timeDropdownPlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {checkingAvailability
+                        ? 'Checking...'
+                        : startTime || 'Select Time'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+                </TouchableOpacity>
               </View>
+            </View>
+
+            <View style={styles.slotSummaryRow}>
+              <Text style={styles.slotCountText}>
+                {checkingAvailability
+                  ? 'Verifying slot availability...'
+                  : `${availableSlotsCount} slot(s) available for ${date}`}
+              </Text>
+              {availableSlotsCount === 0 && !checkingAvailability && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const nextDay = new Date(date);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    setDate(nextDay.toISOString().split('T')[0]);
+                  }}
+                >
+                  <Text style={styles.nextDayText}>Try Next Day →</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <Text style={styles.fieldLabel}>Estimated Duration</Text>
@@ -436,7 +724,7 @@ export default function CreateBookingScreen() {
                 <TouchableOpacity
                   key={hrs}
                   style={[styles.durationChip, duration === hrs && styles.durationChipActive]}
-                  onPress={() => setDuration(hrs)}
+                  onPress={() => handleDurationChange(hrs)}
                 >
                   <Text style={[styles.durationChipText, duration === hrs && styles.durationChipTextActive]}>
                     {hrs} {hrs === 1 ? 'hr' : 'hrs'}
@@ -581,12 +869,135 @@ export default function CreateBookingScreen() {
           variant="primary"
           icon="checkmark-circle-outline"
           loading={submitting}
-          disabled={submitting}
+          disabled={submitting || checkingAvailability}
           onPress={handleConfirmBooking}
           fullWidth={false}
           style={styles.confirmButton}
         />
       </View>
+
+      {/* Time Slot Picker Modal with Dynamic Availability */}
+      <Modal
+        visible={showTimeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTimeModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setShowTimeModal(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Ionicons name="time" size={20} color={colors.accent} />
+                <Text style={styles.modalTitle}>Select Start Time</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowTimeModal(false)}
+                style={styles.modalCloseBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Showing verified slots for {date} • {duration} hr duration
+            </Text>
+
+            {slotAvailabilities.length === 0 ? (
+              <View style={styles.emptySlotsContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.emptySlotsText}>Scanning professional schedule...</Text>
+              </View>
+            ) : availableSlotsCount === 0 ? (
+              <View style={styles.emptySlotsContainer}>
+                <Ionicons name="calendar-outline" size={32} color={colors.textMuted} />
+                <Text style={styles.noSlotsTitle}>No Available Slots</Text>
+                <Text style={styles.emptySlotsText}>
+                  All slots on {date} are booked or outside working hours for a {duration}-hour session.
+                </Text>
+                <TouchableOpacity
+                  style={styles.changeDateBtn}
+                  onPress={() => {
+                    const nextDay = new Date(date);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    setDate(nextDay.toISOString().split('T')[0]);
+                    setShowTimeModal(false);
+                  }}
+                >
+                  <Text style={styles.changeDateBtnText}>Try Next Day</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView
+                style={styles.slotList}
+                contentContainerStyle={styles.slotGrid}
+                showsVerticalScrollIndicator={false}
+              >
+                {slotAvailabilities.map((slot) => {
+                  const isSelected = startTime === slot.time;
+                  const isAvailable = slot.available;
+
+                  return (
+                    <TouchableOpacity
+                      key={slot.time}
+                      disabled={!isAvailable}
+                      style={[
+                        styles.slotCard,
+                        isSelected && styles.slotCardSelected,
+                        !isAvailable && styles.slotCardDisabled,
+                      ]}
+                      onPress={() => {
+                        setStartTime(slot.time);
+                        setErrorMsg('');
+                        setAvailabilityWarning('');
+                        setShowTimeModal(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.slotCardHeader}>
+                        <Ionicons
+                          name={isSelected ? 'checkmark-circle' : isAvailable ? 'time-outline' : 'close-circle'}
+                          size={15}
+                          color={
+                            isSelected
+                              ? '#FFFFFF'
+                              : isAvailable
+                              ? colors.accent
+                              : colors.textMuted
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.slotText,
+                            isSelected && styles.slotTextSelected,
+                            !isAvailable && styles.slotTextDisabled,
+                          ]}
+                        >
+                          {slot.time}
+                        </Text>
+                      </View>
+
+                      <Text
+                        style={[
+                          styles.slotStatusTag,
+                          isSelected && styles.slotStatusTagSelected,
+                          !isAvailable && styles.slotStatusTagDisabled,
+                        ]}
+                      >
+                        {slot.isPast ? 'Past' : isAvailable ? 'Available' : 'Booked'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -645,6 +1056,23 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.accent,
   },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  infoText: {
+    fontSize: typography.sizes.xs,
+    color: '#1D4ED8',
+    flex: 1,
+    fontWeight: typography.weights.medium,
+  },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -701,6 +1129,23 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.semibold,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
+  },
+  slotSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: spacing.md,
+  },
+  slotCountText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+  },
+  nextDayText: {
+    fontSize: 11,
+    color: colors.accent,
+    fontWeight: typography.weights.bold,
   },
   durationSelector: {
     flexDirection: 'row',
@@ -846,5 +1291,158 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     flex: 1.4,
+  },
+  timeDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 48,
+  },
+  timeDropdownDisabled: {
+    opacity: 0.6,
+  },
+  timeDropdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
+  },
+  timeDropdownText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+    fontWeight: typography.weights.medium,
+  },
+  timeDropdownPlaceholder: {
+    color: colors.textMuted,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xxl,
+    maxHeight: '75%',
+    ...shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.xs,
+  },
+  modalTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  modalCloseBtn: {
+    padding: spacing.xs,
+  },
+  slotList: {
+    maxHeight: 380,
+  },
+  slotGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingBottom: spacing.lg,
+  },
+  slotCard: {
+    width: '48%',
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 56,
+  },
+  slotCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  slotCardSelected: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  slotCardDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    opacity: 0.55,
+  },
+  slotText: {
+    fontSize: 12,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+  },
+  slotTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: typography.weights.bold,
+  },
+  slotTextDisabled: {
+    color: colors.textMuted,
+  },
+  slotStatusTag: {
+    fontSize: 9,
+    fontWeight: typography.weights.bold,
+    color: colors.success,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  slotStatusTagSelected: {
+    color: '#FFFFFF',
+  },
+  slotStatusTagDisabled: {
+    color: '#94A3B8',
+  },
+  emptySlotsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+    gap: spacing.sm,
+  },
+  noSlotsTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginTop: spacing.xs,
+  },
+  emptySlotsText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  changeDateBtn: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    marginTop: spacing.md,
+  },
+  changeDateBtnText: {
+    color: '#FFFFFF',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
   },
 });
