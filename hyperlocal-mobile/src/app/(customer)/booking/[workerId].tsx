@@ -19,6 +19,7 @@ import { EmptyState } from '../../../components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useLocation } from '../../../hooks/useLocation';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
 import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
 import { resolveWorkerImage } from '../../../utils/imageUtils';
@@ -27,6 +28,7 @@ export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { location: customerLocation, loading: locationLoading, requestLocation } = useLocation(true);
 
   const rawWorkerId = Array.isArray(workerId) ? workerId[0] : workerId;
   const canonicalParamId = getCanonicalWorkerId(rawWorkerId);
@@ -191,6 +193,12 @@ export default function CreateBookingScreen() {
           pincode: pincode.trim(),
           addressType,
           instructions: instructions.trim() || undefined,
+          ...(customerLocation?.latitude && customerLocation?.longitude
+            ? {
+                latitude: customerLocation.latitude,
+                longitude: customerLocation.longitude,
+              }
+            : {}),
         },
         customerNotes: instructions.trim() || 'Jobnest Mobile Service Request',
       };
@@ -440,7 +448,23 @@ export default function CreateBookingScreen() {
 
           {/* Address Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>3. Service Address</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>3. Service Address</Text>
+              <TouchableOpacity
+                style={styles.gpsButton}
+                onPress={() => requestLocation({ forceHighAccuracy: true, promptIfDenied: true })}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={customerLocation ? 'location' : 'location-outline'}
+                  size={13}
+                  color={customerLocation ? colors.success : colors.accent}
+                />
+                <Text style={[styles.gpsButtonText, customerLocation && { color: colors.success }]}>
+                  {locationLoading ? 'Detecting GPS...' : customerLocation ? 'GPS Captured' : 'Detect GPS'}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.addressTypeRow}>
               {(['HOME', 'OFFICE', 'OTHER'] as const).map((type) => (
@@ -641,11 +665,32 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
   sectionTitle: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+  },
+  gpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  gpsButtonText: {
+    fontSize: 11,
+    fontWeight: typography.weights.semibold,
+    color: colors.accent,
   },
   dateTimeGrid: {
     flexDirection: 'row',

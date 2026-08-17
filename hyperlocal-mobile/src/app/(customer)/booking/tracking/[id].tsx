@@ -274,10 +274,14 @@ export default function CustomerLiveTrackingScreen() {
               <View style={[styles.pinCircle, { backgroundColor: colors.accent }]}>
                 <Ionicons name="car-sport" size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.pinLabel}>Worker Pro</Text>
-              {workerLocation && (
+              <Text style={styles.pinLabel}>Professional</Text>
+              {workerLocation ? (
                 <Text style={styles.coordsText}>
                   {workerLocation.latitude.toFixed(3)}, {workerLocation.longitude.toFixed(3)}
+                </Text>
+              ) : (
+                <Text style={[styles.coordsText, { color: '#F59E0B' }]}>
+                  Worker location is not available yet.
                 </Text>
               )}
             </View>
@@ -292,7 +296,7 @@ export default function CustomerLiveTrackingScreen() {
               <View style={[styles.pinCircle, { backgroundColor: '#10B981' }]}>
                 <Ionicons name="location" size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.pinLabel}>Your Address</Text>
+              <Text style={styles.pinLabel}>Your Location</Text>
               {customerCoords && (
                 <Text style={styles.coordsText}>
                   {customerCoords.latitude.toFixed(3)}, {customerCoords.longitude.toFixed(3)}
