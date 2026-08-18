@@ -145,15 +145,35 @@ export default function AdminLiveTrackingScreen() {
 
       socketInstance.on('connect', () => {
         setSocketConnected(true);
+        if (__DEV__) {
+          console.log('[MOBILE TRACKING] socket connected', {
+            socketId: socketInstance?.id,
+            bookingId,
+            room: `tracking:${bookingId}`,
+          });
+        }
         socketInstance?.emit('join_tracking', { bookingId });
       });
 
       socketInstance.on('disconnect', () => {
         setSocketConnected(false);
+        if (__DEV__) {
+          console.log('[MOBILE TRACKING] socket disconnected', { bookingId });
+        }
       });
 
       socketInstance.on('location:updated', (payload: any) => {
         if (payload && String(payload.bookingId) === String(bookingId)) {
+          if (__DEV__) {
+            console.log('[MOBILE TRACKING] location received:', {
+              bookingId: payload.bookingId,
+              latitude: payload.latitude,
+              longitude: payload.longitude,
+              heading: payload.heading,
+              speed: payload.speed,
+              timestamp: payload.timestamp,
+            });
+          }
           setWorkerLocation({
             latitude: payload.latitude,
             longitude: payload.longitude,
