@@ -211,26 +211,49 @@ export default function AdminDashboard() {
         </View>
 
         {recentBookings.length > 0 ? (
-          recentBookings.slice(0, 3).map((b) => (
-            <View key={b.id || b._id} style={styles.itemCard}>
-              <View style={styles.itemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemTitle}>
-                    {b.category?.name || b.serviceCategoryName || 'Service Booking'}
-                  </Text>
-                  <Text style={styles.itemSub}>
-                    Customer: {b.customer?.name || b.customerName || 'Customer'}
-                  </Text>
+          recentBookings.slice(0, 5).map((b) => {
+            const bId = b.id || b._id || b.bookingId;
+            const bStatus = String(b.bookingStatus || b.status || '').toUpperCase();
+            const isTrackable = Boolean(bId) && !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(bStatus);
+            return (
+              <View key={bId || String(Math.random())} style={styles.itemCard}>
+                <View style={styles.itemRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle}>
+                      {b.category?.name || b.serviceCategoryName || 'Service Booking'}
+                    </Text>
+                    <Text style={styles.itemSub}>
+                      Customer: {b.customer?.name || b.customerName || 'Customer'}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Badge status={b.bookingStatus || b.status} size="sm" />
+                    <Text style={[styles.itemSub, { marginTop: 4, fontWeight: '700', color: '#0F172A' }]}>
+                      ₹{typeof b.totalAmount === 'number' ? b.totalAmount : (b.totalAmountPaise ? b.totalAmountPaise / 100 : 500)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Badge status={b.bookingStatus || b.status} size="sm" />
-                  <Text style={[styles.itemSub, { marginTop: 4, fontWeight: '700', color: '#0F172A' }]}>
-                    ₹{typeof b.totalAmount === 'number' ? b.totalAmount : (b.totalAmountPaise ? b.totalAmountPaise / 100 : 500)}
-                  </Text>
-                </View>
+                {isTrackable && (
+                  <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9', flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#2563EB',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 6,
+                      }}
+                      onPress={() => router.push(`/(admin)/tracking/${bId}` as any)}
+                    >
+                      <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Live Track</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-            </View>
-          ))
+            );
+          })
         ) : (
           <View style={styles.emptyCard}>
             <Ionicons name="calendar-outline" size={36} color="#64748B" />

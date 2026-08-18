@@ -31,6 +31,24 @@ const STATUS_FILTERS = [
   'REJECTED',
 ];
 
+const TERMINAL_STATUSES = [
+  'COMPLETED',
+  'CANCELLED',
+  'REJECTED'
+];
+
+const TRACKABLE_STATUSES = [
+  'PAID',
+  'CONFIRMED',
+  'ASSIGNED',
+  'ACCEPTED',
+  'WORKER_EN_ROUTE',
+  'EN_ROUTE',
+  'ARRIVED',
+  'STARTED',
+  'IN_PROGRESS'
+];
+
 export default function AdminBookingsScreen() {
   const router = useRouter();
 
@@ -65,13 +83,42 @@ export default function AdminBookingsScreen() {
       }
 
       // 1. Fetch from admin specific endpoint
-      const res = await api.get('/bookings/admin', { params }).catch(() => null);
+      let res: any = null;
+      try {
+        res = await api.get('/bookings/admin', { params });
+        console.log('[ADMIN BOOKINGS API]', {
+          status: res?.status,
+          success: res?.data?.success,
+          count: res?.data?.bookings?.length,
+          firstBooking: res?.data?.bookings?.[0]
+        });
+      } catch (adminErr: any) {
+        console.log('[ADMIN BOOKINGS API ERROR]', adminErr?.response?.status, adminErr?.response?.data || adminErr?.message);
+      }
 
       if (res && res.data?.success) {
+        console.log('[ADMIN BOOKINGS RESPONSE]', {
+          success: res?.data?.success,
+          count: res?.data?.bookings?.length,
+          firstBooking: res?.data?.bookings?.[0]
+            ? {
+                _id: res.data.bookings[0]._id,
+                id: res.data.bookings[0].id,
+                bookingId: res.data.bookings[0].bookingId,
+                bookingNumber: res.data.bookings[0].bookingNumber,
+                bookingStatus: res.data.bookings[0].bookingStatus,
+                status: res.data.bookings[0].status,
+                booking_status: res.data.bookings[0].booking_status,
+                currentStatus: res.data.bookings[0].currentStatus,
+                paymentStatus: res.data.bookings[0].paymentStatus,
+              }
+            : null,
+        });
         setBookings(res.data.bookings || []);
       } else {
         // Fallback to /bookings general endpoint
         const fallbackRes = await api.get('/bookings', { params });
+        console.log('[GENERAL BOOKINGS FALLBACK]', fallbackRes?.status, fallbackRes?.data);
         const list = Array.isArray(fallbackRes.data)
           ? fallbackRes.data
           : fallbackRes.data?.bookings || fallbackRes.data?.data || [];
@@ -97,8 +144,6 @@ export default function AdminBookingsScreen() {
     setRefreshing(true);
     fetchBookings(true);
   };
-
-  const activeTrackableStatuses = ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'ARRIVED', 'STARTED'];
 
   return (
     <View style={styles.container}>
@@ -156,7 +201,7 @@ export default function AdminBookingsScreen() {
       ) : (
         <FlatList
           data={bookings}
-          keyExtractor={(item) => String(item._id || item.id)}
+          keyExtractor={(item) => String(item._id || item.id || item.bookingId)}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
@@ -173,7 +218,44 @@ export default function AdminBookingsScreen() {
             />
           }
           renderItem={({ item }) => {
-            const status = normalizeBookingStatus(item.bookingStatus || item.status);
+            const rawStatus =
+              item.bookingStatus ??
+              item.status ??
+              item.booking_status ??
+              item.currentStatus ??
+              '';
+
+            const status = String(rawStatus).trim().toUpperCase();
+            const bookingId = String(item._id ?? item.id ?? item.bookingId ?? '').trim();
+
+            const isTrackable =
+              Boolean(bookingId) &&
+              TRACKABLE_STATUSES.includes(status) &&
+              !TERMINAL_STATUSES.includes(status);
+
+            console.log('[ADMIN BOOKING TRACK DEBUG]', {
+              bookingId,
+              bookingNumber: item.bookingNumber,
+              bookingStatus: item.bookingStatus,
+              status: item.status,
+              normalizedStatus: status,
+              paymentStatus: item.paymentStatus,
+              escrowStatus: item.escrowStatus,
+              worker: item.worker?.name ?? item.workerName,
+              latestLocation: Boolean(item.latestLocation),
+              workerLocation: Boolean(item.workerLocation),
+              isTrackable
+            });
+
+            console.log('[LIVE TRACK VISIBILITY]', {
+              bookingId,
+              bookingNumber: item.bookingNumber,
+              status,
+              isTrackable,
+              hasLatestLocation: Boolean(item.latestLocation),
+              hasWorkerLocation: Boolean(item.workerLocation)
+            });
+
             const category = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || 'Service Booking';
             const customer = item.customer || item.customerId;
             const worker = item.worker || item.workerId;
@@ -182,8 +264,6 @@ export default function AdminBookingsScreen() {
             const workerName = worker?.name || item.workerName || 'Unassigned';
             const amountStr = formatBookingAmount(item);
             const dateStr = formatBookingDateIST(item.scheduledStart || item.bookingDate || item.createdAt);
-            const bookingId = resolveBookingId(item);
-            const isTrackable = isTrackableBookingStatus(status);
 
             return (
               <View style={styles.card}>
@@ -226,26 +306,49 @@ export default function AdminBookingsScreen() {
 
                 {/* Footer / Actions */}
                 <View style={styles.cardFooter}>
-                  <View>
+                  <View style={styles.footerInfo}>
                     <Text style={styles.priceText}>₹{amountStr}</Text>
                     <Text style={styles.dateText}>{dateStr}</Text>
                   </View>
 
-                  {isTrackable && (
-                    <View style={{ alignItems: 'flex-end' }}>
+                  {isTrackable ? (
+                    <View style={styles.trackActionContainer}>
                       <TouchableOpacity
                         style={styles.trackButton}
-                        onPress={() => router.push(`/(admin)/tracking/${bookingId}` as any)}
+                        onPress={() => {
+                          console.log('[LIVE TRACK CLICK]', {
+                            bookingId,
+                            status,
+                            bookingNumber: item.bookingNumber,
+                          });
+
+                          if (!bookingId) {
+                            console.error('[LIVE TRACK] Missing booking ID');
+                            return;
+                          }
+
+                          router.push(`/(admin)/tracking/${bookingId}` as any);
+                        }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                        <Text style={styles.trackButtonText}>Live Track</Text>
+                        <Ionicons
+                          name="navigate-outline"
+                          size={16}
+                          color="#FFFFFF"
+                        />
+
+                        <Text style={styles.trackButtonText}>
+                          Live Track
+                        </Text>
                       </TouchableOpacity>
-                      {!item.latestLocation && !item.workerLocation && (
-                        <Text style={styles.waitingGpsText}>Waiting for worker GPS</Text>
-                      )}
+
+                      {!item.latestLocation && !item.workerLocation ? (
+                        <Text style={styles.waitingGpsText}>
+                          Waiting for worker GPS
+                        </Text>
+                      ) : null}
                     </View>
-                  )}
+                  ) : null}
                 </View>
               </View>
             );
@@ -320,6 +423,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.borderLight,
+    width: '100%',
+    alignSelf: 'stretch',
     ...shadows.sm,
   },
   cardHeader: {
@@ -358,10 +463,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
     marginTop: spacing.md,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
+    gap: spacing.md,
+  },
+  footerInfo: {
+    flex: 1,
+    minWidth: 100,
+  },
+  trackActionContainer: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    minWidth: 120,
+    flexShrink: 0,
+    zIndex: 100,
+    elevation: 10,
   },
   priceText: {
     fontSize: typography.sizes.md,
@@ -373,23 +492,28 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   trackButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: '#2563EB',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.md,
+    justifyContent: 'center',
+    minWidth: 115,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 8,
+    zIndex: 100,
+    elevation: 10,
   },
   trackButtonText: {
     color: '#FFFFFF',
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 5,
   },
   waitingGpsText: {
     fontSize: 9,
     color: '#D97706',
-    fontWeight: typography.weights.semibold,
-    marginTop: 2,
+    fontWeight: '600',
+    marginTop: 4,
     fontStyle: 'italic',
   },
 });

@@ -19,6 +19,24 @@ const STATUS_FILTERS = [
     'REJECTED',
 ];
 
+const TERMINAL_STATUSES = [
+    'COMPLETED',
+    'CANCELLED',
+    'REJECTED',
+];
+
+const TRACKABLE_STATUSES = [
+    'PAID',
+    'CONFIRMED',
+    'ASSIGNED',
+    'ACCEPTED',
+    'WORKER_EN_ROUTE',
+    'EN_ROUTE',
+    'ARRIVED',
+    'STARTED',
+    'IN_PROGRESS',
+];
+
 export const AdminBookingsPanel = () => {
     const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
@@ -62,6 +80,12 @@ export const AdminBookingsPanel = () => {
             const res = await api.get('/v1/bookings/admin', { params }).catch(() => null);
 
             if (res && res.data?.success) {
+                console.log('[WEB ADMIN BOOKINGS API]', {
+                    status: res?.status,
+                    success: res?.data?.success,
+                    count: res?.data?.bookings?.length,
+                    firstBooking: res?.data?.bookings?.[0],
+                });
                 setBookings(res.data.bookings || []);
                 if (res.data.pagination) {
                     setTotalPages(res.data.pagination.totalPages || 1);
@@ -70,6 +94,7 @@ export const AdminBookingsPanel = () => {
             } else {
                 // Fallback to /bookings
                 const fallbackRes = await api.get('/v1/bookings', { params });
+                console.log('[WEB GENERAL BOOKINGS FALLBACK]', fallbackRes?.status, fallbackRes?.data);
                 const list = Array.isArray(fallbackRes.data)
                     ? fallbackRes.data
                     : fallbackRes.data?.bookings || [];
@@ -87,8 +112,6 @@ export const AdminBookingsPanel = () => {
     useEffect(() => {
         fetchBookings();
     }, [fetchBookings]);
-
-    const activeTrackableStatuses = ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'ARRIVED', 'STARTED'];
 
     return (
         <div className="space-y-6">
@@ -187,12 +210,21 @@ export const AdminBookingsPanel = () => {
                             </thead>
                             <tbody className="divide-y divide-[#FEF3C7]">
                                 {bookings.map((b, index) => {
-                                    const bId = resolveBookingId(b) || `booking-row-${index}`;
-                                    const status = normalizeBookingStatus(b.bookingStatus || b.status);
+                                    const rawStatus =
+                                        b.bookingStatus ??
+                                        b.status ??
+                                        b.booking_status ??
+                                        b.currentStatus ??
+                                        '';
+                                    const status = String(rawStatus).trim().toUpperCase();
+                                    const bId = String(b._id ?? b.id ?? b.bookingId ?? '').trim() || `booking-row-${index}`;
                                     const customer = b.customer || b.customerId;
                                     const worker = b.worker || b.workerId;
                                     const category = b.category || b.serviceCategoryId;
-                                    const isTrackable = isTrackableBookingStatus(status);
+                                    const isTrackable =
+                                        Boolean(bId) &&
+                                        TRACKABLE_STATUSES.includes(status) &&
+                                        !TERMINAL_STATUSES.includes(status);
                                     const amountStr = formatBookingAmount(b);
                                     const dateStr = formatBookingDateIST(b.scheduledStart || b.bookingDate || b.createdAt);
 
