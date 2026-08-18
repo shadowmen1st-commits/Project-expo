@@ -17,6 +17,7 @@ import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
+import { formatBookingDateIST, formatBookingAmount, isTrackableBookingStatus, normalizeBookingStatus, resolveBookingId } from '../../utils/formatters';
 
 const STATUS_FILTERS = [
   'ALL',
@@ -172,22 +173,17 @@ export default function AdminBookingsScreen() {
             />
           }
           renderItem={({ item }) => {
-            const status = item.bookingStatus || item.status || 'PENDING';
+            const status = normalizeBookingStatus(item.bookingStatus || item.status);
             const category = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || 'Service Booking';
             const customer = item.customer || item.customerId;
             const worker = item.worker || item.workerId;
             const customerName = customer?.name || item.customerName || 'Customer';
             const customerEmail = customer?.email || '';
             const workerName = worker?.name || item.workerName || 'Unassigned';
-            const amount =
-              typeof item.totalAmount === 'number'
-                ? item.totalAmount
-                : item.totalAmountPaise
-                ? item.totalAmountPaise / 100
-                : 500;
-            const dateStr = item.scheduledStart || item.bookingDate || item.createdAt || Date.now();
-            const bookingId = item._id || item.id;
-            const isTrackable = activeTrackableStatuses.includes(status);
+            const amountStr = formatBookingAmount(item);
+            const dateStr = formatBookingDateIST(item.scheduledStart || item.bookingDate || item.createdAt);
+            const bookingId = resolveBookingId(item);
+            const isTrackable = isTrackableBookingStatus(status);
 
             return (
               <View style={styles.card}>
@@ -231,8 +227,8 @@ export default function AdminBookingsScreen() {
                 {/* Footer / Actions */}
                 <View style={styles.cardFooter}>
                   <View>
-                    <Text style={styles.priceText}>₹{amount}</Text>
-                    <Text style={styles.dateText}>{new Date(dateStr).toLocaleDateString()}</Text>
+                    <Text style={styles.priceText}>₹{amountStr}</Text>
+                    <Text style={styles.dateText}>{dateStr}</Text>
                   </View>
 
                   {isTrackable && (

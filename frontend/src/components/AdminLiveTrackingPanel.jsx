@@ -5,6 +5,7 @@ import {
     Radio, RefreshCw, Navigation, MapPin, User, Briefcase,
     Compass, Clock, AlertCircle, ArrowUpRight, CheckCircle2
 } from 'lucide-react';
+import { resolveBookingId } from '../utils/formatters';
 
 const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -208,7 +209,7 @@ export const AdminLiveTrackingPanel = () => {
 
                                 {/* Action Button */}
                                 <button
-                                    onClick={() => navigate(`/admin/tracking/${b.bookingId}`)}
+                                    onClick={() => navigate(`/admin/tracking/${resolveBookingId(b)}`)}
                                     className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition"
                                 >
                                     <Navigation className="w-3.5 h-3.5" />

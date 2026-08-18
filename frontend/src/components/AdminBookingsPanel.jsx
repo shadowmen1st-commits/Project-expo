@@ -5,6 +5,7 @@ import {
     Calendar, Search, Filter, RefreshCw, Navigation, MapPin,
     User, Briefcase, DollarSign, Clock, ShieldCheck, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import { formatBookingDateIST, formatBookingAmount, isTrackableBookingStatus, normalizeBookingStatus, resolveBookingId } from '../utils/formatters';
 
 const STATUS_FILTERS = [
     'ALL',
@@ -186,13 +187,14 @@ export const AdminBookingsPanel = () => {
                             </thead>
                             <tbody className="divide-y divide-[#FEF3C7]">
                                 {bookings.map((b, index) => {
-                                    const bId = String(b._id || b.id || b.bookingNumber || `booking-row-${index}`).trim();
-                                    const status = b.bookingStatus || b.status || 'PENDING';
+                                    const bId = resolveBookingId(b) || `booking-row-${index}`;
+                                    const status = normalizeBookingStatus(b.bookingStatus || b.status);
                                     const customer = b.customer || b.customerId;
                                     const worker = b.worker || b.workerId;
                                     const category = b.category || b.serviceCategoryId;
-                                    const isTrackable = activeTrackableStatuses.includes(status);
-                                    const amount = typeof b.totalAmount === 'number' ? b.totalAmount : (b.totalAmountPaise ? b.totalAmountPaise / 100 : 0);
+                                    const isTrackable = isTrackableBookingStatus(status);
+                                    const amountStr = formatBookingAmount(b);
+                                    const dateStr = formatBookingDateIST(b.scheduledStart || b.bookingDate || b.createdAt);
 
                                     return (
                                         <tr key={bId} className="hover:bg-[#FEFCE8]/50 transition-colors">
@@ -235,7 +237,7 @@ export const AdminBookingsPanel = () => {
 
                                             {/* Amount */}
                                             <td className="py-3 px-4 font-black text-[#1C1917]">
-                                                ₹{amount}
+                                                ₹{amountStr}
                                             </td>
 
                                             {/* Status */}
@@ -273,7 +275,7 @@ export const AdminBookingsPanel = () => {
 
                                             {/* Date */}
                                             <td className="py-3 px-4 text-[11px] text-[#78716C]">
-                                                {new Date(b.scheduledStart || b.createdAt || Date.now()).toLocaleDateString()}
+                                                {dateStr}
                                             </td>
 
                                             {/* Actions */}
