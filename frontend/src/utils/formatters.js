@@ -110,3 +110,31 @@ export function resolveBookingId(b) {
     const raw = b.id ?? b._id ?? b.bookingId;
     return String(raw || '').trim();
 }
+
+export function formatBookingDateTimeIST(value, timeFallback) {
+    if (!value && !timeFallback) return 'Schedule unavailable';
+    const datePart = formatBookingDateIST(value);
+    
+    if (timeFallback) {
+        return `${datePart} • ${timeFallback}`;
+    }
+
+    if (value) {
+        const dateObj = value instanceof Date ? value : new Date(value);
+        if (!isNaN(dateObj.getTime())) {
+            try {
+                const timePart = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                }).format(dateObj);
+                return `${datePart} • ${timePart}`;
+            } catch {
+                return datePart;
+            }
+        }
+    }
+
+    return datePart;
+}

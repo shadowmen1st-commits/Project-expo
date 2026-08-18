@@ -15,6 +15,7 @@ import config from '../../config/env.js';
 
 // ─── Singleton client ─────────────────────────────────────────────────────────
 let _razorpayInstance = null;
+const _mockOrdersStore = new Map();
 
 /**
  * Get the configured Razorpay client.
@@ -33,34 +34,48 @@ function getRazorpayClient() {
         }
     }
 
-    // Only allow mock client simulation in test environment with explicit mock mode enabled
-    if (config.NODE_ENV === 'test' && config.PAYMENT_PROVIDER_MODE === 'mock') {
+    // Only allow mock client simulation in non-production environment with explicit mock mode enabled
+    if (config.NODE_ENV !== 'production' && config.PAYMENT_PROVIDER_MODE === 'mock') {
         return {
             orders: {
-                create: async (params) => ({
-                    id: `order_mock_${crypto.randomBytes(8).toString('hex')}`,
-                    amount: params.amount,
-                    currency: params.currency,
-                    receipt: params.receipt,
-                    status: 'created',
-                    notes: params.notes,
-                }),
-                fetch: async (id) => ({
-                    id,
-                    amount: 50000,
-                    currency: 'INR',
-                    status: 'paid',
-                })
+                create: async (params) => {
+                    const orderObj = {
+                        id: `order_mock_${crypto.randomBytes(8).toString('hex')}`,
+                        amount: params.amount,
+                        currency: params.currency || 'INR',
+                        receipt: params.receipt,
+                        status: 'created',
+                        notes: params.notes,
+                    };
+                    _mockOrdersStore.set(orderObj.id, orderObj);
+                    return orderObj;
+                },
+                fetch: async (id) => {
+                    return _mockOrdersStore.get(id) || {
+                        id,
+                        amount: 50000,
+                        currency: 'INR',
+                        status: 'paid',
+                    };
+                }
             },
             payments: {
-                fetch: async (id) => ({
-                    id,
-                    amount: 50000,
-                    currency: 'INR',
-                    status: 'captured',
-                    method: 'upi',
-                    captured: true,
-                }),
+                fetch: async (id) => {
+                    let amount = 50000;
+                    let currency = 'INR';
+                    for (const ord of _mockOrdersStore.values()) {
+                        amount = ord.amount;
+                        currency = ord.currency;
+                    }
+                    return {
+                        id,
+                        amount,
+                        currency,
+                        status: 'captured',
+                        method: 'upi',
+                        captured: true,
+                    };
+                },
                 refund: async (paymentId, params) => ({
                     id: `rfnd_mock_${crypto.randomBytes(8).toString('hex')}`,
                     payment_id: paymentId,
@@ -132,10 +147,10 @@ export class RazorpayProvider extends PaymentProvider {
                        keySecret === 'mockKeySecret456' ||
                        webhookSecret === 'mockWebhookSecret789';
 
-        // Check if we are allowed to use mock in test environment
-        const isMockAllowedTest = config.NODE_ENV === 'test' && config.PAYMENT_PROVIDER_MODE === 'mock';
+        // Check if we are allowed to use mock in non-production environment
+        const isMockAllowed = config.NODE_ENV !== 'production' && config.PAYMENT_PROVIDER_MODE === 'mock';
 
-        if (missing || (isProd && isMock) || (isMock && !isMockAllowedTest)) {
+        if (missing || (isProd && isMock) || (isMock && !isMockAllowed)) {
             const err = new Error(
                 'Payment provider is not configured. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET.'
             );
@@ -152,7 +167,7 @@ export class RazorpayProvider extends PaymentProvider {
         const keyId = config.RAZORPAY_KEY_ID;
         const keySecret = config.RAZORPAY_KEY_SECRET;
         if (!keyId || !keySecret) return false;
-        if (config.NODE_ENV === 'test' && config.PAYMENT_PROVIDER_MODE === 'mock') return true;
+        if (config.NODE_ENV !== 'production' && config.PAYMENT_PROVIDER_MODE === 'mock') return true;
         return !!(
             !keyId.startsWith('rzp_test_mock') &&
             keySecret !== 'mockKeySecret456'

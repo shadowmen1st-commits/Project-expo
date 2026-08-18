@@ -15,6 +15,13 @@ import ProfileAvatar from '../../components/ProfileAvatar';
 import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import {
+  isTrackableBookingStatus,
+  normalizeBookingStatus,
+  resolveBookingId,
+  formatBookingAmount,
+  formatBookingDateTimeIST,
+} from '../../utils/formatters';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -212,24 +219,31 @@ export default function AdminDashboard() {
 
         {recentBookings.length > 0 ? (
           recentBookings.slice(0, 5).map((b) => {
-            const bId = b.id || b._id || b.bookingId;
-            const bStatus = String(b.bookingStatus || b.status || '').toUpperCase();
-            const isTrackable = Boolean(bId) && !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(bStatus);
+            const bId = resolveBookingId(b);
+            const rawStatus = b.bookingStatus ?? b.status ?? '';
+            const normalizedStatus = normalizeBookingStatus(rawStatus);
+            const isTrackable = Boolean(bId) && isTrackableBookingStatus(normalizedStatus);
+            const amountStr = formatBookingAmount(b);
+            const dateTimeStr = formatBookingDateTimeIST(b.scheduledStart || b.bookingDate || b.createdAt);
+
             return (
               <View key={bId || String(Math.random())} style={styles.itemCard}>
                 <View style={styles.itemRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemTitle}>
-                      {b.category?.name || b.serviceCategoryName || 'Service Booking'}
+                      {b.category?.name || b.serviceCategoryId?.name || b.serviceCategoryName || 'Service Booking'}
                     </Text>
                     <Text style={styles.itemSub}>
-                      Customer: {b.customer?.name || b.customerName || 'Customer'}
+                      Customer: {b.customer?.name || b.customerId?.name || b.customerName || 'Customer'}
+                    </Text>
+                    <Text style={[styles.itemSub, { fontSize: 11, color: '#64748B', marginTop: 2 }]}>
+                      {dateTimeStr}
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Badge status={b.bookingStatus || b.status} size="sm" />
+                    <Badge status={normalizedStatus} size="sm" />
                     <Text style={[styles.itemSub, { marginTop: 4, fontWeight: '700', color: '#0F172A' }]}>
-                      ₹{typeof b.totalAmount === 'number' ? b.totalAmount : (b.totalAmountPaise ? b.totalAmountPaise / 100 : 500)}
+                      ₹{amountStr}
                     </Text>
                   </View>
                 </View>
@@ -244,7 +258,10 @@ export default function AdminDashboard() {
                         paddingVertical: 6,
                         borderRadius: 6,
                       }}
-                      onPress={() => router.push(`/(admin)/tracking/${bId}` as any)}
+                      onPress={() => {
+                        console.log('[ADMIN DASHBOARD LIVE TRACK CLICK]', { bId, normalizedStatus });
+                        router.push(`/(admin)/tracking/${bId}` as any);
+                      }}
                     >
                       <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
                       <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>Live Track</Text>

@@ -17,7 +17,14 @@ import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
-import { formatBookingDateIST, formatBookingAmount, isTrackableBookingStatus, normalizeBookingStatus, resolveBookingId } from '../../utils/formatters';
+import {
+  formatBookingDateIST,
+  formatBookingDateTimeIST,
+  formatBookingAmount,
+  isTrackableBookingStatus,
+  normalizeBookingStatus,
+  resolveBookingId
+} from '../../utils/formatters';
 
 const STATUS_FILTERS = [
   'ALL',
@@ -263,7 +270,7 @@ export default function AdminBookingsScreen() {
             const customerEmail = customer?.email || '';
             const workerName = worker?.name || item.workerName || 'Unassigned';
             const amountStr = formatBookingAmount(item);
-            const dateStr = formatBookingDateIST(item.scheduledStart || item.bookingDate || item.createdAt);
+            const dateStr = formatBookingDateTimeIST(item.scheduledStart || item.bookingDate || item.createdAt, item.bookingTime);
 
             return (
               <View style={styles.card}>

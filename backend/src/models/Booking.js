@@ -24,6 +24,8 @@ const bookingSchema = new Schema(
         },
         scheduledStart: { type: Date, required: true },
         scheduledEnd: { type: Date, required: true },
+        bookingDate: { type: String },
+        bookingTime: { type: String },
         durationMinutes: { type: Number, required: true },
         pricingType: { type: String, enum: ['HOURLY', 'DAILY'], required: true },
         

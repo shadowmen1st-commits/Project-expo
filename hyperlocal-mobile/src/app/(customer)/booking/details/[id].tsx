@@ -60,99 +60,10 @@ export default function BookingDetailsScreen() {
     fetchDetails(true);
   };
 
-  const handleInitiatePayment = async () => {
-    if (paying || isProcessingPaymentRef.current || !booking) return;
+  const handleInitiatePayment = () => {
+    if (!booking) return;
     const bId = booking.id || booking._id || rawId;
-    setPaymentError('');
-    setPaying(true);
-
-    try {
-      const randKey = `idemp-${bId}-${Date.now()}`;
-      const res = await api.post(
-        '/payments/orders',
-        { bookingId: bId },
-        { headers: { 'Idempotency-Key': randKey } }
-      );
-
-      const orderData = res.data?.data || res.data;
-
-      if (orderData && typeof window !== 'undefined' && (Platform.OS === 'web' || (window as any).document)) {
-        if (!(window as any).Razorpay) {
-          await new Promise<void>((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-            script.async = true;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Razorpay checkout script.'));
-            document.body.appendChild(script);
-          });
-        }
-
-        const options = {
-          key: orderData.publicKeyId,
-          amount: orderData.amount,
-          currency: orderData.currency || 'INR',
-          name: 'JobNest Services',
-          description: `Payment for booking #${orderData.bookingNumber || bId}`,
-          order_id: orderData.razorpayOrderId,
-          prefill: {
-            name: user?.name || '',
-            email: user?.email || '',
-            contact: user?.phone || '',
-          },
-          notes: {
-            bookingId: bId,
-            bookingNumber: orderData.bookingNumber,
-          },
-          theme: { color: '#F97316' },
-          modal: {
-            ondismiss: function () {
-              setPaymentError('Payment cancelled.');
-              setPaying(false);
-            },
-          },
-          handler: async function (response: any) {
-            if (isProcessingPaymentRef.current) return;
-            isProcessingPaymentRef.current = true;
-            setPaying(true);
-            try {
-              const verifyRes = await api.post('/payments/verify', {
-                internalPaymentOrderId: orderData.internalPaymentOrderId,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-
-              if (verifyRes.data?.success) {
-                Alert.alert('Payment Successful', 'Your booking payment has been verified and confirmed.');
-                await fetchDetails(true);
-              } else {
-                setPaymentError(verifyRes.data?.message || 'Payment verification could not be completed.');
-              }
-            } catch (verifyErr: any) {
-              setPaymentError(verifyErr.response?.data?.message || 'Payment verification failed on server.');
-            } finally {
-              setPaying(false);
-              isProcessingPaymentRef.current = false;
-            }
-          },
-        };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.on('payment.failed', function (resp: any) {
-          setPaymentError(resp?.error?.description || 'Payment failed.');
-          setPaying(false);
-        });
-        rzp.open();
-      } else {
-        Alert.alert('Payment Order Ready', `Payment order #${orderData?.razorpayOrderId || bId} created.`);
-        await fetchDetails(true);
-        setPaying(false);
-      }
-    } catch (err: any) {
-      setPaymentError(err.response?.data?.message || err.message || 'Failed to initiate payment.');
-      setPaying(false);
-    }
+    router.push(`/(customer)/booking/payment/${bId}` as any);
   };
 
   const handleCancelBooking = async () => {

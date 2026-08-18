@@ -40,6 +40,8 @@ export const toSafeBookingDTO = (booking) => {
         addressSnapshot: b.addressSnapshot,
         scheduledStart: b.scheduledStart,
         scheduledEnd: b.scheduledEnd,
+        bookingDate: b.bookingDate,
+        bookingTime: b.bookingTime,
         durationMinutes: b.durationMinutes,
         pricingType: b.pricingType,
 

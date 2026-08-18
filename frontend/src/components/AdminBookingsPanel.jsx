@@ -5,7 +5,14 @@ import {
     Calendar, Search, Filter, RefreshCw, Navigation, MapPin,
     User, Briefcase, DollarSign, Clock, ShieldCheck, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
-import { formatBookingDateIST, formatBookingAmount, isTrackableBookingStatus, normalizeBookingStatus, resolveBookingId } from '../utils/formatters';
+import {
+    formatBookingDateIST,
+    formatBookingDateTimeIST,
+    formatBookingAmount,
+    isTrackableBookingStatus,
+    normalizeBookingStatus,
+    resolveBookingId
+} from '../utils/formatters';
 
 const STATUS_FILTERS = [
     'ALL',
@@ -242,7 +249,7 @@ export const AdminBookingsPanel = () => {
                                     });
 
                                     const amountStr = formatBookingAmount(b);
-                                    const dateStr = formatBookingDateIST(b.scheduledStart || b.bookingDate || b.createdAt);
+                                    const dateStr = formatBookingDateTimeIST(b.scheduledStart || b.bookingDate || b.createdAt, b.bookingTime);
 
                                     return (
                                         <tr key={bId} className="hover:bg-[#FEFCE8]/50 transition-colors">

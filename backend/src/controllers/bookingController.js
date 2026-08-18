@@ -86,18 +86,23 @@ export const createBooking = async (req, res, next) => {
 
     try {
         const validatedData = bookingCreateSchema.parse(req.body);
+        const effectiveCategoryId = validatedData.serviceCategoryId || validatedData.serviceId;
+        const effectiveServiceAddress = validatedData.serviceAddress || validatedData.address;
         const {
             quoteId,
             workerId,
-            serviceCategoryId,
-            serviceAddress,
             addressSnapshot: inputAddressSnapshot,
             scheduledStart,
             scheduledEnd,
+            bookingDate: inputBookingDate,
+            bookingTime: inputBookingTime,
             pricingType,
             customerNotes,
             couponCode,
         } = validatedData;
+
+        const serviceCategoryId = effectiveCategoryId;
+        const serviceAddress = effectiveServiceAddress;
 
         // 0. Validate Service Status (Admin Controlled)
         const serviceCat = await ServiceCategory.findById(serviceCategoryId);
@@ -272,6 +277,28 @@ export const createBooking = async (req, res, next) => {
         const endDate = new Date(scheduledEnd);
         const durationMinutes = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60));
 
+        let finalBookingDate = inputBookingDate;
+        let finalBookingTime = inputBookingTime;
+        if (!finalBookingDate) {
+            try {
+                finalBookingDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(startDate);
+            } catch {
+                finalBookingDate = startDate.toISOString().split('T')[0];
+            }
+        }
+        if (!finalBookingTime) {
+            try {
+                finalBookingTime = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                }).format(startDate);
+            } catch {
+                finalBookingTime = '10:00 AM';
+            }
+        }
+
         // 6. Create Booking Record in PAYMENT_PENDING state
         const booking = new Booking({
             bookingNumber,
@@ -283,6 +310,8 @@ export const createBooking = async (req, res, next) => {
             addressSnapshot: finalAddressSnapshot,
             scheduledStart: startDate,
             scheduledEnd: endDate,
+            bookingDate: finalBookingDate,
+            bookingTime: finalBookingTime,
             durationMinutes,
             pricingType,
             baseAmount: priceDetails.baseAmount,

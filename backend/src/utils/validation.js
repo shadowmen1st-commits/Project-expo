@@ -73,15 +73,24 @@ export const addressSnapshotSchema = z.object({
 
 export const bookingCreateSchema = z.object({
     workerId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid worker ID'),
-    serviceCategoryId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category ID'),
+    serviceCategoryId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category ID').optional(),
+    serviceId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid category ID').optional(),
     serviceAddress: z.string().min(5, 'Address must be detailed').optional(),
+    address: z.string().optional(),
     addressSnapshot: addressSnapshotSchema.optional(),
     scheduledStart: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid start date'),
     scheduledEnd: z.string().refine((val) => !isNaN(Date.parse(val)), 'Invalid end date'),
-    pricingType: z.enum(['HOURLY', 'DAILY']),
+    bookingDate: z.string().optional(),
+    bookingTime: z.string().optional(),
+    pricingType: z.enum(['HOURLY', 'DAILY']).optional().default('HOURLY'),
     customerNotes: z.string().optional(),
     couponCode: z.string().optional(),
     quoteId: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+}).refine((data) => data.serviceCategoryId || data.serviceId, {
+    message: 'serviceCategoryId or serviceId is required',
+    path: ['serviceCategoryId'],
 });
 
 export const bookingCancelSchema = z.object({

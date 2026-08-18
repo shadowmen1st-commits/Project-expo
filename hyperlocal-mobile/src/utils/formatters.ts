@@ -76,13 +76,21 @@ export function formatBookingAmount(b: any): string {
 }
 
 export const TRACKABLE_BOOKING_STATUSES = [
-    'CONFIRMED',
     'PAID',
+    'CONFIRMED',
+    'ASSIGNED',
+    'ACCEPTED',
     'WORKER_EN_ROUTE',
-    'IN_PROGRESS',
+    'EN_ROUTE',
     'ARRIVED',
     'STARTED',
-    'ACCEPTED'
+    'IN_PROGRESS'
+];
+
+export const TERMINAL_BOOKING_STATUSES = [
+    'COMPLETED',
+    'CANCELLED',
+    'REJECTED'
 ];
 
 export function normalizeBookingStatus(status: any): string {
@@ -91,11 +99,44 @@ export function normalizeBookingStatus(status: any): string {
 
 export function isTrackableBookingStatus(status: any): boolean {
     const normalized = normalizeBookingStatus(status);
-    return TRACKABLE_BOOKING_STATUSES.includes(normalized);
+    return TRACKABLE_BOOKING_STATUSES.includes(normalized) && !TERMINAL_BOOKING_STATUSES.includes(normalized);
+}
+
+export function isTerminalBookingStatus(status: any): boolean {
+    const normalized = normalizeBookingStatus(status);
+    return TERMINAL_BOOKING_STATUSES.includes(normalized);
 }
 
 export function resolveBookingId(b: any): string {
     if (!b) return '';
     const raw = b.id ?? b._id ?? b.bookingId;
     return String(raw || '').trim();
+}
+
+export function formatBookingDateTimeIST(value: any, timeFallback?: string): string {
+    if (!value && !timeFallback) return 'Schedule unavailable';
+    const datePart = formatBookingDateIST(value);
+    
+    if (timeFallback) {
+        return `${datePart} • ${timeFallback}`;
+    }
+
+    if (value) {
+        const dateObj = value instanceof Date ? value : new Date(value);
+        if (!isNaN(dateObj.getTime())) {
+            try {
+                const timePart = new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                }).format(dateObj);
+                return `${datePart} • ${timePart}`;
+            } catch {
+                return datePart;
+            }
+        }
+    }
+
+    return datePart;
 }

@@ -102,9 +102,9 @@ export function isSlotPassedInIST(dateStr: string, timeStr: string): boolean {
 }
 
 /**
- * Helper to generate 30-minute interval time slots between opening and closing hours
+ * Helper to generate 30-minute interval time slots between opening and closing hours (08:00 AM to 08:00 PM)
  */
-export function generateCandidateTimeSlots(openingHour = 9, closingHour = 18, intervalMinutes = 30): string[] {
+export function generateCandidateTimeSlots(openingHour = 8, closingHour = 20, intervalMinutes = 30): string[] {
   const slots: string[] = [];
   let totalMinutes = openingHour * 60;
   const endMinutes = closingHour * 60;
@@ -230,7 +230,7 @@ export default function CreateBookingScreen() {
       setAvailabilityWarning('');
 
       try {
-        const rawSlots = generateCandidateTimeSlots(9, 18, 30);
+        const rawSlots = generateCandidateTimeSlots(8, 20, 30);
         const slotChecks: SlotAvailability[] = [];
 
         // Evaluate candidate slots
@@ -411,6 +411,8 @@ export default function CreateBookingScreen() {
         serviceCategoryId: String(effectiveCatId),
         scheduledStart: startIso,
         scheduledEnd: endIso,
+        bookingDate: date,
+        bookingTime: startTime,
         pricingType: 'HOURLY',
         serviceAddress: fullAddress,
         addressSnapshot: {
@@ -514,7 +516,7 @@ export default function CreateBookingScreen() {
                   console.log('[PAYMENT:VERIFY_SUCCESS]', { bookingId });
                   if (!hasNavigatedRef.current) {
                     hasNavigatedRef.current = true;
-                    router.replace(`/(customer)/booking/details/${bookingId}` as any);
+                    router.replace(`/(customer)/booking/tracking/${bookingId}` as any);
                   }
                 } else {
                   setErrorMsg(verifyRes.data?.message || 'Payment verification could not be completed.');
@@ -543,10 +545,10 @@ export default function CreateBookingScreen() {
         console.warn('[PAYMENT:ORDER_INITIATE_WARNING]', payErr?.response?.data || payErr?.message);
       }
 
-      // If outside web or direct mobile flow: navigate directly to the exact booking details
+      // Navigate directly to the dedicated Payment page for this booking
       if (!hasNavigatedRef.current) {
         hasNavigatedRef.current = true;
-        router.replace(`/(customer)/booking/details/${bookingId}` as any);
+        router.replace(`/(customer)/booking/payment/${bookingId}` as any);
       }
     } catch (err: any) {
       const status = err.response?.status;
