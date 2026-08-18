@@ -41,7 +41,20 @@ export const AuthProvider=({children})=>{
         throw err;
     }
   };
-  const logout=async()=>{try{await api.post('/auth/logout');}finally{localStorage.removeItem('accessToken');setUser(null);}};
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {
+      console.warn('Logout API error:', e);
+    } finally {
+      localStorage.removeItem('accessToken');
+      try { localStorage.clear(); } catch {}
+      setUser(null);
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+  };
   const updateUser = (data) => setUser(prev => prev ? { ...prev, ...data } : data);
   return <AuthContext.Provider value={{user,setUser,updateUser,token:null,loading,login,registerUser,logout,restoreSession}}>{children}</AuthContext.Provider>;
 };

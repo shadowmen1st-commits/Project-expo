@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, ScrollView, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MobileHeader } from '../../components/MobileHeader';
 import { AppButton } from '../../components/AppButton';
@@ -15,17 +15,22 @@ export default function SettingsScreen() {
   const [emailAlerts, setEmailAlerts] = useState(true);
 
   const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to sign out of your account?')) {
+        logout();
+      }
+    } else {
+      Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   return (

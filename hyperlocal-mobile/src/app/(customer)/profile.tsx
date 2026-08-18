@@ -141,17 +141,22 @@ export default function CustomerProfileScreen() {
   };
 
   const handleLogoutConfirm = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out of your account?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to log out of your account?')) {
+        logout();
+      }
+    } else {
+      Alert.alert('Log Out', 'Are you sure you want to log out of your account?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   return (

@@ -1,4 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { useRouter } from 'expo-router';
+import { Platform } from 'react-native';
 import api from '../config/api';
 import { storage } from '../utils/storage';
 
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
 
   const restoreSession = useCallback(async () => {
     try {
@@ -121,8 +124,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       await storage.removeItem('accessToken');
       await storage.removeItem('refreshToken');
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.removeItem('accessToken');
+          window.localStorage.removeItem('refreshToken');
+          window.localStorage.clear();
+        } catch {
+          // ignore web storage errors
+        }
+      }
       setUser(null);
       if (__DEV__) console.log('AUTH: Logout complete, storage tokens cleared');
+      try {
+        router.replace('/(auth)/login');
+      } catch {
+        // ignore router errors if unmounted
+      }
     }
   };
 
