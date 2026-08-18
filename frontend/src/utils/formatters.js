@@ -76,13 +76,21 @@ export function formatBookingAmount(b) {
 }
 
 export const TRACKABLE_BOOKING_STATUSES = [
-    'CONFIRMED',
     'PAID',
+    'CONFIRMED',
+    'ASSIGNED',
+    'ACCEPTED',
     'WORKER_EN_ROUTE',
-    'IN_PROGRESS',
+    'EN_ROUTE',
     'ARRIVED',
     'STARTED',
-    'ACCEPTED'
+    'IN_PROGRESS',
+];
+
+export const TERMINAL_BOOKING_STATUSES = [
+    'COMPLETED',
+    'CANCELLED',
+    'REJECTED',
 ];
 
 export function normalizeBookingStatus(status) {
@@ -91,7 +99,10 @@ export function normalizeBookingStatus(status) {
 
 export function isTrackableBookingStatus(status) {
     const normalized = normalizeBookingStatus(status);
-    return TRACKABLE_BOOKING_STATUSES.includes(normalized);
+    return (
+        TRACKABLE_BOOKING_STATUSES.includes(normalized) &&
+        !TERMINAL_BOOKING_STATUSES.includes(normalized)
+    );
 }
 
 export function resolveBookingId(b) {

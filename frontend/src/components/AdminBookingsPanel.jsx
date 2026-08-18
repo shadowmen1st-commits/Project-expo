@@ -217,14 +217,30 @@ export const AdminBookingsPanel = () => {
                                         b.currentStatus ??
                                         '';
                                     const status = String(rawStatus).trim().toUpperCase();
-                                    const bId = String(b._id ?? b.id ?? b.bookingId ?? '').trim() || `booking-row-${index}`;
+                                    const bookingId = String(
+                                        b._id ??
+                                        b.id ??
+                                        b.bookingId ??
+                                        ''
+                                    ).trim();
+                                    const bId = bookingId || `booking-row-${index}`;
                                     const customer = b.customer || b.customerId;
                                     const worker = b.worker || b.workerId;
                                     const category = b.category || b.serviceCategoryId;
                                     const isTrackable =
-                                        Boolean(bId) &&
+                                        Boolean(bookingId) &&
                                         TRACKABLE_STATUSES.includes(status) &&
                                         !TERMINAL_STATUSES.includes(status);
+
+                                    console.log('[BOOKING LIVE TRACK DEBUG]', {
+                                        id: bookingId,
+                                        rawStatus,
+                                        normalizedStatus: status,
+                                        isTrackable,
+                                        latestLocation: b.latestLocation,
+                                        workerLocation: b.workerLocation,
+                                    });
+
                                     const amountStr = formatBookingAmount(b);
                                     const dateStr = formatBookingDateIST(b.scheduledStart || b.bookingDate || b.createdAt);
 
@@ -312,19 +328,28 @@ export const AdminBookingsPanel = () => {
 
                                             {/* Actions */}
                                             <td className="py-3 px-4 text-right">
-                                                {isTrackable ? (
-                                                    <div className="flex flex-col items-end gap-1">
+                                                {isTrackable && bookingId ? (
+                                                    <div className="track-action-container">
                                                         <button
-                                                            onClick={() => navigate(`/admin/tracking/${bId}`)}
-                                                            className="bg-[#F97316] hover:bg-orange-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-xs"
+                                                            type="button"
+                                                            className="live-tracking-btn"
+                                                            onClick={() => {
+                                                                console.log('[LIVE TRACK CLICK]', {
+                                                                    bookingId,
+                                                                    status,
+                                                                    bookingNumber: b.bookingNumber,
+                                                                });
+
+                                                                navigate(`/admin/tracking/${bookingId}`);
+                                                            }}
                                                         >
-                                                            <Navigation className="w-3 h-3" />
-                                                            <span>Track Live</span>
+                                                            🧭 Live Track
                                                         </button>
+
                                                         {!b.latestLocation && !b.workerLocation && (
-                                                            <span className="text-[9px] text-amber-600 font-medium italic">
+                                                            <div className="waiting-gps">
                                                                 Waiting for worker GPS
-                                                            </span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 ) : (

@@ -138,6 +138,9 @@ function AppRoutes() {
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
             <AdminDashboard />
           </ProtectedRoute>}/>
+      <Route path="/bookings" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+            <AdminDashboard initialSection="bookings" />
+          </ProtectedRoute>}/>
       <Route path="/admin/tracking/:id" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><LiveTrackingPage /></ProtectedRoute>}/>
       <Route path="/admin/worker-verifications" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><AdminWorkerVerificationsPage /></ProtectedRoute>}/>
       <Route path="/admin/companies/:id/verification" element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}><AdminCompanyVerification /></ProtectedRoute>}/>
