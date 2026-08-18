@@ -3,6 +3,7 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2, Trash2, User } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
+import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
 import AdminSupportPanel from '../components/AdminSupportPanel';
 import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
