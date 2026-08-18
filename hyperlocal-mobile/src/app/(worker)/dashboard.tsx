@@ -16,6 +16,8 @@ import ProfileAvatar from '../../components/ProfileAvatar';
 import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { storage } from '../../utils/storage';
+import { WorkerLocationService } from '../../utils/WorkerLocationService';
 
 export default function WorkerDashboard() {
   const { user } = useAuth();
@@ -43,6 +45,12 @@ export default function WorkerDashboard() {
           ? jobRes.value.data
           : jobRes.value.data.jobs || jobRes.value.data.data || [];
         setAssignedJobs(list);
+
+        // Synchronize background location tracking for any active job
+        const token = await storage.getItem('accessToken');
+        if (token && user?._id) {
+          WorkerLocationService.syncWorkerTracking(list, token, user._id);
+        }
       }
     } catch (err) {
       console.error('Failed fetching worker dashboard data:', err);
@@ -50,7 +58,7 @@ export default function WorkerDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     fetchWorkerData();

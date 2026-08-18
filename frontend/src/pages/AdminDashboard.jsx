@@ -3,12 +3,15 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, UserCheck, Settings, BarChart3, ListFilter, Users, ShoppingBag, DollarSign, ZoomIn, ZoomOut, RotateCw, Check, X, ShieldAlert, ArrowUpRight, Clock, FileText, Building2, Trash2, User } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
-import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import AdminReviewsPanel from '../components/AdminReviewsPanel';
-import AdminSupportPanel from '../components/AdminSupportPanel';import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
+import AdminSupportPanel from '../components/AdminSupportPanel';
+import AdminChatModerationPanel from '../components/AdminChatModerationPanel';
+import AdminBookingsPanel from '../components/AdminBookingsPanel';
+import AdminLiveTrackingPanel from '../components/AdminLiveTrackingPanel';
 import AdminCompanies from './AdminCompanies';
 import UserProfileModal from '../components/UserProfileModal';
 import ProfileAvatar from '../components/ProfileAvatar';
+import { Calendar, Radio as RadioIcon } from 'lucide-react';
 
 export const AdminDashboard = ({ initialSection = 'analytics' }) => {
     const { user, logout } = useAuth();
@@ -485,6 +488,14 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                         <button onClick={() => { setActiveSection('analytics'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'analytics' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <BarChart3 className="w-4 h-4"/>
                             Platform Analytics
+                        </button>
+                        <button onClick={() => { setActiveSection('bookings'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'bookings' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
+                            <Calendar className="w-4 h-4"/>
+                            All Bookings
+                        </button>
+                        <button onClick={() => { setActiveSection('live-tracking'); setError(''); setSuccess(''); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'live-tracking' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
+                            <RadioIcon className="w-4 h-4 text-[#F97316]"/>
+                            Live Field Tracking
                         </button>
                         <button onClick={() => { setActiveSection('queue'); setError(''); setSuccess(''); }} className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${activeSection === 'queue' ? 'bg-[#EAB308] text-white shadow-sm' : 'text-[#78716C] hover:bg-[#FEFCE8] hover:text-[#1C1917]'}`}>
                             <div className="flex items-center gap-3">
@@ -1319,6 +1330,10 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
                             )}
                         </div>
                     )}
+
+                    {/* Bookings & Live Field Tracking Panels */}
+                    {activeSection === 'bookings' && <AdminBookingsPanel />}
+                    {activeSection === 'live-tracking' && <AdminLiveTrackingPanel />}
 
                     {/* Audit Logs Section */}
                     {activeSection === 'reviews' && <AdminReviewsPanel />}

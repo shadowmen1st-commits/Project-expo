@@ -74,6 +74,7 @@ export const initializeSocket = (server) => {
             if (bookingId && typeof latitude === 'number' && typeof longitude === 'number') {
                 const payload = {
                     bookingId: String(bookingId),
+                    workerId: String(user.id || user.userId || user._id || ''),
                     latitude,
                     longitude,
                     heading,

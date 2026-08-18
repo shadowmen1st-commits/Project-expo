@@ -355,13 +355,13 @@ export const LiveTrackingPage = () => {
                     ></div>
 
                     {/* Top Status Overlay */}
-                    <div className="relative z-10 flex items-center justify-between">
+                    <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
                         <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2 flex items-center gap-2.5">
-                            <Compass className="w-4 h-4 text-[#F97316] animate-spin" style={{ animationDuration: '6s' }} />
+                            <Compass className="w-4 h-4 text-[#F97316]" style={{ transform: `rotate(${workerLocation?.heading || 0}deg)` }} />
                             <div>
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Live Distance</div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Distance</div>
                                 <div className="text-sm font-black text-white">
-                                    {distanceKm !== null ? `${distanceKm} km away` : 'Locating GPS...'}
+                                    {distanceKm !== null ? `${distanceKm} km` : 'Locating GPS...'}
                                 </div>
                             </div>
                         </div>
@@ -375,25 +375,50 @@ export const LiveTrackingPage = () => {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-3.5 py-2 flex items-center gap-2.5">
+                            <Navigation className="w-4 h-4 text-sky-400" />
+                            <div>
+                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Speed</div>
+                                <div className="text-sm font-black text-sky-400">
+                                    {workerLocation?.speed ? (workerLocation.speed * 3.6).toFixed(1) : '0'} km/h
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    {/* Temporary Signal Unavailable Notice */}
+                    {!workerLocation && (
+                        <div className="relative z-10 bg-amber-500/20 border border-amber-500/40 rounded-2xl p-3 my-2 text-xs text-amber-200 flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                            <span>Professional location temporarily unavailable. Telemetry reconnecting...</span>
+                        </div>
+                    )}
+
                     {/* Interactive Simulated Route Track */}
-                    <div className="relative z-10 my-auto py-10 flex flex-col items-center justify-center">
+                    <div className="relative z-10 my-auto py-8 flex flex-col items-center justify-center">
                         <div className="relative w-full max-w-md h-32 flex items-center justify-between px-6">
                             {/* Connection Track Line */}
                             <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-500 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.5)]"></div>
 
                             {/* Worker Marker */}
                             <div className="relative flex flex-col items-center z-10 group">
-                                <div className="w-12 h-12 rounded-2xl bg-[#F97316] text-white flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.8)] border-2 border-white animate-bounce">
+                                <div 
+                                    className="w-12 h-12 rounded-2xl bg-[#F97316] text-white flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.8)] border-2 border-white transition-transform duration-300"
+                                    style={{ transform: `rotate(${workerLocation?.heading || 0}deg)` }}
+                                >
                                     <Car className="w-6 h-6" />
                                 </div>
                                 <span className="mt-2 text-[10px] font-black text-orange-400 bg-slate-900/90 px-2 py-0.5 rounded-full border border-slate-800">
                                     Worker ({workerObj?.name?.split(' ')[0] || 'Partner'})
                                 </span>
-                                {workerLocation && (
+                                {workerLocation ? (
                                     <span className="text-[8px] text-slate-500 font-mono mt-0.5">
                                         {workerLocation.latitude.toFixed(4)}, {workerLocation.longitude.toFixed(4)}
+                                    </span>
+                                ) : (
+                                    <span className="text-[8px] text-amber-400/80 font-mono mt-0.5">
+                                        Awaiting GPS
                                     </span>
                                 )}
                             </div>
@@ -410,7 +435,7 @@ export const LiveTrackingPage = () => {
                                     <MapPin className="w-6 h-6" />
                                 </div>
                                 <span className="mt-2 text-[10px] font-black text-emerald-400 bg-slate-900/90 px-2 py-0.5 rounded-full border border-slate-800">
-                                    Your Address
+                                    Destination
                                 </span>
                                 {customerCoords && (
                                     <span className="text-[8px] text-slate-500 font-mono mt-0.5">

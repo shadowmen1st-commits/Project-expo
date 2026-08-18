@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
+  TextInput,
+  TouchableOpacity,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MobileHeader } from '../../components/MobileHeader';
@@ -15,34 +18,64 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
+const STATUS_FILTERS = [
+  'ALL',
+  'PAYMENT_PENDING',
+  'PAID',
+  'CONFIRMED',
+  'WORKER_EN_ROUTE',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'REJECTED',
+];
+
 export default function AdminBookingsScreen() {
   const router = useRouter();
 
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [errorState, setErrorState] = useState<'AUTH_ERROR' | 'SERVER_ERROR' | null>(null);
 
-  const fetchBookings = useCallback(async () => {
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = (text: string) => {
+    setSearchTerm(text);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(text);
+    }, 400);
+  };
+
+  const fetchBookings = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setErrorState(null);
     try {
-      // First attempt to fetch platform bookings via main bookings endpoint
-      let res = await api.get('/bookings');
-      let list = Array.isArray(res.data) ? res.data : res.data?.bookings || res.data?.data || [];
-      
-      // Fallback to admin analytics overview if /bookings returned empty or different format
-      if (!list || list.length === 0) {
-        try {
-          const analyticsRes = await api.get('/v1/admin/analytics/overview');
-          if (analyticsRes.data?.recentBookings) {
-            list = analyticsRes.data.recentBookings;
-          }
-        } catch {
-          // Ignore fallback error
-        }
+      const params: any = { limit: 100 };
+      if (selectedStatus !== 'ALL') {
+        params.status = selectedStatus;
+      }
+      if (debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim();
       }
 
-      setBookings(list);
+      // 1. Fetch from admin specific endpoint
+      const res = await api.get('/bookings/admin', { params }).catch(() => null);
+
+      if (res && res.data?.success) {
+        setBookings(res.data.bookings || []);
+      } else {
+        // Fallback to /bookings general endpoint
+        const fallbackRes = await api.get('/bookings', { params });
+        const list = Array.isArray(fallbackRes.data)
+          ? fallbackRes.data
+          : fallbackRes.data?.bookings || fallbackRes.data?.data || [];
+        setBookings(list);
+      }
     } catch (err: any) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setErrorState('AUTH_ERROR');
@@ -50,10 +83,10 @@ export default function AdminBookingsScreen() {
         setErrorState('SERVER_ERROR');
       }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [selectedStatus, debouncedSearch]);
 
   useEffect(() => {
     fetchBookings();
@@ -61,13 +94,54 @@ export default function AdminBookingsScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchBookings();
+    fetchBookings(true);
   };
+
+  const activeTrackableStatuses = ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'ARRIVED', 'STARTED'];
 
   return (
     <View style={styles.container}>
       <MobileHeader title="All Platform Bookings" showBack />
 
+      {/* Search Input */}
+      <View style={styles.searchBox}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by booking #, customer, worker, ID..."
+          placeholderTextColor={colors.textMuted}
+          value={searchTerm}
+          onChangeText={handleSearchChange}
+        />
+        {searchTerm.length > 0 && (
+          <TouchableOpacity onPress={() => handleSearchChange('')}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Filter Chips */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          {STATUS_FILTERS.map((st) => {
+            const isSelected = selectedStatus === st;
+            return (
+              <TouchableOpacity
+                key={st}
+                style={[styles.filterChip, isSelected && styles.filterChipSelected]}
+                onPress={() => setSelectedStatus(st)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.filterChipText, isSelected && styles.filterChipTextSelected]}>
+                  {st.replace(/_/g, ' ')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Bookings List */}
       {loading && !refreshing ? (
         <LoadingState message="Fetching all platform bookings..." />
       ) : errorState === 'AUTH_ERROR' ? (
@@ -81,7 +155,7 @@ export default function AdminBookingsScreen() {
       ) : (
         <FlatList
           data={bookings}
-          keyExtractor={(item) => item._id || item.id}
+          keyExtractor={(item) => String(item._id || item.id)}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
@@ -89,45 +163,88 @@ export default function AdminBookingsScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="calendar-outline"
-              title="No Platform Bookings"
-              description="There are currently no bookings placed across the platform."
+              title="No Bookings Found"
+              description={
+                searchTerm
+                  ? `No bookings matching "${searchTerm}".`
+                  : `No bookings currently in "${selectedStatus}" status.`
+              }
             />
           }
           renderItem={({ item }) => {
             const status = item.bookingStatus || item.status || 'PENDING';
-            const category = item.category?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
-            const customerName = item.customer?.name || item.customerId?.name || item.customerName || 'Customer';
-            const workerName = item.worker?.name || item.workerId?.name || item.workerName || 'Assigned Worker';
-            const amount = typeof item.totalAmount === 'number' ? item.totalAmount : (item.totalAmountPaise ? item.totalAmountPaise / 100 : 500);
+            const category = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || 'Service Booking';
+            const customer = item.customer || item.customerId;
+            const worker = item.worker || item.workerId;
+            const customerName = customer?.name || item.customerName || 'Customer';
+            const customerEmail = customer?.email || '';
+            const workerName = worker?.name || item.workerName || 'Unassigned';
+            const amount =
+              typeof item.totalAmount === 'number'
+                ? item.totalAmount
+                : item.totalAmountPaise
+                ? item.totalAmountPaise / 100
+                : 500;
             const dateStr = item.scheduledStart || item.bookingDate || item.createdAt || Date.now();
+            const bookingId = item._id || item.id;
+            const isTrackable = activeTrackableStatuses.includes(status);
 
             return (
               <View style={styles.card}>
+                {/* Header */}
                 <View style={styles.cardHeader}>
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.categoryTitle}>{category}</Text>
-                    {item.bookingNumber ? (
-                      <Text style={styles.bookingNumberText}>{item.bookingNumber}</Text>
-                    ) : null}
+                    <Text style={styles.bookingNumberText}>
+                      #{item.bookingNumber || String(bookingId).substring(0, 8)}
+                    </Text>
                   </View>
                   <Badge status={status} />
                 </View>
 
+                {/* Details */}
                 <View style={styles.detailRow}>
-                  <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
-                  <Text style={styles.detailText}>Customer: {customerName}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Ionicons name="briefcase-outline" size={16} color={colors.textSecondary} />
-                  <Text style={styles.detailText}>Worker: {workerName}</Text>
-                </View>
-
-                <View style={styles.cardFooter}>
-                  <Text style={styles.priceText}>₹{amount}</Text>
-                  <Text style={styles.dateText}>
-                    {new Date(dateStr).toLocaleDateString()}
+                  <Ionicons name="person-outline" size={15} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>
+                    <Text style={styles.detailBold}>Customer: </Text>
+                    {customerName} {customerEmail ? `(${customerEmail})` : ''}
                   </Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Ionicons name="briefcase-outline" size={15} color={colors.textSecondary} />
+                  <Text style={styles.detailText}>
+                    <Text style={styles.detailBold}>Worker: </Text>
+                    {workerName}
+                  </Text>
+                </View>
+
+                {item.serviceAddress ? (
+                  <View style={styles.detailRow}>
+                    <Ionicons name="location-outline" size={15} color={colors.textSecondary} />
+                    <Text style={styles.detailText} numberOfLines={1}>
+                      {item.serviceAddress}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Footer / Actions */}
+                <View style={styles.cardFooter}>
+                  <View>
+                    <Text style={styles.priceText}>₹{amount}</Text>
+                    <Text style={styles.dateText}>{new Date(dateStr).toLocaleDateString()}</Text>
+                  </View>
+
+                  {isTrackable && (
+                    <TouchableOpacity
+                      style={styles.trackButton}
+                      onPress={() => router.push(`/(admin)/tracking/${bookingId}` as any)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.trackButtonText}>Live Track</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             );
@@ -142,6 +259,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+  },
+  filterContainer: {
+    marginVertical: spacing.sm,
+  },
+  filterScroll: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  filterChipSelected: {
+    backgroundColor: colors.primaryDark,
+    borderColor: colors.primaryDark,
+  },
+  filterChipText: {
+    fontSize: 11,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+  },
+  filterChipTextSelected: {
+    color: '#FFFFFF',
   },
   listContent: {
     padding: spacing.lg,
@@ -169,18 +334,24 @@ const styles = StyleSheet.create({
   },
   bookingNumberText: {
     fontSize: typography.sizes.xs,
-    color: colors.textMuted,
+    color: colors.accent,
+    fontWeight: typography.weights.semibold,
     marginTop: 2,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
   detailText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     marginLeft: spacing.sm,
+    flex: 1,
+  },
+  detailBold: {
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -199,5 +370,18 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
+  },
+  trackButton: {
+    backgroundColor: colors.accent,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  trackButtonText: {
+    color: '#FFFFFF',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
   },
 });

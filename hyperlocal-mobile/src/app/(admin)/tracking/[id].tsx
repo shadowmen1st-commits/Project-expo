@@ -11,23 +11,21 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io, Socket } from 'socket.io-client';
-import { MobileHeader } from '../../../../components/MobileHeader';
-import { AppButton } from '../../../../components/AppButton';
-import { EmptyState } from '../../../../components/EmptyState';
-import { ProfileAvatar } from '../../../../components/ProfileAvatar';
-import Badge from '../../../../components/Badge';
+import { MobileHeader } from '../../../components/MobileHeader';
+import { AppButton } from '../../../components/AppButton';
+import { EmptyState } from '../../../components/EmptyState';
+import { ProfileAvatar } from '../../../components/ProfileAvatar';
+import Badge from '../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
-import api, { API_BASE_URL } from '../../../../config/api';
-import { storage } from '../../../../utils/storage';
-import { useLocation } from '../../../../hooks/useLocation';
-import { colors, spacing, typography, radius, shadows } from '../../../../theme';
+import api, { API_BASE_URL } from '../../../config/api';
+import { storage } from '../../../utils/storage';
+import { colors, spacing, typography, radius, shadows } from '../../../theme';
 
 const { width } = Dimensions.get('window');
 
-// Haversine formula to compute distance in KM
 const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number | null => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-  const R = 6371; // Earth radius in KM
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -40,7 +38,6 @@ const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: num
   return Number((R * c).toFixed(2));
 };
 
-// Estimate ETA in minutes (assuming average city driving speed of ~25 km/h)
 const estimateEtaMinutes = (distanceKm: number | null): number | null => {
   if (distanceKm === null || distanceKm <= 0) return 1;
   const speedKmh = 25;
@@ -48,10 +45,9 @@ const estimateEtaMinutes = (distanceKm: number | null): number | null => {
   return Math.max(1, Math.round(hours * 60));
 };
 
-export default function CustomerLiveTrackingScreen() {
+export default function AdminLiveTrackingScreen() {
   const { id: bookingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { location: deviceLocation } = useLocation(true);
 
   const [booking, setBooking] = useState<any>(null);
   const [workerLocation, setWorkerLocation] = useState<{
@@ -74,7 +70,6 @@ export default function CustomerLiveTrackingScreen() {
   const socketRef = useRef<Socket | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── 1. Fetch Tracking Info from Backend ─────────────────────────────
   const fetchTracking = useCallback(async (isSilent = false) => {
     if (!bookingId) return;
     if (!isSilent) setLoading(true);
@@ -95,8 +90,6 @@ export default function CustomerLiveTrackingScreen() {
         const addr = res.data.addressSnapshot;
         if (addr?.latitude && addr?.longitude) {
           setCustomerCoords({ latitude: addr.latitude, longitude: addr.longitude });
-        } else if (deviceLocation) {
-          setCustomerCoords({ latitude: deviceLocation.latitude, longitude: deviceLocation.longitude });
         } else {
           setCustomerCoords({ latitude: 12.9716, longitude: 77.5946 });
         }
@@ -108,18 +101,17 @@ export default function CustomerLiveTrackingScreen() {
         setErrorMessage('Tracking information is not available yet.');
       } else if (status === 401 || status === 403) {
         setErrorState('FORBIDDEN');
-        setErrorMessage('You are not authorized to view tracking for this booking.');
+        setErrorMessage('Admin authorization required.');
       } else {
         setErrorState('NETWORK_ERROR');
-        setErrorMessage(err.response?.data?.message || 'Connection lost. Retrying...');
+        setErrorMessage(err.response?.data?.message || 'Connection lost.');
       }
     } finally {
       if (!isSilent) setLoading(false);
       setRefreshing(false);
     }
-  }, [bookingId, deviceLocation]);
+  }, [bookingId]);
 
-  // ── 2. 8-Second Location Fallback Polling ──────────────────────────
   const pollLocation = useCallback(async () => {
     if (!bookingId) return;
     try {
@@ -129,11 +121,10 @@ export default function CustomerLiveTrackingScreen() {
         setLastPingTime(new Date(res.data.location.timestamp || Date.now()));
       }
     } catch {
-      // Non-blocking background poll
+      // Background poll
     }
   }, [bookingId]);
 
-  // ── 3. Lifecycle & Socket.IO ───────────────────────────────────────
   useEffect(() => {
     fetchTracking();
 
@@ -211,10 +202,10 @@ export default function CustomerLiveTrackingScreen() {
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
-        <MobileHeader title="Live Tracking" showBack />
+        <MobileHeader title="Admin Live Tracking" showBack />
         <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={styles.loadingText}>Connecting to live GPS tracking...</Text>
+          <ActivityIndicator size="large" color={colors.primaryDark} />
+          <Text style={styles.loadingText}>Connecting to platform GPS telemetry...</Text>
         </View>
       </View>
     );
@@ -223,10 +214,10 @@ export default function CustomerLiveTrackingScreen() {
   if (errorState && !booking) {
     return (
       <View style={styles.container}>
-        <MobileHeader title="Live Tracking" showBack />
+        <MobileHeader title="Admin Live Tracking" showBack />
         <EmptyState
-          icon={errorState === 'FORBIDDEN' ? 'lock-closed-outline' : 'navigate-outline'}
-          title={errorState === 'NOT_FOUND' ? 'Tracking Not Ready' : 'Access Restricted'}
+          icon="navigate-outline"
+          title={errorState === 'NOT_FOUND' ? 'Tracking Not Found' : 'Access Denied'}
           description={errorMessage}
           actionTitle="Go Back"
           onAction={() => router.back()}
@@ -236,28 +227,29 @@ export default function CustomerLiveTrackingScreen() {
   }
 
   const worker = booking?.workerId || booking?.worker;
+  const customer = booking?.customerId || booking?.customer;
   const status = booking?.bookingStatus || booking?.status || 'PAID';
   const headingDeg = workerLocation?.heading || 0;
 
   return (
     <View style={styles.container}>
-      <MobileHeader title="Live Tracking" showBack />
+      <MobileHeader title="Admin Live Tracking" showBack />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Radar Map Visualizer Card */}
+        {/* Radar Map Card */}
         <View style={styles.radarCard}>
-          {/* Top Status Header */}
+          {/* Top Bar */}
           <View style={styles.radarHeader}>
             <View style={styles.radarStatBox}>
               <Ionicons name="compass-outline" size={16} color={colors.accent} />
               <View>
                 <Text style={styles.statLabel}>Distance</Text>
                 <Text style={styles.statValue}>
-                  {distanceKm !== null ? `${distanceKm} km` : 'Locating GPS...'}
+                  {distanceKm !== null ? `${distanceKm} km` : 'Awaiting GPS'}
                 </Text>
               </View>
             </View>
@@ -267,7 +259,7 @@ export default function CustomerLiveTrackingScreen() {
               <View>
                 <Text style={styles.statLabel}>ETA</Text>
                 <Text style={[styles.statValue, { color: '#10B981' }]}>
-                  {etaMinutes !== null ? `~${etaMinutes} mins` : 'Calculating...'}
+                  {etaMinutes !== null ? `~${etaMinutes} mins` : 'Calculating'}
                 </Text>
               </View>
             </View>
@@ -300,15 +292,13 @@ export default function CustomerLiveTrackingScreen() {
               >
                 <Ionicons name="car-sport" size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.pinLabel}>Professional</Text>
+              <Text style={styles.pinLabel}>Worker Pin</Text>
               {workerLocation ? (
                 <Text style={styles.coordsText}>
                   {workerLocation.latitude.toFixed(3)}, {workerLocation.longitude.toFixed(3)}
                 </Text>
               ) : (
-                <Text style={[styles.coordsText, { color: '#F59E0B' }]}>
-                  Location Signal Unavailable
-                </Text>
+                <Text style={[styles.coordsText, { color: '#F59E0B' }]}>Awaiting Signal</Text>
               )}
             </View>
 
@@ -322,7 +312,7 @@ export default function CustomerLiveTrackingScreen() {
               <View style={[styles.pinCircle, { backgroundColor: '#10B981' }]}>
                 <Ionicons name="location" size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.pinLabel}>Your Location</Text>
+              <Text style={styles.pinLabel}>Customer</Text>
               {customerCoords && (
                 <Text style={styles.coordsText}>
                   {customerCoords.latitude.toFixed(3)}, {customerCoords.longitude.toFixed(3)}
@@ -340,7 +330,7 @@ export default function CustomerLiveTrackingScreen() {
                 onPress={() => setActiveFocus(mode)}
               >
                 <Text style={[styles.mapCtrlBtnText, activeFocus === mode && styles.mapCtrlBtnTextActive]}>
-                  {mode === 'FIT' ? 'Fit Both' : mode === 'WORKER' ? 'Worker Focus' : 'My Location'}
+                  {mode === 'FIT' ? 'Fit Both' : mode === 'WORKER' ? 'Worker Focus' : 'Customer Focus'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -355,7 +345,7 @@ export default function CustomerLiveTrackingScreen() {
                 color={socketConnected ? '#10B981' : '#F59E0B'}
               />
               <Text style={[styles.signalText, { color: socketConnected ? '#10B981' : '#F59E0B' }]}>
-                {socketConnected ? 'Live Socket Stream (Real-Time)' : 'Polling Fallback (8s)'}
+                {socketConnected ? 'Live Socket Stream (0s)' : 'Polling Fallback (8s)'}
               </Text>
             </View>
 
@@ -365,72 +355,62 @@ export default function CustomerLiveTrackingScreen() {
           </View>
         </View>
 
-        {/* Temporary Signal Unavailable Notice if worker location is null */}
-        {!workerLocation && (
-          <View style={styles.noticeBox}>
-            <Ionicons name="information-circle-outline" size={18} color="#F59E0B" />
-            <Text style={styles.noticeText}>
-              Professional location temporarily unavailable. Retrying connection...
-            </Text>
-          </View>
-        )}
-
-        {/* Worker Professional Card */}
+        {/* Booking Details Card */}
         <View style={styles.card}>
-          <View style={styles.workerRow}>
-            <ProfileAvatar user={worker} size="lg" showBadge />
-            <View style={styles.workerInfo}>
-              <Text style={styles.workerName}>{worker?.name || 'Assigned Professional'}</Text>
-              <Text style={styles.workerCategory}>
-                {booking?.serviceCategoryId?.name || booking?.category?.name || 'Verified Professional'}
+          <View style={styles.cardHeader}>
+            <View>
+              <Text style={styles.categoryTitle}>
+                {booking?.serviceCategoryId?.name || booking?.category?.name || 'Service Booking'}
               </Text>
-              <View style={styles.badgeRow}>
-                <Badge status={status} />
-              </View>
+              <Text style={styles.bookingNumberText}>
+                Booking #{booking?.bookingNumber || String(booking?._id || booking?.id).substring(0, 8)}
+              </Text>
+            </View>
+            <Badge status={status} />
+          </View>
+
+          <View style={styles.detailsDivider} />
+
+          {/* Customer Row */}
+          <View style={styles.partyRow}>
+            <ProfileAvatar user={customer} size="md" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.partyRole}>Customer</Text>
+              <Text style={styles.partyName}>{customer?.name || 'Customer'}</Text>
+              <Text style={styles.partyMeta}>{customer?.phone || customer?.email || 'N/A'}</Text>
             </View>
           </View>
 
           <View style={styles.detailsDivider} />
 
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Payment</Text>
-              <Text style={[styles.metricVal, { color: '#10B981' }]}>PAID ✓</Text>
-            </View>
-            <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Booking #</Text>
-              <Text style={styles.metricVal}>
-                {booking?.bookingNumber || String(booking?._id || booking?.id).substring(0, 8)}
-              </Text>
+          {/* Worker Row */}
+          <View style={styles.partyRow}>
+            <ProfileAvatar user={worker} size="md" showBadge />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.partyRole}>Assigned Worker</Text>
+              <Text style={styles.partyName}>{worker?.name || 'Unassigned'}</Text>
+              <Text style={styles.partyMeta}>{worker?.phone || worker?.email || 'N/A'}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Service Address Card */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Destination</Text>
+          <View style={styles.detailsDivider} />
+
+          {/* Address */}
           <View style={styles.addressRow}>
-            <Ionicons name="map-outline" size={18} color={colors.accent} style={{ marginTop: 2 }} />
+            <Ionicons name="location-outline" size={18} color={colors.accent} style={{ marginTop: 2 }} />
             <Text style={styles.addressText}>
-              {booking?.serviceAddress || booking?.address || 'Customer Service Location'}
+              {booking?.serviceAddress || booking?.address || 'Customer Location'}
             </Text>
           </View>
         </View>
 
-        {/* Actions */}
-        <View style={styles.actionGroup}>
-          <AppButton
-            title="View Booking Details"
-            variant="primary"
-            onPress={() => router.push(`/(customer)/booking/details/${bookingId}` as any)}
-          />
-          <AppButton
-            title="Back to Bookings"
-            variant="outline"
-            onPress={() => router.back()}
-            style={{ marginTop: spacing.xs }}
-          />
-        </View>
+        {/* Back Action */}
+        <AppButton
+          title="Back to All Bookings"
+          variant="outline"
+          onPress={() => router.back()}
+          style={{ marginTop: spacing.xs }}
+        />
       </ScrollView>
     </View>
   );
@@ -582,23 +562,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontFamily: 'monospace',
   },
-  noticeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: '#FEF3C7',
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    marginBottom: spacing.md,
-  },
-  noticeText: {
-    fontSize: typography.sizes.xs,
-    color: '#92400E',
-    fontWeight: typography.weights.medium,
-    flex: 1,
-  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
@@ -608,58 +571,47 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     ...shadows.sm,
   },
-  workerRow: {
+  cardHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.md,
   },
-  workerInfo: {
-    flex: 1,
-  },
-  workerName: {
+  categoryTitle: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
   },
-  workerCategory: {
+  bookingNumberText: {
     fontSize: typography.sizes.xs,
     color: colors.accent,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.semibold,
     marginTop: 2,
-  },
-  badgeRow: {
-    marginTop: spacing.xs,
   },
   detailsDivider: {
     height: 1,
     backgroundColor: colors.borderLight,
     marginVertical: spacing.md,
   },
-  metricsGrid: {
+  partyRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.md,
   },
-  metricItem: {
-    flex: 1,
-  },
-  metricLabel: {
+  partyRole: {
     fontSize: 10,
     color: colors.textMuted,
     fontWeight: typography.weights.bold,
     textTransform: 'uppercase',
   },
-  metricVal: {
+  partyName: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginTop: 2,
   },
-  sectionTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
+  partyMeta: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 1,
   },
   addressRow: {
     flexDirection: 'row',
@@ -668,12 +620,8 @@ const styles = StyleSheet.create({
   },
   addressText: {
     flex: 1,
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  actionGroup: {
-    marginTop: spacing.sm,
-    gap: spacing.xs,
+    lineHeight: 18,
   },
 });

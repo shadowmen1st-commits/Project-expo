@@ -21,7 +21,10 @@
       "package": "com.anonymous.hyperlocalmobile",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -44,7 +47,9 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location for live service tracking.",
-          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to track worker arrival."
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to track worker arrival.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ]
     ],

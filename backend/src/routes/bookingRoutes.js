@@ -19,6 +19,8 @@ import {
     getBookingTracking,
     updateWorkerLocation,
     getWorkerLocation,
+    getAdminBookings,
+    getAdminLiveTracking,
 } from '../controllers/bookingController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -29,6 +31,10 @@ router.use(authMiddleware);
 router.post('/availability/check', checkAvailability);
 router.post('/create', createBooking);
 router.post('/', createBooking);
+
+// Admin Routes (Placed before :id parameters)
+router.get('/admin/live-tracking', getAdminLiveTracking);
+router.get('/admin', getAdminBookings);
 
 // Listing & Details
 router.get('/customer', getCustomerBookings);

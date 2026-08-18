@@ -449,6 +449,214 @@ export const getBookings = async (req, res, next) => {
 };
 
 /**
+ * Admin: Get All Bookings across platform with filters, search, and pagination
+ * GET /api/v1/bookings/admin
+ */
+export const getAdminBookings = async (req, res, next) => {
+    const user = req.user;
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+        return res.status(403).json({
+            success: false,
+            statusCode: 403,
+            message: 'Forbidden: Admin access required.',
+        });
+    }
+
+    try {
+        const {
+            status,
+            search,
+            page = 1,
+            limit = 50,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+        } = req.query;
+
+        const query = {};
+
+        // Status Filter
+        if (status && status !== 'ALL') {
+            query.bookingStatus = status;
+        }
+
+        // Search filter (booking number, booking ID, customer name/email, worker name)
+        if (search && search.trim()) {
+            const term = search.trim();
+            const searchRegex = new RegExp(term, 'i');
+
+            // Find matching users (customers or workers)
+            const matchedUsers = await User.find({
+                $or: [
+                    { name: searchRegex },
+                    { email: searchRegex },
+                    { phone: searchRegex },
+                ],
+            }).select('_id');
+            const matchedUserIds = matchedUsers.map((u) => u._id);
+
+            const searchConditions = [
+                { bookingNumber: searchRegex },
+                { customerId: { $in: matchedUserIds } },
+                { workerId: { $in: matchedUserIds } },
+            ];
+
+            // If valid MongoDB ObjectId
+            if (term.match(/^[0-9a-fA-F]{24}$/)) {
+                searchConditions.push({ _id: term });
+            }
+
+            query.$or = searchConditions;
+        }
+
+        const skip = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
+        const take = Math.min(100, Math.max(1, parseInt(limit, 10)));
+
+        const [bookings, total] = await Promise.all([
+            Booking.find(query)
+                .populate('customerId', 'name email phone profileImage')
+                .populate('workerId', 'name email phone profileImage')
+                .populate('serviceCategoryId', 'name icon description')
+                .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+                .skip(skip)
+                .limit(take),
+            Booking.countDocuments(query),
+        ]);
+
+        // Attach latest location status
+        const bookingIds = bookings.map((b) => b._id);
+        const latestPings = await BookingLocation.aggregate([
+            { $match: { bookingId: { $in: bookingIds } } },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$bookingId',
+                    latestLocation: { $first: '$$ROOT' },
+                },
+            },
+        ]);
+
+        const pingMap = new Map();
+        latestPings.forEach((p) => {
+            pingMap.set(p._id.toString(), p.latestLocation);
+        });
+
+        const enrichedBookings = bookings.map((b) => {
+            const safeDTO = toSafeBookingDTO(b);
+            const ping = pingMap.get(b._id.toString());
+            return {
+                ...safeDTO,
+                customer: b.customerId,
+                worker: b.workerId,
+                category: b.serviceCategoryId,
+                latestLocation: ping
+                    ? {
+                          latitude: ping.latitude,
+                          longitude: ping.longitude,
+                          heading: ping.heading,
+                          speed: ping.speed,
+                          accuracy: ping.accuracy,
+                          timestamp: ping.timestamp || ping.createdAt,
+                      }
+                    : null,
+                isTrackingActive: ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'ARRIVED', 'STARTED'].includes(b.bookingStatus),
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            bookings: enrichedBookings,
+            pagination: {
+                total,
+                page: parseInt(page, 10),
+                limit: take,
+                totalPages: Math.ceil(total / take) || 1,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Admin: Get All Active Bookings with Live GPS Tracking
+ * GET /api/v1/bookings/admin/live-tracking
+ */
+export const getAdminLiveTracking = async (req, res, next) => {
+    const user = req.user;
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+        return res.status(403).json({
+            success: false,
+            statusCode: 403,
+            message: 'Forbidden: Admin access required.',
+        });
+    }
+
+    try {
+        const activeStatuses = ['WORKER_EN_ROUTE', 'IN_PROGRESS', 'CONFIRMED', 'PAID', 'ARRIVED', 'STARTED'];
+        const activeBookings = await Booking.find({ bookingStatus: { $in: activeStatuses } })
+            .populate('customerId', 'name email phone profileImage')
+            .populate('workerId', 'name email phone profileImage')
+            .populate('serviceCategoryId', 'name icon description')
+            .sort({ updatedAt: -1 })
+            .limit(100);
+
+        const bookingIds = activeBookings.map((b) => b._id);
+        const latestPings = await BookingLocation.aggregate([
+            { $match: { bookingId: { $in: bookingIds } } },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: '$bookingId',
+                    latestLocation: { $first: '$$ROOT' },
+                },
+            },
+        ]);
+
+        const pingMap = new Map();
+        latestPings.forEach((p) => {
+            pingMap.set(p._id.toString(), p.latestLocation);
+        });
+
+        const trackingList = activeBookings.map((b) => {
+            const ping = pingMap.get(b._id.toString());
+            return {
+                bookingId: b._id.toString(),
+                bookingNumber: b.bookingNumber || b._id.toString().substring(0, 8),
+                bookingStatus: b.bookingStatus,
+                paymentStatus: b.paymentStatus,
+                customer: b.customerId,
+                worker: b.workerId,
+                category: b.serviceCategoryId,
+                serviceAddress: b.serviceAddress,
+                addressSnapshot: b.addressSnapshot,
+                totalAmountPaise: b.totalAmountPaise,
+                totalAmount: b.totalAmountPaise ? b.totalAmountPaise / 100 : b.totalAmount,
+                createdAt: b.createdAt,
+                updatedAt: b.updatedAt,
+                latestLocation: ping
+                    ? {
+                          latitude: ping.latitude,
+                          longitude: ping.longitude,
+                          heading: ping.heading,
+                          speed: ping.speed,
+                          accuracy: ping.accuracy,
+                          timestamp: ping.timestamp || ping.createdAt,
+                      }
+                    : null,
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: trackingList.length,
+            activeBookings: trackingList,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * Get Booking Details by ID
  * GET /api/v1/bookings/:bookingId
  */
@@ -853,6 +1061,7 @@ export const updateWorkerLocation = async (req, res, next) => {
             const io = getIO();
             const payload = {
                 bookingId: booking._id.toString(),
+                workerId: booking.workerId?._id?.toString() || booking.workerId?.toString() || '',
                 latitude,
                 longitude,
                 heading,
@@ -951,4 +1160,5 @@ export const getWorkerLocation = async (req, res, next) => {
         next(err);
     }
 };
+
 

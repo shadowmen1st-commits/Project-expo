@@ -16,10 +16,14 @@ import Badge from '../../components/Badge';
 import { AppButton } from '../../components/AppButton';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
+import { storage } from '../../utils/storage';
+import { WorkerLocationService } from '../../utils/WorkerLocationService';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function WorkerBookingsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [jobs, setJobs] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
@@ -43,6 +47,11 @@ export default function WorkerBookingsScreen() {
       }
 
       setJobs(data);
+
+      const token = await storage.getItem('accessToken');
+      if (token && user?._id) {
+        WorkerLocationService.syncWorkerTracking(data, token, user._id);
+      }
     } catch (err: any) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setErrorState('AUTH_ERROR');
@@ -53,7 +62,7 @@ export default function WorkerBookingsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     fetchJobs();
