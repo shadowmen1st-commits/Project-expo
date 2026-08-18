@@ -17,8 +17,57 @@ import ProfileAvatar from '../../components/ProfileAvatar';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 
+interface NormalizedWorker {
+  _key: string;
+  _realId: string;
+  _id: string;
+  verificationStatus: string;
+  [key: string]: any;
+}
+
+const normalizeWorkers = (rawList: any[]): NormalizedWorker[] => {
+  if (!Array.isArray(rawList)) return [];
+  const seenKeys = new Set<string>();
+  const normalized: NormalizedWorker[] = [];
+
+  rawList.forEach((item, index) => {
+    if (!item || typeof item !== 'object') return;
+
+    const rawId = item._id ?? item.id ?? item.workerId ?? item.userId?._id ?? item.userId?.id;
+    const realId = rawId ? String(rawId) : null;
+
+    let finalKey: string;
+    if (realId) {
+      if (seenKeys.has(realId)) {
+        if (__DEV__) {
+          console.warn(`[workers.tsx] Duplicate worker ID detected: ${realId}. Assigning unique key variant.`);
+        }
+        finalKey = `${realId}-dup-${index}`;
+      } else {
+        seenKeys.add(realId);
+        finalKey = realId;
+      }
+    } else {
+      if (__DEV__) {
+        console.warn(`[workers.tsx] Worker item at index ${index} missing real ID. Falling back to generated key.`);
+      }
+      finalKey = `worker-fallback-${index}`;
+    }
+
+    normalized.push({
+      ...item,
+      _key: finalKey,
+      _realId: realId || finalKey,
+      _id: realId || finalKey,
+      verificationStatus: item.verificationStatus || 'PENDING',
+    });
+  });
+
+  return normalized;
+};
+
 export default function AdminWorkersScreen() {
-  const [workers, setWorkers] = useState<any[]>([]);
+  const [workers, setWorkers] = useState<NormalizedWorker[]>([]);
   const [activeTab, setActiveTab] = useState<string>('PENDING');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,7 +98,7 @@ export default function AdminWorkersScreen() {
           }
         }
       }
-      setWorkers(combined);
+      setWorkers(normalizeWorkers(combined));
     } catch (err) {
       console.error('Error fetching admin worker submissions:', err);
     } finally {
@@ -97,7 +146,8 @@ export default function AdminWorkersScreen() {
     }
   };
 
-  const filteredWorkers = workers.filter((w) => {
+  const filteredWorkers = (Array.isArray(workers) ? workers : []).filter((w) => {
+    if (!w) return false;
     if (activeTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING'].includes(w.verificationStatus);
     if (activeTab === 'APPROVED') return w.verificationStatus === 'APPROVED';
     if (activeTab === 'REJECTED') return w.verificationStatus === 'REJECTED';
@@ -130,7 +180,7 @@ export default function AdminWorkersScreen() {
       ) : (
         <FlatList
           data={filteredWorkers}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => String(item._key || item._realId || item._id)}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
           ListEmptyComponent={
@@ -141,7 +191,8 @@ export default function AdminWorkersScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const isProcessing = actionLoadingId === item._id;
+            const targetId = item._realId || item._id;
+            const isProcessing = actionLoadingId === targetId;
             const isPending = ['PENDING_APPROVAL', 'PENDING'].includes(item.verificationStatus);
 
             return (
@@ -168,14 +219,14 @@ export default function AdminWorkersScreen() {
                       title="Reject"
                       variant="danger"
                       size="sm"
-                      onPress={() => handleReject(item._id)}
+                      onPress={() => handleReject(targetId)}
                       loading={isProcessing}
                       style={{ flex: 1, marginRight: 8 }}
                     />
                     <Button
                       title="Approve"
                       size="sm"
-                      onPress={() => handleApprove(item._id)}
+                      onPress={() => handleApprove(targetId)}
                       loading={isProcessing}
                       style={{ flex: 1 }}
                     />

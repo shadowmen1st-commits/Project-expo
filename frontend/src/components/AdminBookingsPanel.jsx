@@ -278,13 +278,24 @@ export const AdminBookingsPanel = () => {
 
                                             {/* Actions */}
                                             <td className="py-3 px-4 text-right">
-                                                <button
-                                                    onClick={() => navigate(`/booking/${bId}/tracking`)}
-                                                    className="bg-[#F97316] hover:bg-orange-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ml-auto shadow-xs"
-                                                >
-                                                    <Navigation className="w-3 h-3" />
-                                                    <span>Track</span>
-                                                </button>
+                                                {isTrackable ? (
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <button
+                                                            onClick={() => navigate(`/admin/tracking/${bId}`)}
+                                                            className="bg-[#F97316] hover:bg-orange-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-xs"
+                                                        >
+                                                            <Navigation className="w-3 h-3" />
+                                                            <span>Track Live</span>
+                                                        </button>
+                                                        {!b.latestLocation && !b.workerLocation && (
+                                                            <span className="text-[9px] text-amber-600 font-medium italic">
+                                                                Waiting for worker GPS
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] text-[#A8A29E] italic">N/A</span>
+                                                )}
                                             </td>
                                         </tr>
                                     );

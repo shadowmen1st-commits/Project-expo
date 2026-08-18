@@ -71,7 +71,17 @@ export const initializeSocket = (server) => {
 
         // Worker emits direct location update over socket
         socket.on('location:update', ({ bookingId, latitude, longitude, heading = 0, speed = 0, accuracy = 0 }) => {
-            if (bookingId && typeof latitude === 'number' && typeof longitude === 'number') {
+            if (
+                bookingId &&
+                typeof latitude === 'number' &&
+                typeof longitude === 'number' &&
+                !isNaN(latitude) &&
+                !isNaN(longitude) &&
+                latitude >= -90 &&
+                latitude <= 90 &&
+                longitude >= -180 &&
+                longitude <= 180
+            ) {
                 const payload = {
                     bookingId: String(bookingId),
                     workerId: String(user.id || user.userId || user._id || ''),

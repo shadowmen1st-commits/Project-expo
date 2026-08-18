@@ -170,12 +170,15 @@ export default function AdminLiveTrackingScreen() {
     initSocket();
 
     pollingTimerRef.current = setInterval(() => {
-      pollLocation();
+      if (!socketRef.current?.connected) {
+        pollLocation();
+      }
     }, 8000);
 
     return () => {
       if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
       if (socketInstance) {
+        socketInstance.off('location:updated');
         socketInstance.emit('leave_tracking', { bookingId });
         socketInstance.disconnect();
       }
@@ -298,7 +301,7 @@ export default function AdminLiveTrackingScreen() {
                   {workerLocation.latitude.toFixed(3)}, {workerLocation.longitude.toFixed(3)}
                 </Text>
               ) : (
-                <Text style={[styles.coordsText, { color: '#F59E0B' }]}>Awaiting Signal</Text>
+                <Text style={[styles.coordsText, { color: '#F59E0B' }]}>Waiting for professional location...</Text>
               )}
             </View>
 

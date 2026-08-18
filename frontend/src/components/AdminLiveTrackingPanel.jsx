@@ -207,7 +207,7 @@ export const AdminLiveTrackingPanel = () => {
 
                                 {/* Action Button */}
                                 <button
-                                    onClick={() => navigate(`/booking/${b.bookingId}/tracking`)}
+                                    onClick={() => navigate(`/admin/tracking/${b.bookingId}`)}
                                     className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition"
                                 >
                                     <Navigation className="w-3.5 h-3.5" />

@@ -619,6 +619,24 @@ export const getAdminLiveTracking = async (req, res, next) => {
 
         const trackingList = activeBookings.map((b) => {
             const ping = pingMap.get(b._id.toString());
+            const workerLoc = ping
+                ? {
+                      latitude: ping.latitude,
+                      longitude: ping.longitude,
+                      heading: ping.heading || 0,
+                      speed: ping.speed || 0,
+                      accuracy: ping.accuracy || 0,
+                      timestamp: ping.timestamp || ping.createdAt,
+                  }
+                : null;
+            const customerLoc = b.addressSnapshot
+                ? {
+                      latitude: b.addressSnapshot.latitude,
+                      longitude: b.addressSnapshot.longitude,
+                      addressLine: b.serviceAddress,
+                  }
+                : null;
+
             return {
                 bookingId: b._id.toString(),
                 bookingNumber: b.bookingNumber || b._id.toString().substring(0, 8),
@@ -633,16 +651,15 @@ export const getAdminLiveTracking = async (req, res, next) => {
                 totalAmount: b.totalAmountPaise ? b.totalAmountPaise / 100 : b.totalAmount,
                 createdAt: b.createdAt,
                 updatedAt: b.updatedAt,
-                latestLocation: ping
-                    ? {
-                          latitude: ping.latitude,
-                          longitude: ping.longitude,
-                          heading: ping.heading,
-                          speed: ping.speed,
-                          accuracy: ping.accuracy,
-                          timestamp: ping.timestamp || ping.createdAt,
-                      }
-                    : null,
+                latestLocation: workerLoc,
+                workerLocation: workerLoc,
+                customerLocation: customerLoc,
+                latitude: ping?.latitude ?? null,
+                longitude: ping?.longitude ?? null,
+                heading: ping?.heading ?? 0,
+                speed: ping?.speed ?? 0,
+                accuracy: ping?.accuracy ?? 0,
+                timestamp: ping?.timestamp || ping?.createdAt || null,
             };
         });
 
@@ -1030,8 +1047,17 @@ export const updateWorkerLocation = async (req, res, next) => {
         }
 
         const { latitude, longitude, heading = 0, speed = 0, accuracy = 0 } = req.body;
-        if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-            return res.status(400).json({ success: false, statusCode: 400, message: 'Valid latitude and longitude are required.' });
+        if (
+            typeof latitude !== 'number' ||
+            typeof longitude !== 'number' ||
+            isNaN(latitude) ||
+            isNaN(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+            return res.status(400).json({ success: false, statusCode: 400, message: 'Valid latitude (-90 to 90) and longitude (-180 to 180) are required.' });
         }
 
         const locationPing = await BookingLocation.create({

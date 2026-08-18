@@ -215,9 +215,11 @@ export const LiveTrackingPage = () => {
             }
         });
 
-        // Setup 8-second polling fallback
+        // Setup 8-second polling fallback (only runs when socket is disconnected)
         pollingTimerRef.current = setInterval(() => {
-            pollWorkerLocation();
+            if (!socketRef.current?.connected) {
+                pollWorkerLocation();
+            }
         }, 8000);
 
         return () => {
@@ -226,6 +228,7 @@ export const LiveTrackingPage = () => {
                 navigator.geolocation.clearWatch(watchPositionIdRef.current);
             }
             if (socket) {
+                socket.off('location:updated');
                 socket.emit('leave_tracking', { bookingId });
                 socket.disconnect();
             }
@@ -391,7 +394,7 @@ export const LiveTrackingPage = () => {
                     {!workerLocation && (
                         <div className="relative z-10 bg-amber-500/20 border border-amber-500/40 rounded-2xl p-3 my-2 text-xs text-amber-200 flex items-center gap-2">
                             <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                            <span>Professional location temporarily unavailable. Telemetry reconnecting...</span>
+                            <span>Waiting for professional location...</span>
                         </div>
                     )}
 

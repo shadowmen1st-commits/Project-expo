@@ -236,14 +236,19 @@ export default function AdminBookingsScreen() {
                   </View>
 
                   {isTrackable && (
-                    <TouchableOpacity
-                      style={styles.trackButton}
-                      onPress={() => router.push(`/(admin)/tracking/${bookingId}` as any)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.trackButtonText}>Live Track</Text>
-                    </TouchableOpacity>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <TouchableOpacity
+                        style={styles.trackButton}
+                        onPress={() => router.push(`/(admin)/tracking/${bookingId}` as any)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="navigate-outline" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                        <Text style={styles.trackButtonText}>Live Track</Text>
+                      </TouchableOpacity>
+                      {!item.latestLocation && !item.workerLocation && (
+                        <Text style={styles.waitingGpsText}>Waiting for worker GPS</Text>
+                      )}
+                    </View>
                   )}
                 </View>
               </View>
@@ -383,5 +388,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
+  },
+  waitingGpsText: {
+    fontSize: 9,
+    color: '#D97706',
+    fontWeight: typography.weights.semibold,
+    marginTop: 2,
+    fontStyle: 'italic',
   },
 });
