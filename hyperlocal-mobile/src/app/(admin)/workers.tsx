@@ -17,57 +17,67 @@ import ProfileAvatar from '../../components/ProfileAvatar';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 
-interface NormalizedWorker {
-  _key: string;
-  _realId: string;
+export interface WorkerItem {
   _id: string;
+  id: string;
+  workerId?: string;
+  userId?: any;
+  fullName?: string;
+  primaryCategoryName?: string;
   verificationStatus: string;
   [key: string]: any;
 }
 
-const normalizeWorkers = (rawList: any[]): NormalizedWorker[] => {
+const extractWorkerId = (item: any): string | null => {
+  if (!item || typeof item !== 'object') return null;
+  const rawId =
+    item._id ??
+    item.id ??
+    (typeof item.userId === 'string' ? item.userId : item.userId?._id ?? item.userId?.id) ??
+    (typeof item.workerId === 'string' ? item.workerId : item.workerId?._id ?? item.workerId?.id);
+
+  if (rawId === null || rawId === undefined) return null;
+  const str = String(rawId).trim();
+  return str.length > 0 ? str : null;
+};
+
+const normalizeAndDeduplicateWorkers = (rawList: any[]): WorkerItem[] => {
   if (!Array.isArray(rawList)) return [];
-  const seenKeys = new Set<string>();
-  const normalized: NormalizedWorker[] = [];
+  const seenIds = new Set<string>();
+  const normalized: WorkerItem[] = [];
 
-  rawList.forEach((item, index) => {
-    if (!item || typeof item !== 'object') return;
+  for (let i = 0; i < rawList.length; i++) {
+    const item = rawList[i];
+    const workerId = extractWorkerId(item);
 
-    const rawId = item._id ?? item.id ?? item.workerId ?? item.userId?._id ?? item.userId?.id;
-    const realId = rawId ? String(rawId) : null;
-
-    let finalKey: string;
-    if (realId) {
-      if (seenKeys.has(realId)) {
-        if (__DEV__) {
-          console.warn(`[workers.tsx] Duplicate worker ID detected: ${realId}. Assigning unique key variant.`);
-        }
-        finalKey = `${realId}-dup-${index}`;
-      } else {
-        seenKeys.add(realId);
-        finalKey = realId;
-      }
-    } else {
+    if (!workerId) {
       if (__DEV__) {
-        console.warn(`[workers.tsx] Worker item at index ${index} missing real ID. Falling back to generated key.`);
+        console.warn('[workers.tsx] Excluding malformed worker record missing valid ID at index', i, item);
       }
-      finalKey = `worker-fallback-${index}`;
+      continue;
     }
 
+    if (seenIds.has(workerId)) {
+      if (__DEV__) {
+        console.warn('[workers.tsx] Excluding duplicate worker record with ID:', workerId);
+      }
+      continue;
+    }
+
+    seenIds.add(workerId);
     normalized.push({
       ...item,
-      _key: finalKey,
-      _realId: realId || finalKey,
-      _id: realId || finalKey,
+      _id: workerId,
+      id: workerId,
       verificationStatus: item.verificationStatus || 'PENDING',
     });
-  });
+  }
 
   return normalized;
 };
 
 export default function AdminWorkersScreen() {
-  const [workers, setWorkers] = useState<NormalizedWorker[]>([]);
+  const [workers, setWorkers] = useState<WorkerItem[]>([]);
   const [activeTab, setActiveTab] = useState<string>('PENDING');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,13 +102,13 @@ export default function AdminWorkersScreen() {
           ? allRes.value.data
           : allRes.value.data.data || allRes.value.data.workers || [];
         for (const item of aList) {
-          const itemWorkerId = item.workerId || item._id || item.id;
-          if (!combined.some((c) => (c.workerId || c._id || c.id) === itemWorkerId)) {
+          const itemWorkerId = extractWorkerId(item);
+          if (itemWorkerId && !combined.some((c) => extractWorkerId(c) === itemWorkerId)) {
             combined.push({ ...item, verificationStatus: item.verificationStatus || 'APPROVED' });
           }
         }
       }
-      setWorkers(normalizeWorkers(combined));
+      setWorkers(normalizeAndDeduplicateWorkers(combined));
     } catch (err) {
       console.error('Error fetching admin worker submissions:', err);
     } finally {
@@ -146,11 +156,12 @@ export default function AdminWorkersScreen() {
     }
   };
 
-  const filteredWorkers = (Array.isArray(workers) ? workers : []).filter((w) => {
-    if (!w) return false;
-    if (activeTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING'].includes(w.verificationStatus);
-    if (activeTab === 'APPROVED') return w.verificationStatus === 'APPROVED';
-    if (activeTab === 'REJECTED') return w.verificationStatus === 'REJECTED';
+  const filteredWorkers = (Array.isArray(workers) ? workers : []).filter((w): w is WorkerItem => {
+    if (!w || typeof w !== 'object') return false;
+    const status = w.verificationStatus || 'PENDING';
+    if (activeTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING'].includes(status);
+    if (activeTab === 'APPROVED') return status === 'APPROVED';
+    if (activeTab === 'REJECTED') return status === 'REJECTED';
     return true;
   });
 
@@ -162,7 +173,7 @@ export default function AdminWorkersScreen() {
       <View style={styles.tabsRow}>
         {['PENDING', 'APPROVED', 'REJECTED'].map((tab) => (
           <TouchableOpacity
-            key={tab}
+            key={`tab-${tab}`}
             style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
             onPress={() => setActiveTab(tab)}
           >
@@ -180,7 +191,7 @@ export default function AdminWorkersScreen() {
       ) : (
         <FlatList
           data={filteredWorkers}
-          keyExtractor={(item) => String(item._key || item._realId || item._id)}
+          keyExtractor={(item) => String(item._id || item.id || '').trim()}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
           ListEmptyComponent={
@@ -191,12 +202,12 @@ export default function AdminWorkersScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const targetId = item._realId || item._id;
+            const targetId = item._id;
             const isProcessing = actionLoadingId === targetId;
             const isPending = ['PENDING_APPROVAL', 'PENDING'].includes(item.verificationStatus);
 
             return (
-              <View style={styles.card}>
+              <View style={styles.card} key={`card-${targetId}`}>
                 <View style={styles.cardHeader}>
                   <ProfileAvatar user={item.userId || item} size="lg" />
                   <View style={{ flex: 1, marginLeft: 12 }}>

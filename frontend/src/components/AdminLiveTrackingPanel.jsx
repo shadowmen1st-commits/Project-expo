@@ -107,7 +107,8 @@ export const AdminLiveTrackingPanel = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {activeBookings.map((b) => {
+                    {activeBookings.map((b, idx) => {
+                        const cardKey = String(b.bookingId || b._id || b.id || `tracking-card-${idx}`).trim();
                         const customerCoords =
                             b.addressSnapshot?.latitude && b.addressSnapshot?.longitude
                                 ? { latitude: b.addressSnapshot.latitude, longitude: b.addressSnapshot.longitude }
@@ -131,7 +132,7 @@ export const AdminLiveTrackingPanel = () => {
 
                         return (
                             <div
-                                key={b.bookingId}
+                                key={cardKey}
                                 className="bg-white border border-[#FEF3C7] rounded-3xl p-5 shadow-sm space-y-4 hover:shadow-md transition flex flex-col justify-between"
                             >
                                 {/* Card Header */}

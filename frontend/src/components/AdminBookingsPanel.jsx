@@ -185,8 +185,8 @@ export const AdminBookingsPanel = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#FEF3C7]">
-                                {bookings.map((b) => {
-                                    const bId = b._id || b.id;
+                                {bookings.map((b, index) => {
+                                    const bId = String(b._id || b.id || b.bookingNumber || `booking-row-${index}`).trim();
                                     const status = b.bookingStatus || b.status || 'PENDING';
                                     const customer = b.customer || b.customerId;
                                     const worker = b.worker || b.workerId;
