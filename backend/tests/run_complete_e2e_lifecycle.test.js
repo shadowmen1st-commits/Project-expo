@@ -206,7 +206,7 @@ async function runCompleteE2ETest() {
     console.log('\n--- PHASE 5: ADMIN DASHBOARD & BOOKING MATCH ---');
     const adminLoginRes = await request(`${API_BASE}/auth/login`, {
         method: 'POST',
-        body: JSON.stringify({ email: 'admin@test.com', password: 'Admin@012345' }),
+        body: JSON.stringify({ email: 'admin@test.com', password: 'Admin@123' }),
     });
     const adminToken = adminLoginRes.data.accessToken;
     const adminHeaders = { Authorization: `Bearer ${adminToken}` };

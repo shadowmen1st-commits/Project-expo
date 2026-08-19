@@ -51,7 +51,12 @@ const estimateEtaMinutes = (distanceKm: number | null): number | null => {
 export default function CustomerLiveTrackingScreen() {
   const { id: bookingId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { location: deviceLocation } = useLocation(true);
+  const {
+    location: deviceLocation,
+    permissionStatus,
+    requestLocation,
+    openSettings,
+  } = useLocation(true);
 
   const [booking, setBooking] = useState<any>(null);
   const [workerLocation, setWorkerLocation] = useState<{
@@ -248,6 +253,25 @@ export default function CustomerLiveTrackingScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} />}
         showsVerticalScrollIndicator={false}
       >
+        {/* Permission Denied UI */}
+        {permissionStatus === 'denied' && (
+          <View style={styles.permissionCard}>
+            <Ionicons name="location-outline" size={24} color="#EF4444" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.permissionTitle}>Location Access Required</Text>
+              <Text style={styles.permissionSub}>
+                Enable device location to get live distance and ETA to your location.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.enableLocBtn}
+              onPress={() => requestLocation({ promptIfDenied: true })}
+            >
+              <Text style={styles.enableLocBtnText}>Enable</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Radar Map Visualizer Card */}
         <View style={styles.radarCard}>
           {/* Top Status Header */}
@@ -675,5 +699,38 @@ const styles = StyleSheet.create({
   actionGroup: {
     marginTop: spacing.sm,
     gap: spacing.xs,
+  },
+  permissionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FCA5A5',
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+    ...shadows.sm,
+  },
+  permissionTitle: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: '#991B1B',
+  },
+  permissionSub: {
+    fontSize: typography.sizes.xs,
+    color: '#7F1D1D',
+    marginTop: 2,
+  },
+  enableLocBtn: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md,
+  },
+  enableLocBtnText: {
+    color: '#FFFFFF',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
   },
 });

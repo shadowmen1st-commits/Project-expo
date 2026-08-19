@@ -58,6 +58,7 @@ export default function WorkerLiveTrackingScreen() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [socketConnected, setSocketConnected] = useState(false);
   const [pingsCount, setPingsCount] = useState(0);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const locationSubRef = useRef<Location.LocationSubscription | null>(null);
@@ -147,6 +148,7 @@ export default function WorkerLiveTrackingScreen() {
 
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
+        setPermissionDenied(true);
         Alert.alert(
           'Location Permission Required',
           'Foreground location permission is required for customers to track your arrival.'
@@ -154,6 +156,7 @@ export default function WorkerLiveTrackingScreen() {
         return;
       }
 
+      setPermissionDenied(false);
       setIsSharingGps(true);
 
       // Get initial position immediately

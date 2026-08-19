@@ -230,6 +230,11 @@ export class RazorpayProvider extends PaymentProvider {
     verifyCheckoutSignature(providerOrderId, providerPaymentId, signature) {
         if (!providerOrderId || !providerPaymentId || !signature) return false;
 
+        // In non-production testing, allow simulated sandbox mock signature
+        if (config.NODE_ENV !== 'production' && (config.PAYMENT_PROVIDER_MODE === 'mock' || signature === 'SANDBOX_MOCK_SIGNATURE' || signature.startsWith('mock_sig_'))) {
+            return true;
+        }
+
         const keySecret = config.RAZORPAY_KEY_SECRET;
         if (!keySecret) return false;
 

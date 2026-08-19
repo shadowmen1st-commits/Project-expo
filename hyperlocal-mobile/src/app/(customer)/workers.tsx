@@ -35,6 +35,12 @@ export default function WorkersScreen() {
   const [viewMode, setViewMode] = useState<'swipe' | 'list'>('swipe');
   const [shortlistedWorkers, setShortlistedWorkers] = useState<any[]>([]);
 
+  useEffect(() => {
+    if (categoryParam !== undefined) {
+      setSelectedCategory((categoryParam as string) || '');
+    }
+  }, [categoryParam]);
+
   const fetchWorkers = useCallback(async () => {
     setError(null);
     try {
