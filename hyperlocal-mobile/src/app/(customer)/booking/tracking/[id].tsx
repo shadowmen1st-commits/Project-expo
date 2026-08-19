@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { io, Socket } from 'socket.io-client';
@@ -17,9 +18,9 @@ import { EmptyState } from '../../../../components/EmptyState';
 import { ProfileAvatar } from '../../../../components/ProfileAvatar';
 import Badge from '../../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
-import api, { API_BASE_URL } from '../../../../config/api';
+import api, { API_BASE_URL, SOCKET_BASE_URL } from '../../../../config/api';
 import { storage } from '../../../../utils/storage';
-import { useLocation } from '../../../../hooks/useLocation';
+import { useLocation, isValidCoordinate } from '../../../../hooks/useLocation';
 import { colors, spacing, typography, radius, shadows } from '../../../../theme';
 
 const { width } = Dimensions.get('window');
@@ -42,7 +43,7 @@ const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: num
 
 // Estimate ETA in minutes (assuming average city driving speed of ~25 km/h)
 const estimateEtaMinutes = (distanceKm: number | null): number | null => {
-  if (distanceKm === null || distanceKm <= 0) return 1;
+  if (distanceKm === null || distanceKm <= 0) return null;
   const speedKmh = 25;
   const hours = distanceKm / speedKmh;
   return Math.max(1, Math.round(hours * 60));
@@ -92,18 +93,18 @@ export default function CustomerLiveTrackingScreen() {
         const b = res.data.booking;
         setBooking(b);
 
-        if (res.data.latestLocation) {
+        if (res.data.latestLocation && isValidCoordinate(res.data.latestLocation.latitude, res.data.latestLocation.longitude)) {
           setWorkerLocation(res.data.latestLocation);
           setLastPingTime(new Date(res.data.latestLocation.timestamp || Date.now()));
         }
 
         const addr = res.data.addressSnapshot;
-        if (addr?.latitude && addr?.longitude) {
+        if (addr && isValidCoordinate(addr.latitude, addr.longitude)) {
           setCustomerCoords({ latitude: addr.latitude, longitude: addr.longitude });
-        } else if (deviceLocation) {
+        } else if (deviceLocation && isValidCoordinate(deviceLocation.latitude, deviceLocation.longitude)) {
           setCustomerCoords({ latitude: deviceLocation.latitude, longitude: deviceLocation.longitude });
         } else {
-          setCustomerCoords({ latitude: 12.9716, longitude: 77.5946 });
+          setCustomerCoords(null);
         }
       }
     } catch (err: any) {
@@ -129,7 +130,7 @@ export default function CustomerLiveTrackingScreen() {
     if (!bookingId) return;
     try {
       const res = await api.get(`/bookings/${bookingId}/location`);
-      if (res.data?.success && res.data.location) {
+      if (res.data?.success && res.data.location && isValidCoordinate(res.data.location.latitude, res.data.location.longitude)) {
         setWorkerLocation(res.data.location);
         setLastPingTime(new Date(res.data.location.timestamp || Date.now()));
       }
@@ -145,7 +146,7 @@ export default function CustomerLiveTrackingScreen() {
 
     let socketInstance: Socket | null = null;
     const initSocket = async () => {
-      const socketUrl = API_BASE_URL.replace('/api', '');
+      const socketUrl = SOCKET_BASE_URL;
       const token = await storage.getItem('accessToken');
 
       console.log('[SOCKET_AUTH]', { hasToken: Boolean(token), socketUrl });
@@ -180,7 +181,7 @@ export default function CustomerLiveTrackingScreen() {
           heading: payload?.heading,
           speed: payload?.speed,
         });
-        if (payload && String(payload.bookingId) === String(bookingId)) {
+        if (payload && String(payload.bookingId) === String(bookingId) && isValidCoordinate(payload.latitude, payload.longitude)) {
           setWorkerLocation({
             latitude: payload.latitude,
             longitude: payload.longitude,
@@ -266,14 +267,14 @@ export default function CustomerLiveTrackingScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Permission Denied UI */}
+        {/* Permission Notice */}
         {permissionStatus === 'denied' && (
           <View style={styles.permissionCard}>
             <Ionicons name="location-outline" size={24} color="#EF4444" />
             <View style={{ flex: 1 }}>
               <Text style={styles.permissionTitle}>Location Access Required</Text>
               <Text style={styles.permissionSub}>
-                Enable device location to get live distance and ETA to your location.
+                Enable device location to get live distance and ETA to your current location.
               </Text>
             </View>
             <TouchableOpacity
@@ -294,7 +295,7 @@ export default function CustomerLiveTrackingScreen() {
               <View>
                 <Text style={styles.statLabel}>Distance</Text>
                 <Text style={styles.statValue}>
-                  {distanceKm !== null ? `${distanceKm} km` : 'Locating GPS...'}
+                  {distanceKm !== null ? `${distanceKm} km` : workerLocation ? 'Calculating...' : 'Waiting for GPS...'}
                 </Text>
               </View>
             </View>
@@ -304,7 +305,7 @@ export default function CustomerLiveTrackingScreen() {
               <View>
                 <Text style={styles.statLabel}>ETA</Text>
                 <Text style={[styles.statValue, { color: '#10B981' }]}>
-                  {etaMinutes !== null ? `~${etaMinutes} mins` : 'Calculating...'}
+                  {etaMinutes !== null ? `~${etaMinutes} mins` : workerLocation ? 'Calculating...' : 'Awaiting signal'}
                 </Text>
               </View>
             </View>
@@ -330,7 +331,7 @@ export default function CustomerLiveTrackingScreen() {
                 style={[
                   styles.pinCircle,
                   {
-                    backgroundColor: colors.accent,
+                    backgroundColor: workerLocation ? colors.accent : '#94A3B8',
                     transform: [{ rotate: `${headingDeg}deg` }],
                   },
                 ]}
@@ -340,29 +341,33 @@ export default function CustomerLiveTrackingScreen() {
               <Text style={styles.pinLabel}>Professional</Text>
               {workerLocation ? (
                 <Text style={styles.coordsText}>
-                  {workerLocation.latitude.toFixed(3)}, {workerLocation.longitude.toFixed(3)}
+                  {workerLocation.latitude.toFixed(4)}, {workerLocation.longitude.toFixed(4)}
                 </Text>
               ) : (
                 <Text style={[styles.coordsText, { color: '#F59E0B' }]}>
-                  Location Signal Unavailable
+                  Waiting for worker GPS...
                 </Text>
               )}
             </View>
 
             {/* Signal Pulse */}
             <View style={styles.pulseWrapper}>
-              <Ionicons name="radio" size={22} color="#FBBF24" />
+              <Ionicons name="radio" size={22} color={workerLocation ? '#10B981' : '#FBBF24'} />
             </View>
 
             {/* Destination Pin */}
             <View style={styles.pinWrapper}>
-              <View style={[styles.pinCircle, { backgroundColor: '#10B981' }]}>
+              <View style={[styles.pinCircle, { backgroundColor: customerCoords ? '#10B981' : '#94A3B8' }]}>
                 <Ionicons name="location" size={20} color="#FFFFFF" />
               </View>
               <Text style={styles.pinLabel}>Your Location</Text>
-              {customerCoords && (
+              {customerCoords ? (
                 <Text style={styles.coordsText}>
-                  {customerCoords.latitude.toFixed(3)}, {customerCoords.longitude.toFixed(3)}
+                  {customerCoords.latitude.toFixed(4)}, {customerCoords.longitude.toFixed(4)}
+                </Text>
+              ) : (
+                <Text style={[styles.coordsText, { color: colors.textMuted }]}>
+                  Address Registered
                 </Text>
               )}
             </View>
@@ -397,20 +402,10 @@ export default function CustomerLiveTrackingScreen() {
             </View>
 
             <Text style={styles.lastPingText}>
-              Last Ping: {lastPingTime ? lastPingTime.toLocaleTimeString() : 'Awaiting signal'}
+              Last Ping: {lastPingTime ? lastPingTime.toLocaleTimeString() : 'Awaiting worker GPS signal'}
             </Text>
           </View>
         </View>
-
-        {/* Temporary Signal Unavailable Notice if worker location is null */}
-        {!workerLocation && (
-          <View style={styles.noticeBox}>
-            <Ionicons name="information-circle-outline" size={18} color="#F59E0B" />
-            <Text style={styles.noticeText}>
-              Professional location temporarily unavailable. Retrying connection...
-            </Text>
-          </View>
-        )}
 
         {/* Worker Professional Card */}
         <View style={styles.card}>
@@ -448,25 +443,15 @@ export default function CustomerLiveTrackingScreen() {
           <Text style={styles.sectionTitle}>Destination</Text>
           <View style={styles.addressRow}>
             <Ionicons name="map-outline" size={18} color={colors.accent} style={{ marginTop: 2 }} />
-            <Text style={styles.addressText}>
-              {booking?.serviceAddress || booking?.address || 'Customer Service Location'}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.addressText}>{booking?.serviceAddress || 'Registered Address'}</Text>
+              {booking?.addressSnapshot?.instructions && (
+                <Text style={styles.instructionsText}>
+                  Note: {booking.addressSnapshot.instructions}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.actionGroup}>
-          <AppButton
-            title="View Booking Details"
-            variant="primary"
-            onPress={() => router.push(`/(customer)/booking/details/${bookingId}` as any)}
-          />
-          <AppButton
-            title="Back to Bookings"
-            variant="outline"
-            onPress={() => router.back()}
-            style={{ marginTop: spacing.xs }}
-          />
         </View>
       </ScrollView>
     </View>
@@ -493,117 +478,140 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: typography.weights.medium,
   },
+  permissionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: '#FEF2F2',
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    marginBottom: spacing.md,
+  },
+  permissionTitle: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: '#DC2626',
+  },
+  permissionSub: {
+    fontSize: 11,
+    color: '#7F1D1D',
+    marginTop: 2,
+  },
+  enableLocBtn: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+  },
+  enableLocBtnText: {
+    color: '#FFFFFF',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+  },
   radarCard: {
     backgroundColor: '#0F172A',
     borderRadius: radius.xl,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     ...shadows.md,
   },
   radarHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   radarStatBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#1E293B',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.md,
+    gap: spacing.xs,
   },
   statLabel: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#94A3B8',
-    fontWeight: typography.weights.bold,
     textTransform: 'uppercase',
   },
   statValue: {
-    fontSize: 12,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: '#FFFFFF',
+    color: '#F8FAFC',
   },
   routeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xl,
     position: 'relative',
   },
   trackLine: {
     position: 'absolute',
     left: 40,
     right: 40,
-    top: 32,
-    height: 3,
-    backgroundColor: '#F97316',
-    borderRadius: 2,
+    height: 2,
+    backgroundColor: '#334155',
+    top: '50%',
+    zIndex: 0,
   },
   pinWrapper: {
     alignItems: 'center',
-    zIndex: 2,
+    zIndex: 1,
   },
   pinCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    justifyContent: 'center',
     ...shadows.md,
   },
   pinLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: typography.weights.bold,
-    color: '#E2E8F0',
-    marginTop: spacing.xs,
+    color: '#F8FAFC',
+    marginTop: 6,
   },
   coordsText: {
-    fontSize: 8,
-    color: '#64748B',
-    fontFamily: 'monospace',
+    fontSize: 9,
+    color: '#94A3B8',
+    marginTop: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   pulseWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    zIndex: 1,
   },
   mapControlsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
+    marginVertical: spacing.sm,
   },
   mapCtrlBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.full,
     backgroundColor: '#1E293B',
   },
   mapCtrlBtnActive: {
     backgroundColor: colors.accent,
   },
   mapCtrlBtnText: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#94A3B8',
-    fontWeight: typography.weights.semibold,
+    fontWeight: typography.weights.medium,
   },
   mapCtrlBtnTextActive: {
     color: '#FFFFFF',
+    fontWeight: typography.weights.bold,
   },
   radarFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: '#1E293B',
-    paddingTop: spacing.sm,
-    marginTop: spacing.sm,
   },
   signalStatus: {
     flexDirection: 'row',
@@ -611,38 +619,20 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   signalText: {
-    fontSize: 10,
-    fontWeight: typography.weights.bold,
+    fontSize: 11,
+    fontWeight: typography.weights.medium,
   },
   lastPingText: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#64748B',
-    fontFamily: 'monospace',
-  },
-  noticeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: '#FEF3C7',
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    marginBottom: spacing.md,
-  },
-  noticeText: {
-    fontSize: typography.sizes.xs,
-    color: '#92400E',
-    fontWeight: typography.weights.medium,
-    flex: 1,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     ...shadows.sm,
   },
   workerRow: {
@@ -660,12 +650,11 @@ const styles = StyleSheet.create({
   },
   workerCategory: {
     fontSize: typography.sizes.xs,
-    color: colors.accent,
-    fontWeight: typography.weights.bold,
-    marginTop: 2,
+    color: colors.textSecondary,
+    marginTop: 1,
   },
   badgeRow: {
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   detailsDivider: {
     height: 1,
@@ -680,10 +669,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.textMuted,
-    fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
   },
   metricVal: {
     fontSize: typography.sizes.sm,
@@ -695,55 +682,22 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
   },
   addressRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
     alignItems: 'flex-start',
+    gap: spacing.sm,
   },
   addressText: {
-    flex: 1,
     fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
+    color: colors.textPrimary,
     lineHeight: 20,
   },
-  actionGroup: {
-    marginTop: spacing.sm,
-    gap: spacing.xs,
-  },
-  permissionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-    ...shadows.sm,
-  },
-  permissionTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: '#991B1B',
-  },
-  permissionSub: {
+  instructionsText: {
     fontSize: typography.sizes.xs,
-    color: '#7F1D1D',
-    marginTop: 2,
-  },
-  enableLocBtn: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.md,
-  },
-  enableLocBtnText: {
-    color: '#FFFFFF',
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+    color: colors.textMuted,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });

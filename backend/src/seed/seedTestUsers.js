@@ -8,6 +8,8 @@ import WorkerProfile from '../models/WorkerProfile.js';
 import CompanyProfile from '../models/CompanyProfile.js';
 import CompanyWallet from '../models/CompanyWallet.js';
 
+import ServiceCategory from '../models/ServiceCategory.js';
+
 // Resolve directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +28,7 @@ const testUsers = [
     {
         name: 'System Admin',
         email: 'admin@test.com',
-        password: 'Admin@012345',
+        password: 'Admin@123',
         role: 'ADMIN',
     },
     {
@@ -36,9 +38,27 @@ const testUsers = [
         role: 'WORKER',
     },
     {
+        name: 'Rahul Sharma',
+        email: 'worker1@test.com',
+        password: 'Worker@123',
+        role: 'WORKER',
+    },
+    {
+        name: 'Demo Worker',
+        email: 'worker@jobnest.com',
+        password: 'Worker@12345',
+        role: 'WORKER',
+    },
+    {
         name: 'Test Customer',
         email: 'customer@test.com',
         password: 'Customer@12345',
+        role: 'CUSTOMER',
+    },
+    {
+        name: 'John Customer',
+        email: 'customer1@test.com',
+        password: 'Customer@123',
         role: 'CUSTOMER',
     },
     {
@@ -46,12 +66,6 @@ const testUsers = [
         email: 'customer@jobnest.com',
         password: 'Customer@12345',
         role: 'CUSTOMER',
-    },
-    {
-        name: 'Demo Worker',
-        email: 'worker@jobnest.com',
-        password: 'Worker@12345',
-        role: 'WORKER',
     },
     {
         name: 'Test Company',
@@ -66,6 +80,10 @@ const seed = async () => {
         console.log(`Connecting to MongoDB...`);
         await mongoose.connect(MONGODB_URI);
         console.log('Connected successfully!');
+
+        // Fetch categories to associate with workers
+        const categories = await ServiceCategory.find({ status: 'ACTIVE' });
+        const categoryIds = categories.map(c => c._id);
 
         for (const user of testUsers) {
             const normalizedEmail = user.email.trim().toLowerCase();
@@ -93,13 +111,37 @@ const seed = async () => {
                 await WorkerProfile.findOneAndUpdate(
                     { userId: userRecord._id },
                     {
-                        $setOnInsert: {
-                            verificationStatus: 'INCOMPLETE_PROFILE',
-                            isPubliclyVisible: false,
-                            isOnline: false
+                        $set: {
+                            fullName: user.name,
+                            verificationStatus: 'APPROVED',
+                            isPubliclyVisible: true,
+                            isOnline: true,
+                            serviceCategoryIds: categoryIds,
+                            serviceIds: categoryIds,
+                            primaryServiceCategoryId: categoryIds[0] || null,
+                            hourlyRate: 25000,
+                            dailyRate: 150000,
+                            minimumBookingDuration: 1,
+                            bufferMinutes: 0,
+                            timezone: 'Asia/Kolkata',
+                            location: {
+                                type: 'Point',
+                                coordinates: [77.2090, 28.6139] // New Delhi
+                            },
+                            availability: [
+                                { day: 0, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 1, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 2, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 3, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 4, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 5, start: '08:00', end: '22:00', isWorking: true },
+                                { day: 6, start: '08:00', end: '22:00', isWorking: true },
+                            ],
+                            leaveDates: [],
+                            blockedRanges: []
                         }
                     },
-                    { upsert: true }
+                    { upsert: true, new: true }
                 );
             } else if (user.role === 'COMPANY') {
                 await CompanyProfile.findOneAndUpdate(
@@ -117,7 +159,7 @@ const seed = async () => {
                             description: 'Test Company Description',
                             authorizedPersonName: user.name,
                             authorizedPersonPhone: '9999999999',
-                            verificationStatus: 'PENDING'
+                            verificationStatus: 'APPROVED'
                         }
                     },
                     { upsert: true }
@@ -139,8 +181,8 @@ const seed = async () => {
 
         console.log('\nSeed completed successfully.');
         console.log('ADMIN    admin@test.com / Admin@012345');
-        console.log('WORKER   worker@test.com / Worker@012345');
-        console.log('CUSTOMER customer@test.com / Customer@12345');
+        console.log('WORKER   worker@test.com / Worker@012345  &  worker1@test.com / Password123!');
+        console.log('CUSTOMER customer@test.com / Customer@12345  &  customer1@test.com / Password123!');
         console.log('COMPANY  company@test.com / Company@012345');
 
         process.exit(0);

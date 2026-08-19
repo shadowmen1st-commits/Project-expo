@@ -17,7 +17,7 @@ import { EmptyState } from '../../../components/EmptyState';
 import { ProfileAvatar } from '../../../components/ProfileAvatar';
 import Badge from '../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
-import api, { API_BASE_URL } from '../../../config/api';
+import api, { API_BASE_URL, SOCKET_BASE_URL } from '../../../config/api';
 import { storage } from '../../../utils/storage';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
 
@@ -91,7 +91,7 @@ export default function AdminLiveTrackingScreen() {
         if (addr?.latitude && addr?.longitude) {
           setCustomerCoords({ latitude: addr.latitude, longitude: addr.longitude });
         } else {
-          setCustomerCoords({ latitude: 12.9716, longitude: 77.5946 });
+          setCustomerCoords(null);
         }
       }
     } catch (err: any) {
@@ -131,7 +131,7 @@ export default function AdminLiveTrackingScreen() {
 
     let socketInstance: Socket | null = null;
     const initSocket = async () => {
-      const socketUrl = API_BASE_URL.replace('/api', '');
+      const socketUrl = SOCKET_BASE_URL;
       const token = await storage.getItem('accessToken');
 
       console.log('[SOCKET_AUTH]', { hasToken: Boolean(token), role: 'ADMIN' });

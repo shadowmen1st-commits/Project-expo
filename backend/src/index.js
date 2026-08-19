@@ -11,7 +11,7 @@ export async function startServer(port = config.PORT) {
     await connectDB();
     const app = createApp();
     await new Promise((resolve, reject) => {
-        server = app.listen(port, resolve);
+        server = app.listen(port, '0.0.0.0', resolve);
         server.once('error', reject);
     });
     initializeSocket(server);

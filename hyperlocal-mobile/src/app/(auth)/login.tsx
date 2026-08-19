@@ -48,19 +48,24 @@ export default function LoginScreen() {
         router.replace('/(customer)/dashboard');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
-      setError(msg);
+      if (err.response?.status === 401) {
+        setError('Invalid email or password.');
+      } else if (!err.response) {
+        setError(err.userMessage || 'Server is unreachable. Please check your internet connection or try again.');
+      } else {
+        setError(err.userMessage || err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleQuickLogin = (role: 'CUSTOMER' | 'WORKER') => {
-    let qEmail = 'customer@jobnest.com';
-    let qPass = 'Customer@12345';
+    let qEmail = 'customer1@test.com';
+    let qPass = 'Customer@123';
     if (role === 'WORKER') {
-      qEmail = 'worker@jobnest.com';
-      qPass = 'Worker@12345';
+      qEmail = 'worker1@test.com';
+      qPass = 'Worker@123';
     }
     setEmail(qEmail);
     setPassword(qPass);

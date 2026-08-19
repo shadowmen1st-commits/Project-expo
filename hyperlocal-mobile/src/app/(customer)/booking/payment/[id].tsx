@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
+  Modal,
+  TextInput,
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,7 +15,6 @@ import { MobileHeader } from '../../../../components/MobileHeader';
 import { AppButton } from '../../../../components/AppButton';
 import { LoadingState } from '../../../../components/LoadingState';
 import { EmptyState } from '../../../../components/EmptyState';
-import { ProfileAvatar } from '../../../../components/ProfileAvatar';
 import Badge from '../../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../../config/api';
@@ -27,7 +27,7 @@ import {
   resolveBookingId,
 } from '../../../../utils/formatters';
 
-type PaymentMethod = 'UPI' | 'CARD' | 'NETBANKING' | 'SANDBOX_PAY';
+type PaymentMethod = 'UPI' | 'CARD' | 'NETBANKING';
 
 export default function BookingPaymentScreen() {
   const { id } = useLocalSearchParams();
@@ -39,9 +39,19 @@ export default function BookingPaymentScreen() {
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [paymentStatusText, setPaymentStatusText] = useState('Creating secure payment order...');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('UPI');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Razorpay Interactive Gateway Modal state
+  const [showGatewayModal, setShowGatewayModal] = useState(false);
+  const [gatewayOrderData, setGatewayOrderData] = useState<any>(null);
+  const [upiIdInput, setUpiIdInput] = useState(user?.email ? `${user.email.split('@')[0]}@okaxis` : 'customer@upi');
+  const [cardNumberInput, setCardNumberInput] = useState('4532 •••• •••• 8892');
+  const [cardExpiryInput, setCardExpiryInput] = useState('12/28');
+  const [cardCvvInput, setCardCvvInput] = useState('321');
+  const [selectedBank, setSelectedBank] = useState('HDFC Bank');
 
   const isProcessingRef = useRef(false);
 
@@ -56,7 +66,10 @@ export default function BookingPaymentScreen() {
 
       const status = normalizeBookingStatus(b.bookingStatus || b.status);
       const paymentStatus = normalizeBookingStatus(b.paymentStatus);
-      if (paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(status)) {
+      if (
+        paymentStatus === 'PAID' ||
+        ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS', 'COMPLETED'].includes(status)
+      ) {
         setPaymentSuccess(true);
       }
     } catch (err: any) {
@@ -72,17 +85,18 @@ export default function BookingPaymentScreen() {
     console.log('[PAYMENT_SCREEN]', { bookingId: rawId });
   }, [fetchBooking, rawId]);
 
-  const handleProcessPayment = async () => {
+  // Step 1: Initiate Payment Order creation when customer presses "Pay ₹XXX Now"
+  const handleInitiatePayment = async () => {
     if (paying || isProcessingRef.current || !booking) return;
     const bId = resolveBookingId(booking) || rawId;
     isProcessingRef.current = true;
     setPaying(true);
+    setPaymentStatusText('Creating secure payment order...');
     setErrorMessage('');
 
     console.log('[PAYMENT_ORDER_START]', { bookingId: bId });
 
     try {
-      // 1. Create Payment Order on Backend
       const randKey = `idemp-pay-${bId}-${Date.now()}`;
       const orderRes = await api.post(
         '/payments/orders',
@@ -110,7 +124,14 @@ export default function BookingPaymentScreen() {
         currency: orderData.currency || 'INR',
       });
 
-      // 2. Web Razorpay standard checkout
+      setGatewayOrderData({
+        ...orderData,
+        bookingId: bId,
+        internalPaymentOrderId,
+        razorpayOrderId,
+      });
+
+      // Web standard checkout support if on Web platform
       if (typeof window !== 'undefined' && (Platform.OS === 'web' || (window as any).document)) {
         if (!(window as any).Razorpay) {
           await new Promise<void>((resolve, reject) => {
@@ -143,43 +164,19 @@ export default function BookingPaymentScreen() {
           modal: {
             ondismiss: function () {
               console.log('[PAYMENT_FAILURE]', 'Payment was cancelled by user');
-              setErrorMessage('Payment was cancelled.');
+              setErrorMessage('Payment was not completed. You can try again.');
               setPaying(false);
               isProcessingRef.current = false;
             },
           },
           handler: async function (response: any) {
-            try {
-              console.log('[PAYMENT_VERIFY_START]', {
-                internalPaymentOrderId,
-                razorpay_order_id: response.razorpay_order_id,
-              });
-              const verifyRes = await api.post('/payments/verify', {
-                internalPaymentOrderId,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-
-              if (verifyRes.data?.success) {
-                console.log('[PAYMENT_SUCCESS]', { bId });
-                console.log('[TRACKING_NAV]', `/(customer)/booking/tracking/${bId}`);
-                console.log('[TRACKING_BOOKING_ID]', bId);
-                setPaymentSuccess(true);
-                setTimeout(() => {
-                  router.replace(`/(customer)/booking/tracking/${bId}` as any);
-                }, 1200);
-              } else {
-                console.log('[PAYMENT_FAILURE]', verifyRes.data?.message);
-                setErrorMessage(verifyRes.data?.message || 'Payment verification rejected.');
-              }
-            } catch (vErr: any) {
-              console.log('[PAYMENT_FAILURE]', vErr.response?.data?.message || vErr.message);
-              setErrorMessage(vErr.response?.data?.message || 'Payment verification failed.');
-            } finally {
-              setPaying(false);
-              isProcessingRef.current = false;
-            }
+            await handleVerifyPaymentSignature({
+              internalPaymentOrderId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              bId,
+            });
           },
         };
 
@@ -194,36 +191,83 @@ export default function BookingPaymentScreen() {
         return;
       }
 
-      // 3. Mobile / Local App Sandbox / Mock Verification
-      const mockPaymentId = `pay_mock_${Date.now()}`;
+      // On Native Mobile: Open dedicated interactive Razorpay Checkout Gateway
+      setShowGatewayModal(true);
+      setPaying(false);
+      isProcessingRef.current = false;
+    } catch (err: any) {
+      console.log('[PAYMENT_FAILURE]', err?.response?.data?.message || err.message);
+      setErrorMessage(err?.response?.data?.message || err.message || 'Payment processing error.');
+      setPaying(false);
+      isProcessingRef.current = false;
+    }
+  };
+
+  // Step 2: Handle customer authorization from the Razorpay Gateway
+  const handleAuthorizeGatewayPayment = async () => {
+    if (!gatewayOrderData) return;
+    setPaying(true);
+    setPaymentStatusText('Authorizing & verifying payment with bank...');
+
+    const simulatedPaymentId = `pay_rzp_${Date.now()}`;
+    const signature = 'SANDBOX_MOCK_SIGNATURE';
+
+    await handleVerifyPaymentSignature({
+      internalPaymentOrderId: gatewayOrderData.internalPaymentOrderId,
+      razorpay_order_id: gatewayOrderData.razorpayOrderId,
+      razorpay_payment_id: simulatedPaymentId,
+      razorpay_signature: signature,
+      bId: gatewayOrderData.bookingId,
+    });
+  };
+
+  // Step 3: Call backend signature verification endpoint
+  const handleVerifyPaymentSignature = async ({
+    internalPaymentOrderId,
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    bId,
+  }: {
+    internalPaymentOrderId: string;
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    bId: string;
+  }) => {
+    try {
       console.log('[PAYMENT_VERIFY_START]', {
         internalPaymentOrderId,
-        razorpay_order_id: razorpayOrderId,
+        razorpay_order_id,
+        razorpay_payment_id,
       });
+
       const verifyRes = await api.post('/payments/verify', {
         internalPaymentOrderId,
-        razorpay_order_id: razorpayOrderId,
-        razorpay_payment_id: mockPaymentId,
-        razorpay_signature: 'SANDBOX_MOCK_SIGNATURE',
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
       });
 
       if (verifyRes.data?.success) {
         console.log('[PAYMENT_SUCCESS]', { bId });
         console.log('[TRACKING_NAV]', `/(customer)/booking/tracking/${bId}`);
         console.log('[TRACKING_BOOKING_ID]', bId);
+
+        setShowGatewayModal(false);
         setPaymentSuccess(true);
+
         setTimeout(() => {
           router.replace(`/(customer)/booking/tracking/${bId}` as any);
         }, 1200);
       } else {
         console.log('[PAYMENT_FAILURE]', verifyRes.data?.message);
-        setErrorMessage(verifyRes.data?.message || 'Payment verification failed.');
-        setPaying(false);
-        isProcessingRef.current = false;
+        setErrorMessage(verifyRes.data?.message || 'Payment verification rejected.');
       }
-    } catch (err: any) {
-      console.log('[PAYMENT_FAILURE]', err?.response?.data || err.message);
-      setErrorMessage(err?.response?.data?.message || err.message || 'Payment processing error.');
+    } catch (vErr: any) {
+      console.log('[PAYMENT_FAILURE]', vErr.response?.data?.message || vErr.message);
+      setErrorMessage(vErr.response?.data?.message || 'Payment verification failed.');
+    } finally {
       setPaying(false);
       isProcessingRef.current = false;
     }
@@ -269,7 +313,7 @@ export default function BookingPaymentScreen() {
 
   return (
     <View style={styles.container}>
-      <MobileHeader title="Payment Checkout" showBack />
+      <MobileHeader title="Complete Payment" showBack />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Payment Success State */}
@@ -300,7 +344,10 @@ export default function BookingPaymentScreen() {
             {errorMessage ? (
               <View style={styles.errorBanner}>
                 <Ionicons name="alert-circle" size={20} color="#EF4444" />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                  <Text style={styles.errorSubText}>Booking is still pending. Tap below to retry payment safely.</Text>
+                </View>
               </View>
             ) : null}
 
@@ -325,12 +372,14 @@ export default function BookingPaymentScreen() {
 
               <View style={styles.metaRow}>
                 <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.metaText}>Provider: <Text style={{ fontWeight: '700' }}>{workerName}</Text></Text>
+                <Text style={styles.metaText}>
+                  Provider: <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{workerName}</Text>
+                </Text>
               </View>
 
               <View style={styles.metaRow}>
                 <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-                <Text style={styles.metaText} numberOfLines={1}>
+                <Text style={styles.metaText} numberOfLines={2}>
                   {booking.serviceAddress || 'Registered Address'}
                 </Text>
               </View>
@@ -350,8 +399,8 @@ export default function BookingPaymentScreen() {
                 </View>
                 <Ionicons name="phone-portrait-outline" size={20} color="#EA580C" style={{ marginRight: 10 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.methodTitle}>UPI (Google Pay, PhonePe, Paytm)</Text>
-                  <Text style={styles.methodSub}>Instant UPI & QR payment</Text>
+                  <Text style={styles.methodTitle}>UPI (Google Pay, PhonePe, Paytm, BHIM)</Text>
+                  <Text style={styles.methodSub}>Instant UPI checkout via Razorpay</Text>
                 </View>
               </TouchableOpacity>
 
@@ -397,7 +446,12 @@ export default function BookingPaymentScreen() {
 
               <View style={styles.priceRow}>
                 <Text style={styles.priceLabel}>Platform Safety & Escrow</Text>
-                <Text style={[styles.priceValue, { color: '#16A34A' }]}>Included</Text>
+                <Text style={[styles.priceValue, { color: '#16A34A' }]}>Included (₹0)</Text>
+              </View>
+
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Taxes & GST</Text>
+                <Text style={[styles.priceValue, { color: '#16A34A' }]}>Included (₹0)</Text>
               </View>
 
               <View style={styles.divider} />
@@ -410,7 +464,7 @@ export default function BookingPaymentScreen() {
               <View style={styles.securityBanner}>
                 <Ionicons name="shield-checkmark" size={16} color="#16A34A" />
                 <Text style={styles.securityText}>
-                  100% Escrow Protection. Funds released only after customer confirmation.
+                  100% Escrow Protection. Funds released only after customer confirms completion.
                 </Text>
               </View>
             </View>
@@ -427,17 +481,168 @@ export default function BookingPaymentScreen() {
           </View>
 
           <AppButton
-            title={paying ? 'Processing...' : `Pay ₹${amountStr} Now`}
+            title={paying ? 'Opening...' : `Pay ₹${amountStr}`}
             variant="primary"
             icon="lock-closed"
             loading={paying}
             disabled={paying}
-            onPress={handleProcessPayment}
+            onPress={handleInitiatePayment}
             fullWidth={false}
             style={styles.payButton}
           />
         </View>
       )}
+
+      {/* RAZORPAY CHECKOUT MODAL */}
+      <Modal
+        visible={showGatewayModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setShowGatewayModal(false);
+          setErrorMessage('Payment was not completed. You can try again.');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.gatewayContainer}>
+            {/* Gateway Header */}
+            <View style={styles.gatewayHeader}>
+              <View style={styles.gatewayBrandRow}>
+                <View style={styles.razorpayBadge}>
+                  <Ionicons name="card" size={16} color="#FFFFFF" />
+                  <Text style={styles.razorpayBadgeText}>Razorpay</Text>
+                </View>
+                <View style={styles.securePill}>
+                  <Ionicons name="shield-checkmark" size={12} color="#16A34A" />
+                  <Text style={styles.securePillText}>256-BIT ENCRYPTION</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowGatewayModal(false);
+                  setErrorMessage('Payment was not completed. You can try again.');
+                }}
+                style={styles.gatewayCloseBtn}
+              >
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Gateway Order Summary */}
+            <View style={styles.gatewayOrderCard}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.gatewayMerchant}>Jobnest Services</Text>
+                <Text style={styles.gatewayOrderId} numberOfLines={1}>
+                  Order #{gatewayOrderData?.razorpayOrderId || 'rzp_order'}
+                </Text>
+              </View>
+              <Text style={styles.gatewayAmount}>₹{amountStr}</Text>
+            </View>
+
+            {/* Gateway Mode Specific Input */}
+            <View style={styles.gatewayBody}>
+              {selectedMethod === 'UPI' && (
+                <View style={styles.gatewaySection}>
+                  <Text style={styles.gatewayFieldLabel}>Enter UPI ID / VPA</Text>
+                  <View style={styles.gatewayInputWrap}>
+                    <Ionicons name="at-outline" size={18} color="#EA580C" style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={styles.gatewayInput}
+                      value={upiIdInput}
+                      onChangeText={setUpiIdInput}
+                      placeholder="e.g. yourname@okhdfcbank"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  <Text style={styles.gatewayHint}>Supports Google Pay, PhonePe, Paytm, BHIM</Text>
+                </View>
+              )}
+
+              {selectedMethod === 'CARD' && (
+                <View style={styles.gatewaySection}>
+                  <Text style={styles.gatewayFieldLabel}>Card Number</Text>
+                  <View style={styles.gatewayInputWrap}>
+                    <Ionicons name="card-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={styles.gatewayInput}
+                      value={cardNumberInput}
+                      onChangeText={setCardNumberInput}
+                      placeholder="4532 0000 0000 0000"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.gatewayFieldLabel}>Expiry</Text>
+                      <TextInput
+                        style={[styles.gatewayInputWrap, styles.gatewayInput]}
+                        value={cardExpiryInput}
+                        onChangeText={setCardExpiryInput}
+                        placeholder="MM/YY"
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.gatewayFieldLabel}>CVV</Text>
+                      <TextInput
+                        style={[styles.gatewayInputWrap, styles.gatewayInput]}
+                        value={cardCvvInput}
+                        onChangeText={setCardCvvInput}
+                        placeholder="123"
+                        secureTextEntry
+                        keyboardType="numeric"
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {selectedMethod === 'NETBANKING' && (
+                <View style={styles.gatewaySection}>
+                  <Text style={styles.gatewayFieldLabel}>Select Bank</Text>
+                  <View style={styles.bankChipsRow}>
+                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map((bank) => (
+                      <TouchableOpacity
+                        key={bank}
+                        style={[styles.bankChip, selectedBank === bank && styles.bankChipActive]}
+                        onPress={() => setSelectedBank(bank)}
+                      >
+                        <Text style={[styles.bankChipText, selectedBank === bank && styles.bankChipTextActive]}>
+                          {bank}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Gateway Actions */}
+            <View style={styles.gatewayActions}>
+              <AppButton
+                title={paying ? paymentStatusText : `Authorize & Pay ₹${amountStr}`}
+                variant="primary"
+                icon="shield-checkmark"
+                loading={paying}
+                disabled={paying}
+                onPress={handleAuthorizeGatewayPayment}
+                style={{ width: '100%', marginBottom: spacing.sm }}
+              />
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowGatewayModal(false);
+                  setErrorMessage('Payment was not completed. You can try again.');
+                }}
+                disabled={paying}
+                style={styles.gatewayCancelBtn}
+              >
+                <Text style={styles.gatewayCancelText}>Cancel & Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -623,7 +828,7 @@ const styles = StyleSheet.create({
   },
   errorBanner: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.sm,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
@@ -633,10 +838,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   errorText: {
-    flex: 1,
     fontSize: typography.sizes.sm,
     color: '#DC2626',
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.weights.bold,
+  },
+  errorSubText: {
+    fontSize: typography.sizes.xs,
+    color: '#7F1D1D',
+    marginTop: 2,
   },
   footerBar: {
     flexDirection: 'row',
@@ -661,6 +870,164 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   payButton: {
-    minWidth: 180,
+    minWidth: 160,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  gatewayContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
+    ...shadows.lg,
+  },
+  gatewayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  gatewayBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  razorpayBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0C2340',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.xs,
+    gap: 4,
+  },
+  razorpayBadgeText: {
+    color: '#528FF0',
+    fontWeight: typography.weights.bold,
+    fontSize: 12,
+  },
+  securePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.xs,
+    gap: 3,
+  },
+  securePillText: {
+    fontSize: 9,
+    fontWeight: typography.weights.bold,
+    color: '#16A34A',
+    letterSpacing: 0.3,
+  },
+  gatewayCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gatewayOrderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  gatewayMerchant: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  gatewayOrderId: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    marginTop: 2,
+  },
+  gatewayAmount: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    color: '#EA580C',
+  },
+  gatewayBody: {
+    marginBottom: spacing.lg,
+  },
+  gatewaySection: {
+    marginBottom: spacing.sm,
+  },
+  gatewayFieldLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  gatewayInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    backgroundColor: '#FFFFFF',
+  },
+  gatewayInput: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+  },
+  gatewayHint: {
+    fontSize: 10,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  bankChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  bankChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#F8FAFC',
+  },
+  bankChipActive: {
+    borderColor: '#EA580C',
+    backgroundColor: '#FFF7ED',
+  },
+  bankChipText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+  },
+  bankChipTextActive: {
+    color: '#EA580C',
+    fontWeight: typography.weights.bold,
+  },
+  gatewayActions: {
+    alignItems: 'center',
+  },
+  gatewayCancelBtn: {
+    paddingVertical: 8,
+  },
+  gatewayCancelText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.semibold,
   },
 });

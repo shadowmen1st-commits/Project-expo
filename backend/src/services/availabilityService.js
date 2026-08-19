@@ -33,7 +33,9 @@ export class AvailabilityService {
         }
 
         // 2. Fetch Worker Profile
-        const workerProfile = await WorkerProfile.findOne({ userId: workerId });
+        const workerProfile = await WorkerProfile.findOne({
+            $or: [{ userId: workerId }, { _id: workerId }]
+        });
         if (!workerProfile) {
             const error = new Error('Worker profile not found.');
             error.statusCode = 404;
@@ -41,8 +43,10 @@ export class AvailabilityService {
             throw error;
         }
 
+        const resolvedWorkerUserId = workerProfile.userId || workerProfile._id;
+
         // 3. Worker Approval & Visibility Checks
-        if (workerProfile.verificationStatus !== 'APPROVED') {
+        if (workerProfile.verificationStatus !== 'APPROVED' && workerProfile.verificationStatus !== 'ACTIVE') {
             const error = new Error('Worker is currently not approved for bookings.');
             error.statusCode = 409;
             error.errorCode = 'WORKER_NOT_APPROVED';
@@ -50,12 +54,22 @@ export class AvailabilityService {
         }
 
         if (serviceCategoryId && Array.isArray(workerProfile.serviceCategoryIds) && workerProfile.serviceCategoryIds.length > 0) {
-            const hasCat = workerProfile.serviceCategoryIds.some(id => id.toString() === serviceCategoryId.toString());
-            if (!hasCat) {
-                const error = new Error('Worker does not provide this service category.');
-                error.statusCode = 400;
-                error.errorCode = 'WORKER_SERVICE_MISMATCH';
-                throw error;
+            const allWorkerCategories = [
+                ...(workerProfile.serviceCategoryIds || []).map(id => id.toString()),
+                ...(workerProfile.serviceIds || []).map(id => id.toString()),
+                workerProfile.primaryServiceCategoryId ? workerProfile.primaryServiceCategoryId.toString() : null
+            ].filter(Boolean);
+
+            const hasCat = allWorkerCategories.includes(serviceCategoryId.toString());
+            if (!hasCat && allWorkerCategories.length > 0) {
+                // If specific category is not in list, check if category exists in DB
+                const catExists = await ServiceCategory.findById(serviceCategoryId);
+                if (!catExists) {
+                    const error = new Error('Worker does not provide this service category.');
+                    error.statusCode = 400;
+                    error.errorCode = 'WORKER_SERVICE_MISMATCH';
+                    throw error;
+                }
             }
         }
 
@@ -192,19 +206,29 @@ export class AvailabilityService {
         }
 
         // 8. Double-Booking Overlap Detection (with buffer time)
-        const bufferMs = (workerProfile.bufferMinutes || 30) * 60 * 1000;
+        const bufferMs = (workerProfile.bufferMinutes || 0) * 60 * 1000;
         const bufferedStart = new Date(startDate.getTime() - bufferMs);
         const bufferedEnd = new Date(endDate.getTime() + bufferMs);
 
         const overlappingBooking = await Booking.findOne({
-            workerId,
-            bookingStatus: { $nin: ['CANCELLED', 'REJECTED', 'REFUNDED'] },
             $or: [
-                {
-                    scheduledStart: { $lt: bufferedEnd },
-                    scheduledEnd: { $gt: bufferedStart },
-                },
+                { workerId: resolvedWorkerUserId },
+                { workerId: workerProfile._id }
             ],
+            bookingStatus: {
+                $in: [
+                    'CONFIRMED',
+                    'ASSIGNED',
+                    'ACCEPTED',
+                    'WORKER_EN_ROUTE',
+                    'ARRIVED',
+                    'STARTED',
+                    'IN_PROGRESS',
+                    'COMPLETION_REQUESTED'
+                ]
+            },
+            scheduledStart: { $lt: bufferedEnd },
+            scheduledEnd: { $gt: bufferedStart },
         });
 
         if (overlappingBooking) {

@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Switch,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
@@ -17,9 +19,10 @@ import { AppButton } from '../../../components/AppButton';
 import { EmptyState } from '../../../components/EmptyState';
 import Badge from '../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
-import api, { API_BASE_URL } from '../../../config/api';
+import api, { API_BASE_URL, SOCKET_BASE_URL } from '../../../config/api';
 import { storage } from '../../../utils/storage';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
+import { isValidCoordinate } from '../../../hooks/useLocation';
 
 // Haversine formula to compute distance in KM
 const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number | null => {
@@ -63,6 +66,18 @@ export default function WorkerLiveTrackingScreen() {
   const socketRef = useRef<Socket | null>(null);
   const locationSubRef = useRef<Location.LocationSubscription | null>(null);
 
+  const openSettings = useCallback(async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else {
+        await Linking.openSettings();
+      }
+    } catch {
+      await Linking.openURL('app-settings:');
+    }
+  }, []);
+
   // ── 1. Fetch Booking Tracking Details ──────────────────────────────
   const fetchBookingInfo = useCallback(async (isSilent = false) => {
     if (!bookingId) return;
@@ -77,10 +92,10 @@ export default function WorkerLiveTrackingScreen() {
         setBooking(b);
 
         const addr = res.data.addressSnapshot;
-        if (addr?.latitude && addr?.longitude) {
+        if (addr && isValidCoordinate(addr.latitude, addr.longitude)) {
           setCustomerCoords({ latitude: addr.latitude, longitude: addr.longitude });
         } else {
-          setCustomerCoords({ latitude: 12.9716, longitude: 77.5946 });
+          setCustomerCoords(null);
         }
 
         // If booking is already finished/cancelled, stop GPS tracking
@@ -108,6 +123,11 @@ export default function WorkerLiveTrackingScreen() {
 
   // ── 2. Broadcast Location Helper ────────────────────────────────────
   const sendLocationPing = async (coords: Location.LocationObjectCoords) => {
+    if (!isValidCoordinate(coords.latitude, coords.longitude)) {
+      console.log('[GPS_REJECTED_INVALID_COORDS]', coords);
+      return;
+    }
+
     const payload = {
       latitude: coords.latitude,
       longitude: coords.longitude,
@@ -121,7 +141,9 @@ export default function WorkerLiveTrackingScreen() {
       bookingId,
       latitude: payload.latitude,
       longitude: payload.longitude,
+      accuracy: payload.accuracy,
       speed: payload.speed,
+      timestamp: payload.timestamp,
     });
 
     setCurrentCoords(payload);
@@ -135,6 +157,7 @@ export default function WorkerLiveTrackingScreen() {
         bookingId,
         lat: payload.latitude,
         lng: payload.longitude,
+        accuracy: payload.accuracy,
       });
     } catch (err: any) {
       console.log('[GPS_TELEMETRY_ERROR]', err?.response?.data || err.message);
@@ -156,18 +179,33 @@ export default function WorkerLiveTrackingScreen() {
       const isGpsEnabled = await Location.hasServicesEnabledAsync();
       console.log('[LOCATION_SERVICES]', { isGpsEnabled });
       if (!isGpsEnabled) {
-        Alert.alert('GPS Disabled', 'Please enable Location Services / GPS on your device to share live tracking.');
+        Alert.alert(
+          'Location / GPS Disabled',
+          'Please turn ON Location Services / GPS on your device to share live tracking.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openSettings },
+          ]
+        );
         return;
       }
 
       console.log('[LOCATION_PERMISSION_REQUEST]');
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log('[LOCATION_PERMISSION_RESULT]', status);
-      if (status !== 'granted') {
+      let perm = await Location.getForegroundPermissionsAsync();
+      if (perm.status !== Location.PermissionStatus.GRANTED) {
+        perm = await Location.requestForegroundPermissionsAsync();
+      }
+      console.log('[LOCATION_PERMISSION_RESULT]', perm.status);
+
+      if (perm.status !== Location.PermissionStatus.GRANTED) {
         setPermissionDenied(true);
         Alert.alert(
           'Location Permission Required',
-          'Foreground location permission is required for customers to track your arrival.'
+          'Foreground location permission is required for customers to track your live arrival.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openSettings },
+          ]
         );
         return;
       }
@@ -179,10 +217,15 @@ export default function WorkerLiveTrackingScreen() {
       // Get initial position immediately
       const initialPos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
+      }).catch(async () => {
+        return await Location.getLastKnownPositionAsync().catch(() => null);
       });
-      await sendLocationPing(initialPos.coords);
 
-      // Watch position every 4 seconds or 5 meters
+      if (initialPos && isValidCoordinate(initialPos.coords.latitude, initialPos.coords.longitude)) {
+        await sendLocationPing(initialPos.coords);
+      }
+
+      // Watch position continuously (high accuracy, 4s interval, 5m distance)
       const sub = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -196,6 +239,7 @@ export default function WorkerLiveTrackingScreen() {
 
       locationSubRef.current = sub;
     } catch (err: any) {
+      console.log('[GPS_ERROR]', err?.message);
       Alert.alert('Location Error', err.message || 'Failed to start GPS tracking.');
       setIsSharingGps(false);
     }
@@ -235,13 +279,13 @@ export default function WorkerLiveTrackingScreen() {
     }
   };
 
-  // ── 5. Lifecycle & Socket.IO ───────────────────────────────────────
+  // ── 6. Lifecycle & Socket.IO ───────────────────────────────────────
   useEffect(() => {
     fetchBookingInfo();
 
     let socketInstance: Socket | null = null;
     const initSocket = async () => {
-      const socketUrl = API_BASE_URL.replace('/api', '');
+      const socketUrl = SOCKET_BASE_URL;
       const token = await storage.getItem('accessToken');
 
       socketInstance = io(socketUrl, {
@@ -335,8 +379,8 @@ export default function WorkerLiveTrackingScreen() {
               </Text>
               <Text style={styles.controlSub}>
                 {isSharingGps
-                  ? 'Your real-time GPS coordinates are streaming to the customer.'
-                  : 'Start live location so customer can see your arrival on map.'}
+                  ? 'Your real-time physical GPS coordinates are streaming to the customer.'
+                  : 'Start live location so customer can see your real arrival on map.'}
               </Text>
             </View>
             <Switch
@@ -357,7 +401,7 @@ export default function WorkerLiveTrackingScreen() {
             <View style={styles.metricBox}>
               <Text style={styles.metricLbl}>Distance to Client</Text>
               <Text style={styles.metricNum}>
-                {distanceKm !== null ? `${distanceKm} km` : 'Acquiring...'}
+                {distanceKm !== null ? `${distanceKm} km` : customerCoords ? 'Acquiring GPS...' : 'Address Registered'}
               </Text>
             </View>
             <View style={styles.metricBox}>
@@ -370,9 +414,9 @@ export default function WorkerLiveTrackingScreen() {
         </View>
 
         {/* Live Coordinates Card */}
-        {currentCoords && (
+        {currentCoords ? (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Your Current GPS Coordinates</Text>
+            <Text style={styles.sectionTitle}>Your Current Physical GPS Coordinates</Text>
             <View style={styles.coordsRow}>
               <Ionicons name="navigate-circle" size={24} color={colors.accent} />
               <View style={{ flex: 1 }}>
@@ -389,6 +433,16 @@ export default function WorkerLiveTrackingScreen() {
             <Text style={styles.pingTimestamp}>
               Last Sent: {lastBroadcastTime ? lastBroadcastTime.toLocaleTimeString() : 'Just now'}
             </Text>
+          </View>
+        ) : (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Live GPS Signal</Text>
+            <View style={styles.waitingGpsRow}>
+              <ActivityIndicator size="small" color={colors.accent} />
+              <Text style={styles.waitingGpsText}>
+                {isSharingGps ? 'Acquiring fresh device GPS satellite lock...' : 'GPS sharing is currently paused.'}
+              </Text>
+            </View>
           </View>
         )}
 
@@ -502,6 +556,7 @@ const styles = StyleSheet.create({
   controlHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.md,
   },
   controlTitle: {
@@ -513,7 +568,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     marginTop: 2,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   detailsDivider: {
     height: 1,
@@ -525,27 +580,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   metricBox: {
+    alignItems: 'center',
     flex: 1,
   },
   metricLbl: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.textMuted,
-    fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    marginBottom: 2,
   },
   metricNum: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginTop: 2,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     ...shadows.sm,
   },
   sectionTitle: {
@@ -553,34 +607,49 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
-    textTransform: 'uppercase',
   },
   coordsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
+    backgroundColor: '#FFF7ED',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
   },
   coordsValue: {
-    fontSize: typography.sizes.xs,
-    fontFamily: 'monospace',
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
+    color: '#EA580C',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   coordsMeta: {
-    fontSize: 10,
-    color: colors.textMuted,
+    fontSize: 11,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   pingTimestamp: {
     fontSize: 10,
     color: colors.textMuted,
-    marginTop: spacing.sm,
-    fontFamily: 'monospace',
+    marginTop: spacing.xs,
+    textAlign: 'right',
+  },
+  waitingGpsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+  },
+  waitingGpsText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   addressRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
     alignItems: 'flex-start',
+    gap: spacing.sm,
   },
   addressText: {
     fontSize: typography.sizes.sm,
@@ -590,8 +659,8 @@ const styles = StyleSheet.create({
   instructionsText: {
     fontSize: typography.sizes.xs,
     color: colors.textMuted,
+    marginTop: 4,
     fontStyle: 'italic',
-    marginTop: 2,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -599,15 +668,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: 10,
+    fontSize: typography.sizes.xs,
     color: colors.textMuted,
-    fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
   },
   summaryVal: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginTop: 2,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });

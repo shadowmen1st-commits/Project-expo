@@ -124,7 +124,7 @@ export default function CustomerDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* 2. Search / Categories Quick Bar */}
+        {/* 2. Search / Quick Bar */}
         <TouchableOpacity
           style={styles.searchBar}
           onPress={() => router.push('/(customer)/services')}
@@ -137,60 +137,17 @@ export default function CustomerDashboard() {
           </View>
         </TouchableOpacity>
 
-        {/* 3. Horizontal Categories Slider */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Services & Categories</Text>
-          <TouchableOpacity onPress={() => router.push('/(customer)/services')}>
-            <Text style={styles.seeAllText}>Explore All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading && categories.length === 0 ? (
-          <ActivityIndicator color={colors.primaryDark} style={{ marginVertical: spacing.md }} />
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryScrollContent}
-          >
-            {(categories.length > 0
-              ? categories
-              : [
-                  { _id: '1', name: 'Cleaning' },
-                  { _id: '2', name: 'Electrician' },
-                  { _id: '3', name: 'Plumber' },
-                  { _id: '4', name: 'Carpenter' },
-                ]
-            ).map((cat) => (
-              <ServiceCard
-                key={cat._id || cat.id}
-                name={cat.name}
-                icon={getCategoryIcon(cat.name)}
-                onPress={() => router.push('/(customer)/services')}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {/* 4. Featured Promotional Card */}
-        <View style={styles.promoBanner}>
-          <View style={styles.promoContent}>
-            <View style={styles.promoTag}>
-              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
-            </View>
-            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
-            <Text style={styles.promoSub}>Swipe to discover top-rated experts in your neighborhood</Text>
-          </View>
-          <View style={styles.promoIconBox}>
-            <Ionicons name="shield-checkmark" size={44} color={colors.primaryDark} />
-          </View>
-        </View>
-
-        {/* 5. TINDER-STYLE WORKER CARD SLIDER */}
+        {/* 3. TOP PROFESSIONAL HORIZONTAL SWIPE CAROUSEL (First in content order) */}
         <View style={styles.tinderSection}>
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={styles.sectionTitle}>Top Professionals</Text>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>Top Professionals</Text>
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="shield-checkmark" size={11} color={colors.success} />
+                  <Text style={styles.verifiedBadgeText}>VERIFIED</Text>
+                </View>
+              </View>
               <Text style={styles.sectionSubtitle}>Swipe right to shortlist, left to pass</Text>
             </View>
           </View>
@@ -214,7 +171,164 @@ export default function CustomerDashboard() {
           )}
         </View>
 
-        {/* 6. Recent Active Bookings */}
+        {/* 4. POPULAR SERVICES SECTION (Horizontal Scrolling Cards, Directly Below Carousel) */}
+        <View style={styles.servicesSection}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Popular Services</Text>
+              <Text style={styles.sectionSubtitle}>Book instant expert home services</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/(customer)/services')}
+              style={styles.viewAllButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>View All</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+            </TouchableOpacity>
+          </View>
+
+          {loading && categories.length === 0 ? (
+            <View style={styles.loadingPlaceholderRow}>
+              <ActivityIndicator color={colors.primaryDark} />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToAlignment="start"
+              contentContainerStyle={styles.servicesScrollContent}
+            >
+              {(categories.length > 0
+                ? categories
+                : [
+                    { _id: '1', name: 'Deep Cleaning', description: 'Complete sanitization & hygiene' },
+                    { _id: '2', name: 'Electrical Care', description: 'Wiring, fixtures & appliance setup' },
+                    { _id: '3', name: 'Plumbing Works', description: 'Leak repairs & pipeline fitting' },
+                    { _id: '4', name: 'AC Servicing', description: 'Filter clean, gas refill & repairs' },
+                    { _id: '5', name: 'Home Painting', description: 'Interior, exterior & touch-ups' },
+                  ]
+              ).map((service, idx) => {
+                const iconName = getCategoryIcon(service.name);
+                const tag = idx === 0 ? 'Best Seller' : idx === 1 ? 'Instant Pro' : 'Top Rated';
+                return (
+                  <TouchableOpacity
+                    key={service._id || service.id || `srv-${idx}`}
+                    style={styles.serviceCard}
+                    onPress={() => router.push(`/(customer)/workers?category=${service._id || service.id}`)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.serviceCardTopRow}>
+                      <View style={styles.serviceIconWrap}>
+                        <Ionicons name={iconName} size={22} color={colors.accent} />
+                      </View>
+                      <View style={styles.serviceTagPill}>
+                        <Text style={styles.serviceTagText}>{tag}</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.serviceName} numberOfLines={1}>
+                      {service.name}
+                    </Text>
+
+                    <Text style={styles.serviceSubtitle} numberOfLines={2}>
+                      {service.description || 'Verified pros at your doorstep'}
+                    </Text>
+
+                    <View style={styles.serviceFooterRow}>
+                      <View style={styles.serviceRatingRow}>
+                        <Ionicons name="star" size={12} color="#F59E0B" />
+                        <Text style={styles.serviceRatingText}>4.8+</Text>
+                      </View>
+                      <View style={styles.quickBookPill}>
+                        <Text style={styles.quickBookText}>Book</Text>
+                        <Ionicons name="arrow-forward" size={11} color={colors.primaryDark} />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* 5. CATEGORIES SECTION (Horizontal Carousel Directly Below Services) */}
+        <View style={styles.categoriesSection}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Explore Categories</Text>
+              <Text style={styles.sectionSubtitle}>Browse by specialization</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/(customer)/services')}
+              style={styles.viewAllButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>Explore All</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+            </TouchableOpacity>
+          </View>
+
+          {loading && categories.length === 0 ? (
+            <View style={styles.loadingPlaceholderRow}>
+              <ActivityIndicator color={colors.primaryDark} />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToAlignment="start"
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              {(categories.length > 0
+                ? categories
+                : [
+                    { _id: '1', name: 'Cleaning' },
+                    { _id: '2', name: 'Electrician' },
+                    { _id: '3', name: 'Plumber' },
+                    { _id: '4', name: 'Carpenter' },
+                    { _id: '5', name: 'Painter' },
+                  ]
+              ).map((cat) => {
+                const iconName = getCategoryIcon(cat.name);
+                return (
+                  <TouchableOpacity
+                    key={cat._id || cat.id}
+                    style={styles.categoryPillCard}
+                    onPress={() => router.push(`/(customer)/workers?category=${cat._id || cat.id}`)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.categoryIconCircle}>
+                      <Ionicons name={iconName} size={22} color={colors.primaryDark} />
+                    </View>
+                    <Text numberOfLines={1} style={styles.categoryPillName}>
+                      {cat.name}
+                    </Text>
+                    <Text style={styles.categoryCountBadge}>Explore</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+
+        {/* 6. Featured Promotional Card */}
+        <View style={styles.promoBanner}>
+          <View style={styles.promoContent}>
+            <View style={styles.promoTag}>
+              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
+            </View>
+            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
+            <Text style={styles.promoSub}>Upfront pricing, live GPS tracking and escrow-protected payments.</Text>
+          </View>
+          <View style={styles.promoIconBox}>
+            <Ionicons name="shield-checkmark" size={44} color={colors.primaryDark} />
+          </View>
+        </View>
+
+        {/* 7. Recent Active Bookings */}
         {recentBookings.length > 0 && (
           <View style={styles.recentBookingContainer}>
             <View style={styles.sectionHeader}>
@@ -248,7 +362,7 @@ export default function CustomerDashboard() {
           </View>
         )}
 
-        {/* 7. Footer Note */}
+        {/* 8. Footer Note */}
         <View style={styles.footerNote}>
           <Ionicons name="sparkles" size={16} color={colors.accent} />
           <Text style={styles.footerNoteText}>
@@ -321,6 +435,169 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tinderSection: {
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+    gap: 3,
+  },
+  verifiedBadgeText: {
+    fontSize: 9,
+    fontWeight: typography.weights.bold,
+    color: colors.success,
+    letterSpacing: 0.3,
+  },
+  servicesSection: {
+    marginBottom: spacing.lg,
+  },
+  servicesScrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  serviceCard: {
+    width: 154,
+    height: 166,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    justifyContent: 'space-between',
+    ...shadows.sm,
+  },
+  serviceCardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  serviceIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serviceTagPill: {
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+  },
+  serviceTagText: {
+    fontSize: 8,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryDark,
+    textTransform: 'uppercase',
+  },
+  serviceName: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginTop: 4,
+  },
+  serviceSubtitle: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    lineHeight: 14,
+    marginTop: 2,
+  },
+  serviceFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  serviceRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  serviceRatingText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  quickBookPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceSecondary,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.xs,
+    gap: 2,
+  },
+  quickBookText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryDark,
+  },
+  categoriesSection: {
+    marginBottom: spacing.lg,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  categoryPillCard: {
+    width: 106,
+    height: 110,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
+  },
+  categoryIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  categoryPillName: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  categoryCountBadge: {
+    fontSize: 9,
+    fontWeight: typography.weights.semibold,
+    color: colors.accent,
+    marginTop: 2,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  loadingPlaceholderRow: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   promoBanner: {
     marginHorizontal: spacing.lg,
     backgroundColor: '#FEF3C7',
@@ -361,6 +638,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     marginTop: 4,
+    lineHeight: 16,
   },
   promoIconBox: {
     width: 60,
@@ -389,15 +667,6 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.accent,
-  },
-  categoryScrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  tinderSection: {
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
   },
   loaderArea: {
     alignItems: 'center',

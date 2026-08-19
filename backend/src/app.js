@@ -47,6 +47,7 @@ export const createApp = () => {
         if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
         if (/^capacitor:\/\/localhost$/.test(origin) || /^https:\/\/localhost$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+        if (config.NODE_ENV !== 'production' && (/^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin) || /^exp:\/\//.test(origin))) return true;
         return false;
     };
 

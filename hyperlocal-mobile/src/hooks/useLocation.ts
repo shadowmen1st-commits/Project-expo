@@ -8,6 +8,7 @@ export interface LocationCoords {
   accuracy?: number | null;
   heading?: number | null;
   speed?: number | null;
+  timestamp?: number;
 }
 
 export interface UseLocationResult {
@@ -18,6 +19,19 @@ export interface UseLocationResult {
   canAskAgain: boolean;
   requestLocation: (options?: { forceHighAccuracy?: boolean; promptIfDenied?: boolean }) => Promise<LocationCoords | null>;
   openSettings: () => Promise<void>;
+}
+
+/**
+ * Validates that coordinates are legitimate real-world geographic coordinates.
+ */
+export function isValidCoordinate(latitude?: number | null, longitude?: number | null): boolean {
+  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+    return false;
+  }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return false;
+  }
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
 }
 
 export function useLocation(autoRequest = false): UseLocationResult {
@@ -41,46 +55,51 @@ export function useLocation(autoRequest = false): UseLocationResult {
 
   const requestLocation = useCallback(
     async (options?: { forceHighAccuracy?: boolean; promptIfDenied?: boolean }): Promise<LocationCoords | null> => {
-      const { forceHighAccuracy = false, promptIfDenied = true } = options || {};
+      const { forceHighAccuracy = true, promptIfDenied = true } = options || {};
       setLoading(true);
       setError(null);
 
       try {
         // 1. Check if location services are enabled on device
+        console.log('[LOCATION_SERVICES_CHECK]');
         const isServicesEnabled = await Location.hasServicesEnabledAsync().catch(() => true);
+        console.log('[LOCATION_SERVICES]', { isServicesEnabled });
+
         if (!isServicesEnabled) {
-          const msg = 'Location services are disabled on your device. Please enable GPS in device settings.';
+          const msg = 'Location services are disabled on your device. Please turn ON GPS in device settings.';
           setError(msg);
           if (promptIfDenied) {
             Alert.alert('Location Services Disabled', msg, [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Enable Location', onPress: openSettings },
+              { text: 'Open Settings', onPress: openSettings },
             ]);
           }
           return null;
         }
 
         // 2. Request Foreground Permission
+        console.log('[LOCATION_PERMISSION_REQUEST]');
         let perm = await Location.getForegroundPermissionsAsync();
         if (perm.status !== Location.PermissionStatus.GRANTED) {
           perm = await Location.requestForegroundPermissionsAsync();
         }
 
+        console.log('[LOCATION_PERMISSION_RESULT]', perm.status);
         setPermissionStatus(perm.status);
         setCanAskAgain(perm.canAskAgain);
 
         if (perm.status !== Location.PermissionStatus.GRANTED) {
-          const msg = 'Location permission is required to show nearby professionals and track your assigned worker.';
+          const msg = 'Location permission is required to detect your location and track services.';
           setError(msg);
 
           if (promptIfDenied) {
             if (!perm.canAskAgain) {
               Alert.alert(
                 'Location Permission Required',
-                `${msg}\n\nPlease tap "Enable Location" to open settings and grant access.`,
+                `${msg}\n\nPlease tap "Open Settings" to grant location access.`,
                 [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Enable Location', onPress: openSettings },
+                  { text: 'Open Settings', onPress: openSettings },
                 ]
               );
             } else {
@@ -90,52 +109,41 @@ export function useLocation(autoRequest = false): UseLocationResult {
           return null;
         }
 
-        // 3. Obtain current position with timeout safeguard
-        const positionPromise = Location.getCurrentPositionAsync({
-          accuracy: forceHighAccuracy ? Location.Accuracy.Highest : Location.Accuracy.Balanced,
+        // 3. Obtain fresh real GPS position
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: forceHighAccuracy ? Location.Accuracy.High : Location.Accuracy.Balanced,
+        }).catch(async (posErr) => {
+          console.log('[GPS_CURRENT_POSITION_FALLBACK]', posErr?.message);
+          // Only fallback to last known location temporarily if fresh GPS fails
+          return await Location.getLastKnownPositionAsync().catch(() => null);
         });
 
-        // 10s fallback timeout to prevent hanging on emulators
-        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000));
-        const pos = await Promise.race([positionPromise, timeoutPromise]);
-
-        if (pos) {
+        if (pos && isValidCoordinate(pos.coords.latitude, pos.coords.longitude)) {
           const coords: LocationCoords = {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
             accuracy: pos.coords.accuracy,
             heading: pos.coords.heading,
             speed: pos.coords.speed,
+            timestamp: pos.timestamp,
           };
+          console.log('[GPS_UPDATE]', {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracy: coords.accuracy,
+            timestamp: coords.timestamp,
+          });
           setLocation(coords);
           setError(null);
           return coords;
         }
 
-        // Fallback: Last known position
-        const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
-        if (lastKnown) {
-          const coords: LocationCoords = {
-            latitude: lastKnown.coords.latitude,
-            longitude: lastKnown.coords.longitude,
-            accuracy: lastKnown.coords.accuracy,
-            heading: lastKnown.coords.heading,
-            speed: lastKnown.coords.speed,
-          };
-          setLocation(coords);
-          setError(null);
-          return coords;
-        }
-
-        // Emulator default or graceful fallback
-        const fallbackCoords: LocationCoords = {
-          latitude: 12.9716,
-          longitude: 77.5946,
-        };
-        setLocation(fallbackCoords);
-        return fallbackCoords;
+        // No valid GPS signal acquired
+        setError('Waiting for GPS signal...');
+        return null;
       } catch (err: any) {
-        const msg = err?.message || 'Unable to retrieve your current location.';
+        const msg = err?.message || 'Unable to retrieve your physical location.';
+        console.log('[GPS_ERROR]', msg);
         setError(msg);
         return null;
       } finally {

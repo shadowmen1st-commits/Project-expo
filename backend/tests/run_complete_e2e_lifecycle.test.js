@@ -45,12 +45,32 @@ async function runCompleteE2ETest() {
     // PHASE 2: CUSTOMER LOGIN
     // -------------------------------------------------------------
     console.log('--- PHASE 2: CUSTOMER AUTHENTICATION ---');
-    const custLoginRes = await request(`${API_BASE}/auth/login`, {
+    const custAuthUrl = `${API_BASE}/auth/login`;
+    const custEmail = 'customer1@test.com';
+
+    console.log('[E2E_AUTH_START]', { timestamp: new Date().toISOString() });
+    console.log('[E2E_AUTH_URL]', custAuthUrl);
+    console.log('[E2E_AUTH_EMAIL]', custEmail);
+
+    const custLoginRes = await request(custAuthUrl, {
         method: 'POST',
-        body: JSON.stringify({ email: 'customer1@test.com', password: 'Customer@123' }),
+        body: JSON.stringify({ email: custEmail, password: 'Customer@123' }),
+    });
+
+    console.log('[E2E_AUTH_RESPONSE]', {
+        status: custLoginRes.status,
+        ok: custLoginRes.ok,
+        success: custLoginRes.data?.success,
+        role: custLoginRes.data?.user?.role,
+        hasAccessToken: Boolean(custLoginRes.data?.accessToken),
     });
 
     if (!custLoginRes.ok || !custLoginRes.data.accessToken) {
+        console.error('[E2E_AUTH_FAILURE]', {
+            status: custLoginRes.status,
+            errorCode: custLoginRes.data?.errorCode,
+            message: custLoginRes.data?.message,
+        });
         throw new Error(`Customer login failed: ${custLoginRes.status} ${JSON.stringify(custLoginRes.data)}`);
     }
 

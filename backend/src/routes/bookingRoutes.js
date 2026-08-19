@@ -25,10 +25,13 @@ import {
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
+
+// Availability Check (Public / Accessible during booking flow)
+router.post('/availability/check', checkAvailability);
+
 router.use(authMiddleware);
 
-// Availability & Creation
-router.post('/availability/check', checkAvailability);
+// Creation
 router.post('/create', createBooking);
 router.post('/', createBooking);
 

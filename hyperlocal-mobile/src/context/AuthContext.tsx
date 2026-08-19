@@ -65,10 +65,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<UserType> => {
     setLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log('[LOGIN_START]', { email: normalizedEmail, timestamp: new Date().toISOString() });
+    console.log('[LOGIN_API_URL]', `${api.defaults.baseURL}/auth/login`);
+    console.log('[LOGIN_REQUEST]', { email: normalizedEmail, hasPassword: Boolean(password) });
+
     try {
       const response = await api.post('/auth/login', {
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
+      });
+
+      console.log('[LOGIN_RESPONSE]', {
+        status: response.status,
+        success: response.data?.success,
+        role: response.data?.user?.role,
+        userId: response.data?.user?.id || response.data?.user?._id,
       });
 
       const { accessToken, refreshToken, user: userData } = response.data;
@@ -82,8 +94,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (__DEV__) console.log('AUTH: login refresh token stored: YES');
       }
 
+      console.log('[LOGIN_SUCCESS]', {
+        email: userData?.email,
+        role: userData?.role,
+        id: userData?.id || userData?._id,
+      });
+
       setUser(userData);
       return userData;
+    } catch (err: any) {
+      if (err.response) {
+        console.error('[LOGIN_FAILURE]', {
+          status: err.response.status,
+          message: err.response.data?.message || err.message,
+          errorCode: err.response.data?.errorCode,
+        });
+      } else {
+        console.error('[LOGIN_NETWORK_ERROR]', {
+          message: err.message,
+          code: err.code,
+          baseURL: api.defaults.baseURL,
+        });
+      }
+      throw err;
     } finally {
       setLoading(false);
     }

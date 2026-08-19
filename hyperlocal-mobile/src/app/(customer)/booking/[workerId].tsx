@@ -219,12 +219,28 @@ export default function CreateBookingScreen() {
       const effectiveWorkerId = getCanonicalWorkerId(worker) || canonicalParamId;
       if (!effectiveWorkerId || !isValidObjectId(effectiveWorkerId) || !targetDate) return;
 
+      const workerCatIds = Array.isArray(worker?.serviceCategoryIds) && worker.serviceCategoryIds.length > 0
+        ? worker.serviceCategoryIds.map((c: any) => (typeof c === 'object' ? c._id || c.id : c)).filter(Boolean)
+        : [];
+
       const effectiveCatId =
         selectedCategoryId && isValidObjectId(selectedCategoryId)
           ? selectedCategoryId
+          : workerCatIds.length > 0 && isValidObjectId(workerCatIds[0])
+          ? String(workerCatIds[0])
           : categories.length > 0 && isValidObjectId(categories[0]._id || categories[0].id)
           ? String(categories[0]._id || categories[0].id)
-          : '6a7a91e194884cf983721a9a';
+          : undefined;
+
+      console.log('[AVAILABILITY_START]', {
+        workerId: effectiveWorkerId,
+        date: targetDate,
+        duration: targetDuration,
+        categoryId: effectiveCatId,
+      });
+      console.log('[AVAILABILITY_WORKER_ID]', effectiveWorkerId);
+      console.log('[AVAILABILITY_DATE]', targetDate);
+      console.log('[AVAILABILITY_TIMEZONE]', 'Asia/Kolkata');
 
       setCheckingAvailability(true);
       setAvailabilityWarning('');
@@ -264,23 +280,46 @@ export default function CreateBookingScreen() {
           slotChecks.map(async (slot) => {
             if (!slot.available) return slot;
 
+            const reqBody: any = {
+              workerId: String(effectiveWorkerId),
+              scheduledStart: slot.startIso,
+              scheduledEnd: slot.endIso,
+              pricingType: 'HOURLY',
+            };
+            if (effectiveCatId && isValidObjectId(effectiveCatId)) {
+              reqBody.serviceCategoryId = String(effectiveCatId);
+            }
+
+            console.log('[AVAILABILITY_REQUEST]', {
+              time: slot.time,
+              startIso: slot.startIso,
+              endIso: slot.endIso,
+            });
+
             try {
-              const res = await api.post('/bookings/availability/check', {
-                workerId: String(effectiveWorkerId),
-                serviceCategoryId: String(effectiveCatId),
-                scheduledStart: slot.startIso,
-                scheduledEnd: slot.endIso,
-                pricingType: 'HOURLY',
-              });
+              const res = await api.post('/bookings/availability/check', reqBody);
 
               const isAvail = res.data?.success && res.data?.available !== false;
+              console.log('[AVAILABILITY_RESPONSE]', {
+                time: slot.time,
+                status: res.status,
+                available: isAvail,
+              });
+
               return {
                 ...slot,
                 available: isAvail,
-                reason: isAvail ? undefined : res.data?.message || 'Slot unavailable',
+                reason: isAvail ? undefined : res.data?.reason || res.data?.message || 'Slot unavailable',
               };
             } catch (err: any) {
+              const reason = err.response?.data?.reason || err.response?.data?.errorCode || 'WORKER_UNAVAILABLE';
               const msg = err.response?.data?.message || 'Conflict with another booking or buffer';
+              console.log('[AVAILABILITY_REASON]', {
+                time: slot.time,
+                reason,
+                message: msg,
+              });
+
               return {
                 ...slot,
                 available: false,
@@ -291,6 +330,13 @@ export default function CreateBookingScreen() {
         );
 
         setSlotAvailabilities(checkedSlots);
+
+        const availableCount = checkedSlots.filter(s => s.available).length;
+        console.log('[AVAILABILITY_RESULT]', {
+          total: checkedSlots.length,
+          availableCount,
+          date: targetDate,
+        });
 
         // Verify if currently selected startTime is available
         const currentSlotObj = checkedSlots.find((s) => s.time === startTime);
@@ -468,7 +514,7 @@ export default function CreateBookingScreen() {
       // Navigate directly to the dedicated Payment page for this booking
       if (!hasNavigatedRef.current) {
         hasNavigatedRef.current = true;
-        router.replace(`/(customer)/booking/payment/${bookingId}` as any);
+        router.push(`/(customer)/booking/payment/${bookingId}` as any);
       }
     } catch (err: any) {
       const status = err.response?.status;

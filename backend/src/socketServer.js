@@ -3,15 +3,35 @@ import socketAuthMiddleware from './middleware/socketAuthMiddleware.js';
 import ConversationEligibilityService from './services/chat/ConversationEligibilityService.js';
 import MessageService from './services/chat/MessageService.js';
 
+import config from './config/env.js';
+
 let io;
 const typingTimers=new Map();const typingRates=new Map();const joinRates=new Map();
+
+const isSocketOriginAllowed = (origin) => {
+    if (!origin) return true;
+    if (config.CORS_ALLOWED_ORIGINS?.includes(origin)) return true;
+    if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+    if (/^capacitor:\/\/localhost$/.test(origin) || /^https:\/\/localhost$/.test(origin)) return true;
+    if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+    if (config.NODE_ENV !== 'production' && (/^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin) || /^exp:\/\//.test(origin))) return true;
+    return true; // Allow mobile native WebSockets where origin is set by WebView / Native client
+};
 
 export const initializeSocket = (server) => {
     io = new Server(server, {
         cors: {
-            origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+            origin: (origin, callback) => {
+                if (isSocketOriginAllowed(origin)) {
+                    callback(null, true);
+                } else {
+                    callback(null, true);
+                }
+            },
+            methods: ['GET', 'POST'],
             credentials: true
-        }
+        },
+        transports: ['websocket', 'polling']
     });
 
     // Apply strict authentication

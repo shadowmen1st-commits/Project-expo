@@ -1,20 +1,46 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const normalizeApiUrl = (url?: string) => {
-  if (!url) return 'https://project-expo-md7o.onrender.com/api';
+export const normalizeApiUrl = (url?: string) => {
+  if (!url || !url.trim()) {
+    if (__DEV__) {
+      console.warn('[API_CONFIG_DEFAULT] EXPO_PUBLIC_API_URL not set. Defaulting to local Wi-Fi LAN backend.');
+      return 'http://192.168.1.10:5000/api';
+    }
+    console.warn('[PUBLIC_BACKEND_REQUIRED] EXPO_PUBLIC_API_URL is missing in production build!');
+    return 'http://192.168.1.10:5000/api';
+  }
   let cleaned = url.trim().replace(/\/+$/, '');
-  if (!cleaned.includes('/api')) {
+  cleaned = cleaned.replace(/\/api\/api$/, '/api');
+  if (!cleaned.endsWith('/api')) {
     cleaned += '/api';
   }
   return cleaned;
 };
 
+export const normalizeSocketUrl = (url?: string, apiBaseUrl?: string) => {
+  if (url && url.trim()) {
+    return url.trim().replace(/\/+$/, '');
+  }
+  if (apiBaseUrl) {
+    return apiBaseUrl.replace(/\/api\/?$/, '');
+  }
+  return 'http://192.168.1.10:5000';
+};
+
 export const API_BASE_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL);
+export const SOCKET_BASE_URL = normalizeSocketUrl(process.env.EXPO_PUBLIC_SOCKET_URL, API_BASE_URL);
+
+console.log('[API_CONFIG]', {
+  baseURL: API_BASE_URL,
+  socketURL: SOCKET_BASE_URL,
+  platform: Platform.OS,
+});
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 45000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,10 +60,14 @@ api.interceptors.request.use(
       }
     } else {
       delete config.headers.Authorization;
-      // Only log "authorized: NO" for protected routes — not for login/register which never need a token
-      if (__DEV__ && !isPublicRoute) {
-        console.log(`AUTH: Request to ${config.url} authorized: NO (No access token)`);
-      }
+    }
+
+    if (__DEV__ && !isPublicRoute) {
+      console.log('[API_REQUEST]', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL || API_BASE_URL,
+      });
     }
     return config;
   },
@@ -58,8 +88,33 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+export const checkServerHealth = async (): Promise<{ ok: boolean; status?: number; data?: any; error?: string }> => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/v1/health`, { timeout: 8000 });
+    return { ok: res.status === 200, status: res.status, data: res.data };
+  } catch (err: any) {
+    try {
+      const fallbackRes = await axios.get(`${API_BASE_URL}/health`, { timeout: 8000 });
+      return { ok: fallbackRes.status === 200, status: fallbackRes.status, data: fallbackRes.data };
+    } catch (fallbackErr: any) {
+      return {
+        ok: false,
+        error: fallbackErr.message || err.message || 'Server unreachable',
+      };
+    }
+  }
+};
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (__DEV__) {
+      console.log('[API_RESPONSE]', {
+        status: response.status,
+        url: response.config.url,
+      });
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -141,6 +196,41 @@ api.interceptors.response.use(
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    if (!error.response) {
+      const code = error.code || '';
+      let userFriendlyMsg = 'Unable to connect to server. Please check your internet connection or verify the server is reachable.';
+
+      if (code === 'ECONNABORTED' || code === 'ETIMEDOUT') {
+        userFriendlyMsg = 'Connection timed out. Please check your network speed.';
+      } else if (code === 'ENOTFOUND') {
+        userFriendlyMsg = 'Server domain not found. Please verify backend URL.';
+      } else if (code === 'ECONNREFUSED') {
+        userFriendlyMsg = 'Connection refused. Ensure the backend server is running.';
+      } else if (code.includes('SSL') || code.includes('CERT')) {
+        userFriendlyMsg = 'SSL/TLS certificate error. Please verify the HTTPS certificate.';
+      }
+
+      console.error('[API_NETWORK_ERROR]', {
+        url: originalRequest.url,
+        baseURL: originalRequest.baseURL || API_BASE_URL,
+        method: originalRequest.method,
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        category: code || 'NO_RESPONSE',
+      });
+      error.userMessage = userFriendlyMsg;
+    } else {
+      const status = error.response.status;
+      if (status >= 500) {
+        error.userMessage = 'Server error encountered. Please try again in a few moments.';
+      } else if (status === 403) {
+        error.userMessage = error.response.data?.message || 'Access forbidden.';
+      } else if (status === 404) {
+        error.userMessage = error.response.data?.message || 'Requested resource not found.';
       }
     }
 

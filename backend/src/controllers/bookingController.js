@@ -59,8 +59,10 @@ export const checkAvailability = async (req, res, next) => {
         if (error.statusCode) {
             res.status(error.statusCode).json({
                 success: false,
+                available: false,
                 statusCode: error.statusCode,
                 errorCode: error.errorCode || 'AVAILABILITY_ERROR',
+                reason: error.errorCode || 'WORKER_UNAVAILABLE',
                 message: error.message,
             });
             return;
