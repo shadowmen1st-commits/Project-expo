@@ -117,6 +117,13 @@ export default function WorkerLiveTrackingScreen() {
       timestamp: new Date(),
     };
 
+    console.log('[GPS_UPDATE]', {
+      bookingId,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      speed: payload.speed,
+    });
+
     setCurrentCoords(payload);
     setLastBroadcastTime(new Date());
     setPingsCount((prev) => prev + 1);
@@ -124,8 +131,13 @@ export default function WorkerLiveTrackingScreen() {
     // 1. Post to REST API
     try {
       await api.post(`/bookings/${bookingId}/location`, payload);
-    } catch {
-      // Background retry
+      console.log('[GPS_TELEMETRY_SENT]', {
+        bookingId,
+        lat: payload.latitude,
+        lng: payload.longitude,
+      });
+    } catch (err: any) {
+      console.log('[GPS_TELEMETRY_ERROR]', err?.response?.data || err.message);
     }
 
     // 2. Emit over Socket.IO
@@ -140,13 +152,17 @@ export default function WorkerLiveTrackingScreen() {
   // ── 3. Start GPS Watcher ───────────────────────────────────────────
   const startGpsSharing = async () => {
     try {
+      console.log('[LOCATION_SERVICES_CHECK]');
       const isGpsEnabled = await Location.hasServicesEnabledAsync();
+      console.log('[LOCATION_SERVICES]', { isGpsEnabled });
       if (!isGpsEnabled) {
         Alert.alert('GPS Disabled', 'Please enable Location Services / GPS on your device to share live tracking.');
         return;
       }
 
+      console.log('[LOCATION_PERMISSION_REQUEST]');
       const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('[LOCATION_PERMISSION_RESULT]', status);
       if (status !== 'granted') {
         setPermissionDenied(true);
         Alert.alert(
@@ -158,6 +174,7 @@ export default function WorkerLiveTrackingScreen() {
 
       setPermissionDenied(false);
       setIsSharingGps(true);
+      console.log('[GPS_WATCH_START]', { bookingId });
 
       // Get initial position immediately
       const initialPos = await Location.getCurrentPositionAsync({
@@ -191,6 +208,31 @@ export default function WorkerLiveTrackingScreen() {
       locationSubRef.current = null;
     }
     setIsSharingGps(false);
+  };
+
+  // ── 5. Status Transition Action Handler ───────────────────────────
+  const [transitionLoading, setTransitionLoading] = useState(false);
+  const handleStatusTransition = async (action: 'accept' | 'en-route' | 'start' | 'request-completion') => {
+    setTransitionLoading(true);
+    try {
+      if (action === 'accept') {
+        console.log('[WORKER_ACCEPT]', { bookingId });
+      } else if (action === 'en-route') {
+        console.log('[WORKER_EN_ROUTE]', { bookingId });
+      }
+      const res = await api.post(`/bookings/${bookingId}/${action}`);
+      if (res.data?.success) {
+        Alert.alert('Success', `Booking status updated.`);
+        fetchBookingInfo(true);
+        if (action === 'en-route' && !isSharingGps) {
+          startGpsSharing();
+        }
+      }
+    } catch (err: any) {
+      Alert.alert('Action Failed', err.response?.data?.message || 'Failed to update booking status.');
+    } finally {
+      setTransitionLoading(false);
+    }
   };
 
   // ── 5. Lifecycle & Socket.IO ───────────────────────────────────────
@@ -381,10 +423,41 @@ export default function WorkerLiveTrackingScreen() {
           </View>
         </View>
 
-        {/* Action Button */}
+        {/* Status Transition Action Buttons */}
+        {['PAID', 'CONFIRMED', 'ASSIGNED'].includes(status) && (
+          <AppButton
+            title="🚗 Start En Route (Share GPS)"
+            variant="primary"
+            loading={transitionLoading}
+            onPress={() => handleStatusTransition('en-route')}
+            style={{ marginTop: spacing.sm }}
+          />
+        )}
+
+        {['WORKER_EN_ROUTE', 'EN_ROUTE', 'ARRIVED'].includes(status) && (
+          <AppButton
+            title="🛠️ Start Service"
+            variant="primary"
+            loading={transitionLoading}
+            onPress={() => handleStatusTransition('start')}
+            style={{ marginTop: spacing.sm }}
+          />
+        )}
+
+        {['STARTED', 'IN_PROGRESS'].includes(status) && (
+          <AppButton
+            title="✅ Complete Service"
+            variant="primary"
+            loading={transitionLoading}
+            onPress={() => handleStatusTransition('request-completion')}
+            style={{ marginTop: spacing.sm }}
+          />
+        )}
+
+        {/* GPS Control Button */}
         <AppButton
           title={isSharingGps ? 'Stop Live GPS Sharing' : 'Start Live GPS Sharing'}
-          variant={isSharingGps ? 'danger' : 'primary'}
+          variant={isSharingGps ? 'danger' : 'secondary'}
           onPress={isSharingGps ? stopGpsSharing : startGpsSharing}
           style={{ marginTop: spacing.sm }}
         />

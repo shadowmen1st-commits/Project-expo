@@ -69,7 +69,8 @@ export default function BookingPaymentScreen() {
 
   useEffect(() => {
     fetchBooking();
-  }, [fetchBooking]);
+    console.log('[PAYMENT_SCREEN]', { bookingId: rawId });
+  }, [fetchBooking, rawId]);
 
   const handleProcessPayment = async () => {
     if (paying || isProcessingRef.current || !booking) return;
@@ -77,6 +78,8 @@ export default function BookingPaymentScreen() {
     isProcessingRef.current = true;
     setPaying(true);
     setErrorMessage('');
+
+    console.log('[PAYMENT_ORDER_START]', { bookingId: bId });
 
     try {
       // 1. Create Payment Order on Backend
@@ -95,10 +98,16 @@ export default function BookingPaymentScreen() {
       const internalPaymentOrderId = orderData.internalPaymentOrderId || orderData.orderId;
       const razorpayOrderId = orderData.razorpayOrderId;
 
-      console.log('[MOBILE PAYMENT:ORDER_CREATED]', {
+      console.log('[PAYMENT_ORDER_SUCCESS]', {
         bId,
         internalPaymentOrderId,
         razorpayOrderId,
+      });
+
+      console.log('[PAYMENT_CHECKOUT]', {
+        orderId: razorpayOrderId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
       });
 
       // 2. Web Razorpay standard checkout
@@ -133,6 +142,7 @@ export default function BookingPaymentScreen() {
           theme: { color: '#F97316' },
           modal: {
             ondismiss: function () {
+              console.log('[PAYMENT_FAILURE]', 'Payment was cancelled by user');
               setErrorMessage('Payment was cancelled.');
               setPaying(false);
               isProcessingRef.current = false;
@@ -140,6 +150,10 @@ export default function BookingPaymentScreen() {
           },
           handler: async function (response: any) {
             try {
+              console.log('[PAYMENT_VERIFY_START]', {
+                internalPaymentOrderId,
+                razorpay_order_id: response.razorpay_order_id,
+              });
               const verifyRes = await api.post('/payments/verify', {
                 internalPaymentOrderId,
                 razorpay_order_id: response.razorpay_order_id,
@@ -148,14 +162,19 @@ export default function BookingPaymentScreen() {
               });
 
               if (verifyRes.data?.success) {
+                console.log('[PAYMENT_SUCCESS]', { bId });
+                console.log('[TRACKING_NAV]', `/(customer)/booking/tracking/${bId}`);
+                console.log('[TRACKING_BOOKING_ID]', bId);
                 setPaymentSuccess(true);
                 setTimeout(() => {
                   router.replace(`/(customer)/booking/tracking/${bId}` as any);
                 }, 1200);
               } else {
+                console.log('[PAYMENT_FAILURE]', verifyRes.data?.message);
                 setErrorMessage(verifyRes.data?.message || 'Payment verification rejected.');
               }
             } catch (vErr: any) {
+              console.log('[PAYMENT_FAILURE]', vErr.response?.data?.message || vErr.message);
               setErrorMessage(vErr.response?.data?.message || 'Payment verification failed.');
             } finally {
               setPaying(false);
@@ -166,6 +185,7 @@ export default function BookingPaymentScreen() {
 
         const rzp = new (window as any).Razorpay(options);
         rzp.on('payment.failed', (resp: any) => {
+          console.log('[PAYMENT_FAILURE]', resp?.error?.description);
           setErrorMessage(resp?.error?.description || 'Payment transaction failed.');
           setPaying(false);
           isProcessingRef.current = false;
@@ -174,8 +194,12 @@ export default function BookingPaymentScreen() {
         return;
       }
 
-      // 3. Mobile / Local App Instant Sandbox / Mock Verification
+      // 3. Mobile / Local App Sandbox / Mock Verification
       const mockPaymentId = `pay_mock_${Date.now()}`;
+      console.log('[PAYMENT_VERIFY_START]', {
+        internalPaymentOrderId,
+        razorpay_order_id: razorpayOrderId,
+      });
       const verifyRes = await api.post('/payments/verify', {
         internalPaymentOrderId,
         razorpay_order_id: razorpayOrderId,
@@ -184,18 +208,21 @@ export default function BookingPaymentScreen() {
       });
 
       if (verifyRes.data?.success) {
-        console.log('[MOBILE PAYMENT:VERIFIED]', { bId });
+        console.log('[PAYMENT_SUCCESS]', { bId });
+        console.log('[TRACKING_NAV]', `/(customer)/booking/tracking/${bId}`);
+        console.log('[TRACKING_BOOKING_ID]', bId);
         setPaymentSuccess(true);
         setTimeout(() => {
           router.replace(`/(customer)/booking/tracking/${bId}` as any);
         }, 1200);
       } else {
+        console.log('[PAYMENT_FAILURE]', verifyRes.data?.message);
         setErrorMessage(verifyRes.data?.message || 'Payment verification failed.');
         setPaying(false);
         isProcessingRef.current = false;
       }
     } catch (err: any) {
-      console.error('[MOBILE PAYMENT ERROR]', err?.response?.data || err.message);
+      console.log('[PAYMENT_FAILURE]', err?.response?.data || err.message);
       setErrorMessage(err?.response?.data?.message || err.message || 'Payment processing error.');
       setPaying(false);
       isProcessingRef.current = false;

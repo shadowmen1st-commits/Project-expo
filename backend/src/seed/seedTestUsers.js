@@ -42,6 +42,18 @@ const testUsers = [
         role: 'CUSTOMER',
     },
     {
+        name: 'Demo Customer',
+        email: 'customer@jobnest.com',
+        password: 'Customer@12345',
+        role: 'CUSTOMER',
+    },
+    {
+        name: 'Demo Worker',
+        email: 'worker@jobnest.com',
+        password: 'Worker@12345',
+        role: 'WORKER',
+    },
+    {
         name: 'Test Company',
         email: 'company@test.com',
         password: 'Company@012345',

@@ -140,12 +140,15 @@ export default function CustomerLiveTrackingScreen() {
 
   // ── 3. Lifecycle & Socket.IO ───────────────────────────────────────
   useEffect(() => {
+    console.log('[TRACKING_SCREEN]', { bookingId });
     fetchTracking();
 
     let socketInstance: Socket | null = null;
     const initSocket = async () => {
       const socketUrl = API_BASE_URL.replace('/api', '');
       const token = await storage.getItem('accessToken');
+
+      console.log('[SOCKET_AUTH]', { hasToken: Boolean(token), socketUrl });
 
       socketInstance = io(socketUrl, {
         auth: { token: token || '' },
@@ -158,15 +161,25 @@ export default function CustomerLiveTrackingScreen() {
       socketRef.current = socketInstance;
 
       socketInstance.on('connect', () => {
+        console.log('[SOCKET_CONNECT]', { socketId: socketInstance?.id, bookingId });
         setSocketConnected(true);
+        console.log('[SOCKET_JOIN]', `tracking:${bookingId}`);
         socketInstance?.emit('join_tracking', { bookingId });
       });
 
-      socketInstance.on('disconnect', () => {
+      socketInstance.on('disconnect', (reason) => {
+        console.log('[SOCKET_DISCONNECT]', reason);
         setSocketConnected(false);
       });
 
       socketInstance.on('location:updated', (payload: any) => {
+        console.log('[SOCKET_LOCATION_UPDATED]', {
+          bookingId: payload?.bookingId,
+          latitude: payload?.latitude,
+          longitude: payload?.longitude,
+          heading: payload?.heading,
+          speed: payload?.speed,
+        });
         if (payload && String(payload.bookingId) === String(bookingId)) {
           setWorkerLocation({
             latitude: payload.latitude,

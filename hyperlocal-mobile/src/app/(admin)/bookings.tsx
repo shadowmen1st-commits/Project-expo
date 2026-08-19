@@ -323,7 +323,7 @@ export default function AdminBookingsScreen() {
                       <TouchableOpacity
                         style={styles.trackButton}
                         onPress={() => {
-                          console.log('[LIVE TRACK CLICK]', {
+                          console.log('[ADMIN_TRACK_CLICK]', {
                             bookingId,
                             status,
                             bookingNumber: item.bookingNumber,

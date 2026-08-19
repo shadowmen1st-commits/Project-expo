@@ -404,6 +404,16 @@ export default function CreateBookingScreen() {
     setSubmitting(true);
     hasNavigatedRef.current = false;
 
+    console.log('[BOOKING_FORM]', {
+      workerId: effectiveWorkerId,
+      categoryId: effectiveCatId,
+      date,
+      time: startTime,
+      duration,
+      address: fullAddress,
+    });
+    console.log('[BOOKING_CREATE_START]', { workerId: effectiveWorkerId, startIso, endIso });
+
     try {
       // 1. Create Booking on backend
       const payload = {
@@ -447,11 +457,13 @@ export default function CreateBookingScreen() {
         throw new Error('Booking was created, but server did not return a booking ID.');
       }
 
-      console.log('[BOOKING_CREATED_SUCCESS]', {
+      console.log('[BOOKING_CREATED]', {
         bookingId,
         bookingNumber: createdBooking?.bookingNumber,
         status: createdBooking?.bookingStatus || createdBooking?.status,
       });
+      console.log('[BOOKING_ID]', bookingId);
+      console.log('[BOOKING_PAYMENT_NAV]', `/(customer)/booking/payment/${bookingId}`);
 
       // Navigate directly to the dedicated Payment page for this booking
       if (!hasNavigatedRef.current) {
