@@ -199,9 +199,10 @@ export const CustomerHome = () => {
             if (maxPrice) params.maxPrice = Number(maxPrice) * 100;
 
             const res = await api.get('/workers/search', { params });
-            if (res.data.success) {
-                setWorkers(res.data.data || []);
-            }
+            const list = Array.isArray(res.data)
+                ? res.data
+                : res.data?.data || res.data?.workers || [];
+            setWorkers(list);
         } catch (err) {
             console.error('Error searching workers:', err);
         } finally {

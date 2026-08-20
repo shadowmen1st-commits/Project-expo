@@ -226,13 +226,20 @@ export const searchWorkers = async (req, res, next) => {
         const queryLng = longitude !== undefined ? longitude : req.query.lng;
 
         if (queryLat !== undefined && queryLng !== undefined && !isNaN(Number(queryLat)) && !isNaN(Number(queryLng))) {
-            const radiusKm = Number(maxDistanceKm) || 15;
+            const radiusKm = Number(maxDistanceKm) || 100;
             const radiusRadians = radiusKm / 6378.1;
-            query.location = {
-                $geoWithin: {
-                    $centerSphere: [[Number(queryLng), Number(queryLat)], radiusRadians],
+            query.$or = [
+                {
+                    location: {
+                        $geoWithin: {
+                            $centerSphere: [[Number(queryLng), Number(queryLat)], radiusRadians],
+                        },
+                    },
                 },
-            };
+                { location: { $exists: false } },
+                { location: null },
+                { 'location.coordinates': { $size: 0 } },
+            ];
         }
 
         const profiles = await WorkerProfile.find(query)
