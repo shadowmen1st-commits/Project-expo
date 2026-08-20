@@ -3,52 +3,77 @@ import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
 export const normalizeApiUrl = (url?: string) => {
-  if (!url || !url.trim()) {
+  let cleaned = (url || '').trim();
+
+  // If no URL is provided, fallback cleanly
+  if (!cleaned) {
     if (__DEV__) {
-      console.warn('[API_CONFIG_DEFAULT] EXPO_PUBLIC_API_URL not set. Defaulting to local Wi-Fi LAN backend.');
-      return 'http://192.168.1.10:5000/api';
+      console.warn('[API_CONFIG] EXPO_PUBLIC_API_URL not set in dev, using default public HTTPS tunnel.');
+      cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com/api';
+    } else {
+      console.error('[API_CONFIG_CRITICAL] EXPO_PUBLIC_API_URL is missing in production build!');
+      cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com/api';
     }
-    console.warn('[PUBLIC_BACKEND_REQUIRED] EXPO_PUBLIC_API_URL is missing in production build!');
-    return 'http://192.168.1.10:5000/api';
   }
-  let cleaned = url.trim().replace(/\/+$/, '');
+
+  // Remove trailing slashes
+  cleaned = cleaned.replace(/\/+$/, '');
+
+  // Prevent duplicate prefixes like /api/api or /api/v1/api/v1
   cleaned = cleaned.replace(/\/api\/api$/, '/api');
-  if (!cleaned.endsWith('/api')) {
+  cleaned = cleaned.replace(/\/v1\/v1$/, '/v1');
+  cleaned = cleaned.replace(/\/api\/v1\/api\/v1$/, '/api/v1');
+
+  if (!cleaned.endsWith('/api') && !cleaned.endsWith('/api/v1')) {
     cleaned += '/api';
   }
+
+  // Release environment safety validation
+  if (!__DEV__) {
+    const isLocal = ['localhost', '127.0.0.1', '192.168.', '10.0.', '172.16.', '172.31.'].some(ip => cleaned.includes(ip));
+    const isHttp = cleaned.startsWith('http://');
+    if (isLocal || isHttp) {
+      console.error('[API_CONFIG_SECURITY_VIOLATION] Production APK must not point to local/insecure URL:', cleaned);
+    }
+  }
+
   return cleaned;
 };
 
 export const normalizeSocketUrl = (url?: string, apiBaseUrl?: string) => {
-  if (url && url.trim()) {
-    return url.trim().replace(/\/+$/, '');
+  let cleaned = (url || '').trim();
+  if (!cleaned && apiBaseUrl) {
+    cleaned = apiBaseUrl.replace(/\/api(\/v1)?\/?$/, '');
   }
-  if (apiBaseUrl) {
-    return apiBaseUrl.replace(/\/api\/?$/, '');
+  if (!cleaned) {
+    cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com';
   }
-  return 'http://192.168.1.10:5000';
+  return cleaned.replace(/\/+$/, '');
 };
 
 export const API_BASE_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL);
 export const SOCKET_BASE_URL = normalizeSocketUrl(process.env.EXPO_PUBLIC_SOCKET_URL, API_BASE_URL);
 
 console.log('[API_CONFIG]', {
-  baseURL: API_BASE_URL,
-  socketURL: SOCKET_BASE_URL,
+  environment: __DEV__ ? 'development' : 'production',
+  apiUrl: API_BASE_URL,
+  socketUrl: SOCKET_BASE_URL,
   platform: Platform.OS,
 });
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 25000,
   headers: {
     'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
 });
 
+// Request Interceptor: Attach bearer token & log safely
 api.interceptors.request.use(
   async (config) => {
-    const isPublicRoute = ['/auth/login', '/auth/register', '/auth/refresh', '/categories', '/services', '/workers/search', '/workers/profile'].some(
+    const isPublicRoute = ['/auth/login', '/auth/register', '/auth/refresh', '/categories', '/services', '/workers/search', '/health'].some(
       (path) => config.url?.includes(path)
     );
 
@@ -56,13 +81,13 @@ api.interceptors.request.use(
     if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
       config.headers.Authorization = `Bearer ${token.trim()}`;
       if (__DEV__ && !isPublicRoute) {
-        console.log(`AUTH: Request to ${config.url} authorized: YES`);
+        console.log(`[API_AUTH] Authorized request to ${config.url}`);
       }
     } else {
       delete config.headers.Authorization;
     }
 
-    if (__DEV__ && !isPublicRoute) {
+    if (__DEV__) {
       console.log('[API_REQUEST]', {
         method: config.method?.toUpperCase(),
         url: config.url,
@@ -88,23 +113,31 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+/**
+ * Public health check diagnostic helper
+ */
 export const checkServerHealth = async (): Promise<{ ok: boolean; status?: number; data?: any; error?: string }> => {
   try {
     const res = await axios.get(`${API_BASE_URL}/v1/health`, { timeout: 8000 });
+    console.log('[SERVER_HEALTH]', { reachable: true, status: res.status });
     return { ok: res.status === 200, status: res.status, data: res.data };
   } catch (err: any) {
     try {
       const fallbackRes = await axios.get(`${API_BASE_URL}/health`, { timeout: 8000 });
+      console.log('[SERVER_HEALTH]', { reachable: true, status: fallbackRes.status });
       return { ok: fallbackRes.status === 200, status: fallbackRes.status, data: fallbackRes.data };
     } catch (fallbackErr: any) {
+      const safeErrorMsg = fallbackErr.message || err.message || 'Server unreachable';
+      console.log('[SERVER_HEALTH]', { reachable: false, error: safeErrorMsg });
       return {
         ok: false,
-        error: fallbackErr.message || err.message || 'Server unreachable',
+        error: safeErrorMsg,
       };
     }
   }
 };
 
+// Response Interceptor: Safe status differentiation & error handling
 api.interceptors.response.use(
   (response) => {
     if (__DEV__) {
@@ -124,6 +157,7 @@ api.interceptors.response.use(
       originalRequest.url?.includes(path)
     );
 
+    // Auto-refresh on 401
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -139,16 +173,9 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      if (__DEV__) {
-        console.log('AUTH: 401 encountered, refresh started');
-      }
-
       try {
         const refreshToken = await storage.getItem('refreshToken');
         if (!refreshToken || refreshToken === 'null' || refreshToken === 'undefined' || !refreshToken.trim()) {
-          if (__DEV__) {
-            console.log('AUTH: Refresh failed - No refresh token available in storage.');
-          }
           await storage.removeItem('accessToken');
           await storage.removeItem('refreshToken');
           processQueue(new Error('No refresh token available'), null);
@@ -158,7 +185,7 @@ api.interceptors.response.use(
         const res = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           { refreshToken: refreshToken.trim() },
-          { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+          { headers: { 'Content-Type': 'application/json' }, withCredentials: true, timeout: 10000 }
         );
 
         const newToken = res.data?.accessToken;
@@ -166,15 +193,8 @@ api.interceptors.response.use(
 
         if (newToken) {
           await storage.setItem('accessToken', newToken);
-          if (__DEV__) console.log('AUTH: access token stored: YES');
-
           if (newRefreshToken) {
             await storage.setItem('refreshToken', newRefreshToken);
-            if (__DEV__) console.log('AUTH: refresh token stored: YES');
-          }
-
-          if (__DEV__) {
-            console.log('AUTH: refresh succeeded');
           }
 
           api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
@@ -182,14 +202,12 @@ api.interceptors.response.use(
           processQueue(null, newToken);
           return api(originalRequest);
         } else {
-          if (__DEV__) console.log('AUTH: refresh failed - Response missing access token');
-          processQueue(new Error('Refresh failed'), null);
+          processQueue(new Error('Refresh response missing token'), null);
           await storage.removeItem('accessToken');
           await storage.removeItem('refreshToken');
           return Promise.reject(error);
         }
       } catch (refreshErr) {
-        if (__DEV__) console.log('AUTH: refresh failed');
         processQueue(refreshErr, null);
         await storage.removeItem('accessToken');
         await storage.removeItem('refreshToken');
@@ -199,41 +217,45 @@ api.interceptors.response.use(
       }
     }
 
+    // Determine user-facing friendly message
     if (!error.response) {
       const code = error.code || '';
-      let userFriendlyMsg = 'Unable to connect to server. Please check your internet connection or verify the server is reachable.';
+      let userFriendlyMsg = 'Unable to connect to Jobnest server. Check your internet connection.';
 
       if (code === 'ECONNABORTED' || code === 'ETIMEDOUT') {
-        userFriendlyMsg = 'Connection timed out. Please check your network speed.';
+        userFriendlyMsg = 'Jobnest server request timed out.';
       } else if (code === 'ENOTFOUND') {
-        userFriendlyMsg = 'Server domain not found. Please verify backend URL.';
+        userFriendlyMsg = 'Server domain not found. Check your internet connection.';
       } else if (code === 'ECONNREFUSED') {
-        userFriendlyMsg = 'Connection refused. Ensure the backend server is running.';
+        userFriendlyMsg = 'Unable to connect to Jobnest server. Server connection refused.';
       } else if (code.includes('SSL') || code.includes('CERT')) {
-        userFriendlyMsg = 'SSL/TLS certificate error. Please verify the HTTPS certificate.';
+        userFriendlyMsg = 'Secure SSL/TLS connection failed. Please verify your connection.';
       }
 
       console.error('[API_NETWORK_ERROR]', {
-        url: originalRequest.url,
-        baseURL: originalRequest.baseURL || API_BASE_URL,
-        method: originalRequest.method,
         message: error.message,
         code: error.code,
-        status: error.response?.status,
-        category: code || 'NO_RESPONSE',
+        baseURL: originalRequest.baseURL || API_BASE_URL,
+        url: originalRequest.url,
       });
+
       error.userMessage = userFriendlyMsg;
     } else {
       const status = error.response.status;
       const serverMsg = error.response.data?.message;
+
       if (status === 401) {
         error.userMessage = serverMsg || 'Invalid email or password.';
       } else if (status === 403) {
-        error.userMessage = serverMsg || 'Access denied. Please check your permissions.';
+        error.userMessage = serverMsg || 'Access denied.';
       } else if (status === 404) {
         error.userMessage = serverMsg || 'API endpoint not found.';
+      } else if (status === 408) {
+        error.userMessage = serverMsg || 'Request timeout.';
+      } else if (status === 429) {
+        error.userMessage = serverMsg || 'Too many requests. Please try again.';
       } else if (status >= 500) {
-        error.userMessage = serverMsg || 'Backend server error. Please try again in a few moments.';
+        error.userMessage = serverMsg || 'Server error. Please try again.';
       } else {
         error.userMessage = serverMsg || error.message || 'Request failed. Please try again.';
       }

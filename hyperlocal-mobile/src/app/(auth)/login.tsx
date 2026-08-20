@@ -42,7 +42,9 @@ export default function LoginScreen() {
 
       if (loggedInUser?.role === 'ADMIN') {
         router.replace('/(admin)/dashboard');
-      } else if (loggedInUser?.role === 'WORKER' || loggedInUser?.role === 'COMPANY') {
+      } else if (loggedInUser?.role === 'COMPANY') {
+        router.replace('/(company)/dashboard');
+      } else if (loggedInUser?.role === 'WORKER') {
         router.replace('/(worker)/dashboard');
       } else {
         router.replace('/(customer)/dashboard');
@@ -50,10 +52,12 @@ export default function LoginScreen() {
     } catch (err: any) {
       if (err.response?.status === 401) {
         setError('Invalid email or password.');
+      } else if (err.userMessage) {
+        setError(err.userMessage);
       } else if (!err.response) {
-        setError(err.userMessage || 'Server is unreachable. Please check your internet connection or try again.');
+        setError('Unable to connect to Jobnest server. Check your internet connection.');
       } else {
-        setError(err.userMessage || err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
+        setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
       }
     } finally {
       setLoading(false);

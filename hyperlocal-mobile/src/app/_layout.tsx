@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NetworkProvider } from '../context/NetworkContext';
 import { AuthProvider } from '../context/AuthContext';
 import { LocationProvider } from '../context/LocationContext';
 import { LocationGate } from '../components/LocationGate';
@@ -19,20 +20,23 @@ LogBox.ignoreLogs([
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <LocationGate>
-        <LocationProvider>
-          <AuthProvider>
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(customer)" />
-              <Stack.Screen name="(worker)" />
-              <Stack.Screen name="(admin)" />
-            </Stack>
-          </AuthProvider>
-        </LocationProvider>
-      </LocationGate>
+      <NetworkProvider>
+        <LocationGate>
+          <LocationProvider>
+            <AuthProvider>
+              <StatusBar style="dark" />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(customer)" />
+                <Stack.Screen name="(worker)" />
+                <Stack.Screen name="(company)" />
+                <Stack.Screen name="(admin)" />
+              </Stack>
+            </AuthProvider>
+          </LocationProvider>
+        </LocationGate>
+      </NetworkProvider>
     </SafeAreaProvider>
   );
 }

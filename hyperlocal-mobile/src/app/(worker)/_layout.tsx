@@ -17,13 +17,14 @@ export default function WorkerLayout() {
     if (loading) return;
     if (!user) {
       routerRef.current.replace('/(auth)/login');
-    } else if (user.role !== 'WORKER' && user.role !== 'COMPANY') {
-      if (user.role === 'ADMIN') routerRef.current.replace('/(admin)/dashboard');
+    } else if (user.role !== 'WORKER') {
+      if (user.role === 'COMPANY') routerRef.current.replace('/(company)/dashboard');
+      else if (user.role === 'ADMIN') routerRef.current.replace('/(admin)/dashboard');
       else routerRef.current.replace('/(customer)/dashboard');
     }
   }, [user?.role, loading]);
 
-  if (loading || !user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
+  if (loading || !user || user.role !== 'WORKER') {
     return <LoadingState message="Verifying worker access..." />;
   }
 

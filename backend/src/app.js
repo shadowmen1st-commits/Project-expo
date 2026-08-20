@@ -38,7 +38,7 @@ export const createApp = () => {
     app.use(pinoHttp({ logger }));
 
     // Health Check (Public - before any middleware)
-    app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'ok', service: 'project-expo-api', timestamp: new Date().toISOString() }));
+    app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'UP', service: 'project-expo-api', timestamp: new Date().toISOString() }));
 
     app.use(helmet());
     const isOriginAllowed = (origin) => {
@@ -47,6 +47,10 @@ export const createApp = () => {
         if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
         if (/^capacitor:\/\/localhost$/.test(origin) || /^https:\/\/localhost$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.loca\.lt$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.pinggy\.link$/.test(origin)) return true;
         if (config.NODE_ENV !== 'production' && (/^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin) || /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/.test(origin) || /^exp:\/\//.test(origin))) return true;
         return false;
     };
