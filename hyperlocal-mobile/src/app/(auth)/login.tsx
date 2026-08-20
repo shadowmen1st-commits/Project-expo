@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AppButton } from '../../components/AppButton';
 import { AppInput } from '../../components/AppInput';
 import { Ionicons } from '@expo/vector-icons';
+import { checkServerHealth } from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function LoginScreen() {
@@ -23,6 +24,11 @@ export default function LoginScreen() {
 
   const { login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    // Perform server health check diagnostic on login screen load
+    checkServerHealth().catch(() => {});
+  }, []);
 
   const handleLogin = async (customEmail?: any, customPassword?: any) => {
     // If called directly without explicit string arguments (e.g. from Pressable event), use state
@@ -50,12 +56,10 @@ export default function LoginScreen() {
         router.replace('/(customer)/dashboard');
       }
     } catch (err: any) {
-      if (err.response?.status === 401) {
-        setError('Invalid email or password.');
-      } else if (err.userMessage) {
+      if (err.userMessage) {
         setError(err.userMessage);
-      } else if (!err.response) {
-        setError('Unable to connect to Jobnest server. Check your internet connection.');
+      } else if (err.response?.status === 401) {
+        setError('Invalid email or password.');
       } else {
         setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
       }

@@ -2,17 +2,18 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
+const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://latina-nodes-catch-generally.trycloudflare.com';
+
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
 
-  // If no URL is provided, fallback cleanly
+  // If no URL is provided, fallback cleanly to the active HTTPS backend
   if (!cleaned) {
     if (__DEV__) {
-      console.warn('[API_CONFIG] EXPO_PUBLIC_API_URL not set in dev, using default public HTTPS tunnel.');
-      cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com/api';
+      console.warn('[API_CONFIG] EXPO_PUBLIC_API_URL not set in dev, using default public HTTPS backend.');
+      cleaned = `${DEFAULT_PUBLIC_HTTPS_BACKEND}/api`;
     } else {
-      console.error('[API_CONFIG_CRITICAL] EXPO_PUBLIC_API_URL is missing in production build!');
-      cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com/api';
+      cleaned = `${DEFAULT_PUBLIC_HTTPS_BACKEND}/api`;
     }
   }
 
@@ -46,7 +47,7 @@ export const normalizeSocketUrl = (url?: string, apiBaseUrl?: string) => {
     cleaned = apiBaseUrl.replace(/\/api(\/v1)?\/?$/, '');
   }
   if (!cleaned) {
-    cleaned = 'https://affiliation-oaks-walnut-bonds.trycloudflare.com';
+    cleaned = DEFAULT_PUBLIC_HTTPS_BACKEND;
   }
   return cleaned.replace(/\/+$/, '');
 };
@@ -117,18 +118,33 @@ const processQueue = (error: any, token: string | null = null) => {
  * Public health check diagnostic helper
  */
 export const checkServerHealth = async (): Promise<{ ok: boolean; status?: number; data?: any; error?: string }> => {
+  const healthEndpoint = `${API_BASE_URL}/v1/health`;
   try {
-    const res = await axios.get(`${API_BASE_URL}/v1/health`, { timeout: 8000 });
-    console.log('[SERVER_HEALTH]', { reachable: true, status: res.status });
+    const res = await axios.get(healthEndpoint, { timeout: 10000 });
+    console.log('[SERVER_HEALTH]', {
+      reachable: true,
+      status: res.status,
+      url: healthEndpoint,
+    });
     return { ok: res.status === 200, status: res.status, data: res.data };
   } catch (err: any) {
     try {
-      const fallbackRes = await axios.get(`${API_BASE_URL}/health`, { timeout: 8000 });
-      console.log('[SERVER_HEALTH]', { reachable: true, status: fallbackRes.status });
+      const fallbackUrl = `${API_BASE_URL}/health`;
+      const fallbackRes = await axios.get(fallbackUrl, { timeout: 10000 });
+      console.log('[SERVER_HEALTH]', {
+        reachable: true,
+        status: fallbackRes.status,
+        url: fallbackUrl,
+      });
       return { ok: fallbackRes.status === 200, status: fallbackRes.status, data: fallbackRes.data };
     } catch (fallbackErr: any) {
       const safeErrorMsg = fallbackErr.message || err.message || 'Server unreachable';
-      console.log('[SERVER_HEALTH]', { reachable: false, error: safeErrorMsg });
+      console.log('[SERVER_HEALTH]', {
+        reachable: false,
+        status: fallbackErr.response?.status || 0,
+        url: healthEndpoint,
+        error: safeErrorMsg,
+      });
       return {
         ok: false,
         error: safeErrorMsg,
@@ -220,14 +236,14 @@ api.interceptors.response.use(
     // Determine user-facing friendly message
     if (!error.response) {
       const code = error.code || '';
-      let userFriendlyMsg = 'Unable to connect to Jobnest server. Check your internet connection.';
+      let userFriendlyMsg = 'Internet connection unavailable.';
 
       if (code === 'ECONNABORTED' || code === 'ETIMEDOUT') {
         userFriendlyMsg = 'Jobnest server request timed out.';
       } else if (code === 'ENOTFOUND') {
-        userFriendlyMsg = 'Server domain not found. Check your internet connection.';
+        userFriendlyMsg = 'Jobnest server is temporarily unavailable.';
       } else if (code === 'ECONNREFUSED') {
-        userFriendlyMsg = 'Unable to connect to Jobnest server. Server connection refused.';
+        userFriendlyMsg = 'Jobnest server is temporarily unavailable.';
       } else if (code.includes('SSL') || code.includes('CERT')) {
         userFriendlyMsg = 'Secure SSL/TLS connection failed. Please verify your connection.';
       }
@@ -245,17 +261,17 @@ api.interceptors.response.use(
       const serverMsg = error.response.data?.message;
 
       if (status === 401) {
-        error.userMessage = serverMsg || 'Invalid email or password.';
+        error.userMessage = serverMsg || 'Session expired. Please login again.';
       } else if (status === 403) {
         error.userMessage = serverMsg || 'Access denied.';
       } else if (status === 404) {
         error.userMessage = serverMsg || 'API endpoint not found.';
       } else if (status === 408) {
-        error.userMessage = serverMsg || 'Request timeout.';
+        error.userMessage = serverMsg || 'Request timed out. Please try again.';
       } else if (status === 429) {
-        error.userMessage = serverMsg || 'Too many requests. Please try again.';
+        error.userMessage = serverMsg || 'Too many requests. Please try again later.';
       } else if (status >= 500) {
-        error.userMessage = serverMsg || 'Server error. Please try again.';
+        error.userMessage = serverMsg || 'Jobnest server error. Please try again.';
       } else {
         error.userMessage = serverMsg || error.message || 'Request failed. Please try again.';
       }
