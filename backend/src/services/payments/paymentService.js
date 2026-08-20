@@ -172,6 +172,7 @@ export async function createPaymentOrder({ bookingId, customerId, idempotencyKey
             },
         });
     } catch (providerErr) {
+        console.error('[PAYMENT_PROVIDER_CREATE_ORDER_FAILED]', providerErr?.message || providerErr);
         // Save CREATED record even if provider fails (for audit)
         orderRecord.status = 'FAILED';
         await orderRecord.save();
@@ -179,7 +180,7 @@ export async function createPaymentOrder({ bookingId, customerId, idempotencyKey
         if (providerErr.errorCode === 'PAYMENT_PROVIDER_NOT_CONFIGURED') {
             throw providerErr;
         }
-        const err = new Error('Payment provider is currently unavailable. Please try again.');
+        const err = new Error(providerErr?.message || 'Payment provider is currently unavailable. Please try again.');
         err.statusCode = 502;
         err.errorCode = 'PAYMENT_PROVIDER_ERROR';
         throw err;

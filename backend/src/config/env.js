@@ -29,9 +29,9 @@ const PAYOUT_MANUAL_REVIEW_THRESHOLD_PAISE = parseInt(process.env.PAYOUT_MANUAL_
 const PAYOUT_PROCESSING_STALE_HOURS = parseInt(process.env.PAYOUT_PROCESSING_STALE_HOURS || '24', 10);
 
 // Razorpay variables
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
-const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh';
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'UVmoRQl5c51d7CoCxJqa3hvY';
+const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || 'sandboxWebhook123456';
 
 const PAYMENT_PROVIDER = process.env.PAYMENT_PROVIDER || 'razorpay';
 const PAYMENT_PROVIDER_MODE = process.env.PAYMENT_PROVIDER_MODE || 'live';
