@@ -218,7 +218,7 @@ export const LandingPage = () => {
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-black leading-[1.08] tracking-tight mb-6 text-[#111827]">
-                        Professional Services, <br />
+                        Professional Peoples, <br />
                         <span className="text-highlight-gradient">At Your Doorstep</span>
                     </h1>
 
