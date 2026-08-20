@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://latina-nodes-catch-generally.trycloudflare.com';
+const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://strength-honor-annie-whereas.trycloudflare.com';
 
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
