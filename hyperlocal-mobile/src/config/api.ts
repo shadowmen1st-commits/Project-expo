@@ -225,12 +225,17 @@ api.interceptors.response.use(
       error.userMessage = userFriendlyMsg;
     } else {
       const status = error.response.status;
-      if (status >= 500) {
-        error.userMessage = 'Server error encountered. Please try again in a few moments.';
+      const serverMsg = error.response.data?.message;
+      if (status === 401) {
+        error.userMessage = serverMsg || 'Invalid email or password.';
       } else if (status === 403) {
-        error.userMessage = error.response.data?.message || 'Access forbidden.';
+        error.userMessage = serverMsg || 'Access denied. Please check your permissions.';
       } else if (status === 404) {
-        error.userMessage = error.response.data?.message || 'Requested resource not found.';
+        error.userMessage = serverMsg || 'API endpoint not found.';
+      } else if (status >= 500) {
+        error.userMessage = serverMsg || 'Backend server error. Please try again in a few moments.';
+      } else {
+        error.userMessage = serverMsg || error.message || 'Request failed. Please try again.';
       }
     }
 

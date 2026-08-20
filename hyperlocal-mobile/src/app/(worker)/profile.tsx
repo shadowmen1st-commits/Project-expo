@@ -145,7 +145,7 @@ export default function WorkerProfileScreen() {
     );
   }
 
-  const verificationStatus = profile?.verificationStatus || 'APPROVED';
+  const verificationStatus = profile?.verificationStatus || user?.verificationStatus || 'NOT_SUBMITTED';
 
   return (
     <SafeAreaView style={styles.safeArea}>

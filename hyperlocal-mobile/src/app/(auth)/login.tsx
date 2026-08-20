@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
       if (loggedInUser?.role === 'ADMIN') {
         router.replace('/(admin)/dashboard');
-      } else if (loggedInUser?.role === 'WORKER') {
+      } else if (loggedInUser?.role === 'WORKER' || loggedInUser?.role === 'COMPANY') {
         router.replace('/(worker)/dashboard');
       } else {
         router.replace('/(customer)/dashboard');

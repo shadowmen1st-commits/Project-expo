@@ -22,10 +22,13 @@ import { issueSession, setSessionCookies, safeUser } from './authController.js';
 
 // Helper for data validation
 const validatePassword = (p) => {
-    return p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
+    return typeof p === 'string' && p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
 };
 
 export const registerCompany = async (req, res, next) => {
+    const emailLower = typeof req.body?.email === 'string' ? req.body.email.toLowerCase().trim() : '';
+    console.log(`[COMPANY_REGISTER_START] email=${emailLower}`);
+
     try {
         const {
             companyName,
@@ -44,62 +47,132 @@ export const registerCompany = async (req, res, next) => {
             authorizedPersonName,
             authorizedPersonPhone,
             panNumber
-        } = req.body;
+        } = req.body || {};
 
-        if (!companyName || !email || !phone || !address || !city || !state || !pincode || !businessType || !description || !password || !authorizedPersonName || !authorizedPersonPhone) {
-            return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
+        // 1. Validate Company Name
+        const trimmedCompanyName = typeof companyName === 'string' ? companyName.trim() : '';
+        if (!trimmedCompanyName || trimmedCompanyName.length < 2) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Company Name is required (minimum 2 characters).' });
+        }
+
+        // 2. Validate Email
+        const trimmedEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Please provide a valid official email address.' });
+        }
+
+        // 3. Validate Phone
+        const trimmedPhone = typeof phone === 'string' ? phone.trim() : '';
+        const phoneRegex = /^\+?[0-9]{7,15}$/;
+        if (!trimmedPhone || !phoneRegex.test(trimmedPhone)) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Please provide a valid business phone number.' });
+        }
+
+        // 4. Validate Address fields
+        const trimmedAddress = typeof address === 'string' ? address.trim() : '';
+        const trimmedCity = typeof city === 'string' ? city.trim() : '';
+        const trimmedState = typeof state === 'string' ? state.trim() : '';
+        const trimmedPincode = typeof pincode === 'string' ? pincode.trim() : '';
+
+        if (!trimmedAddress || !trimmedCity || !trimmedState || !trimmedPincode) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Please complete all required business address fields (address, city, state, pincode).' });
+        }
+
+        if (!/^[0-9]{4,10}$/.test(trimmedPincode)) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Please provide a valid postal/pincode.' });
+        }
+
+        // 5. Validate Password
+        if (!password || !confirmPassword) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Password and confirm password are required.' });
         }
 
         if (password !== confirmPassword) {
-            return res.status(400).json({ success: false, message: 'Passwords do not match.' });
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Passwords do not match.' });
         }
 
         if (!validatePassword(password)) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters, contain a letter and a number.' });
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Password must be at least 8 characters long and contain both letters and numbers.' });
         }
 
-        const emailExists = await User.exists({ email: email.toLowerCase().trim() });
+        // 6. Validate Optional Tax/Legal IDs if provided
+        const trimmedGst = typeof gstNumber === 'string' ? gstNumber.trim().toUpperCase() : undefined;
+        const trimmedPan = typeof panNumber === 'string' ? panNumber.trim().toUpperCase() : undefined;
+
+        if (trimmedGst && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(trimmedGst)) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Invalid GSTIN format. Expected 15-character alphanumeric GSTIN.' });
+        }
+
+        if (trimmedPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(trimmedPan)) {
+            return res.status(400).json({ statusCode: 400, errorCode: 'VALIDATION_ERROR', message: 'Invalid PAN format. Expected 10-character alphanumeric PAN.' });
+        }
+
+        // 7. Duplicate Checks
+        const [emailExists, phoneExists] = await Promise.all([
+            User.exists({ email: trimmedEmail }),
+            User.exists({ phone: trimmedPhone })
+        ]);
+
         if (emailExists) {
-            return res.status(409).json({ success: false, errorCode: 'EMAIL_EXISTS', field: 'email', message: 'This email is already registered.' });
+            console.log(`[COMPANY_REGISTER_FAILURE] Duplicate email: ${trimmedEmail}`);
+            return res.status(409).json({ statusCode: 409, errorCode: 'EMAIL_EXISTS', field: 'email', message: 'This email is already registered. Please sign in instead.' });
         }
 
-        const phoneExists = await User.exists({ phone: phone.trim() });
         if (phoneExists) {
-            return res.status(409).json({ success: false, errorCode: 'PHONE_EXISTS', field: 'phone', message: 'This phone number is already registered.' });
+            console.log(`[COMPANY_REGISTER_FAILURE] Duplicate phone: ${trimmedPhone}`);
+            return res.status(409).json({ statusCode: 409, errorCode: 'PHONE_EXISTS', field: 'phone', message: 'This phone number is already registered. Please sign in or use another number.' });
         }
 
-        // Create User
+        if (trimmedGst) {
+            const gstExists = await CompanyProfile.exists({ gstNumber: trimmedGst });
+            if (gstExists) {
+                return res.status(409).json({ statusCode: 409, errorCode: 'GSTIN_EXISTS', field: 'gstNumber', message: 'This GSTIN is already registered with another company.' });
+            }
+        }
+
+        if (trimmedPan) {
+            const panExists = await CompanyProfile.exists({ panNumber: trimmedPan });
+            if (panExists) {
+                return res.status(409).json({ statusCode: 409, errorCode: 'PAN_EXISTS', field: 'panNumber', message: 'This PAN is already registered with another company.' });
+            }
+        }
+
+        // 8. Create User (Server-enforced role 'COMPANY')
         const user = await User.create({
-            name: companyName,
-            email: email.toLowerCase().trim(),
-            phone: phone.trim(),
+            name: trimmedCompanyName,
+            email: trimmedEmail,
+            phone: trimmedPhone,
             passwordHash: await hashPassword(password),
             role: 'COMPANY',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            emailVerified: true,
+            phoneVerified: true
         });
 
+        let profile = null;
         try {
-            // Create Profile
-            await CompanyProfile.create({
+            // 9. Create Company Profile (Server-enforced status 'PENDING')
+            profile = await CompanyProfile.create({
                 userId: user._id,
-                companyName,
-                email: email.toLowerCase().trim(),
-                phone: phone.trim(),
-                address,
-                city,
-                state,
-                pincode,
-                businessType,
-                description,
-                gstNumber,
-                website,
-                authorizedPersonName,
-                authorizedPersonPhone,
-                panNumber,
+                companyName: trimmedCompanyName,
+                email: trimmedEmail,
+                phone: trimmedPhone,
+                address: trimmedAddress,
+                city: trimmedCity,
+                state: trimmedState,
+                pincode: trimmedPincode,
+                businessType: (typeof businessType === 'string' && businessType.trim()) || 'Services',
+                description: (typeof description === 'string' && description.trim()) || 'Member of Jobnest platform',
+                gstNumber: trimmedGst,
+                website: (typeof website === 'string' && website.trim()) || undefined,
+                authorizedPersonName: (typeof authorizedPersonName === 'string' && authorizedPersonName.trim()) || trimmedCompanyName,
+                authorizedPersonPhone: (typeof authorizedPersonPhone === 'string' && authorizedPersonPhone.trim()) || trimmedPhone,
+                panNumber: trimmedPan,
                 verificationStatus: 'PENDING'
             });
 
-            // Create Default Wallet
+            // 10. Create Default Company Wallet
             await CompanyWallet.create({
                 companyId: user._id,
                 availableBalancePaise: 0,
@@ -107,17 +180,39 @@ export const registerCompany = async (req, res, next) => {
                 escrowAmountPaise: 0,
                 totalSpentPaise: 0
             });
+
+            // 11. Audit Log
+            await AuditLog.create({
+                actor: user._id,
+                action: 'AUTH_REGISTERED',
+                resourceType: 'CompanyProfile',
+                resourceId: profile._id.toString(),
+                afterSnapshot: { companyName: trimmedCompanyName, role: 'COMPANY' },
+                ipAddress: req.ip,
+                userAgent: req.get?.('user-agent')
+            });
+
+            console.log(`[COMPANY_REGISTER_SUCCESS] userId=${user._id} companyName=${trimmedCompanyName}`);
         } catch (profileError) {
+            console.error('[COMPANY_REGISTER_ROLLBACK] Error creating profile/wallet, rolling back user:', profileError);
             await User.deleteOne({ _id: user._id });
             throw profileError;
         }
 
         return res.status(201).json({
             success: true,
-            message: 'Company registration successful.',
-            user: safeUser(user)
+            message: 'Company registration successful. Please sign in to your dashboard.',
+            user: safeUser(user, profile),
+            company: {
+                id: profile._id,
+                companyName: profile.companyName,
+                email: profile.email,
+                phone: profile.phone,
+                verificationStatus: profile.verificationStatus,
+            }
         });
     } catch (error) {
+        console.error(`[COMPANY_REGISTER_FAILURE] Error: ${error.message}`);
         next(error);
     }
 };

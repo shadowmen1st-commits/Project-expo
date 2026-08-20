@@ -41,28 +41,40 @@ export default function CompanyRegisterScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const validateForm = (): boolean => {
-    if (!companyName.trim()) {
-      setErrorMessage('Please enter your Company Name.');
+    if (!companyName.trim() || companyName.trim().length < 2) {
+      setErrorMessage('Please enter a valid Company Name (minimum 2 characters).');
       return false;
     }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setErrorMessage('Please enter a valid official Email Address.');
       return false;
     }
-    if (!phone.trim()) {
-      setErrorMessage('Please enter your Company Phone Number.');
+    if (!phone.trim() || !/^\+?[0-9]{7,15}$/.test(phone.trim())) {
+      setErrorMessage('Please enter a valid Company Phone Number (7-15 digits).');
       return false;
     }
     if (!address.trim() || !city.trim() || !state.trim() || !pincode.trim()) {
-      setErrorMessage('Please complete all business address fields.');
+      setErrorMessage('Please complete all business address fields (address, city, state, pincode).');
       return false;
     }
-    if (!password || password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
+    if (!/^[0-9]{4,10}$/.test(pincode.trim())) {
+      setErrorMessage('Please enter a valid Pincode / Postal code.');
+      return false;
+    }
+    if (!password || password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      setErrorMessage('Password must be at least 8 characters long and contain both letters and numbers.');
       return false;
     }
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
+      return false;
+    }
+    if (gstNumber.trim() && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber.trim().toUpperCase())) {
+      setErrorMessage('Invalid GSTIN format (Expected 15-character alphanumeric GSTIN).');
+      return false;
+    }
+    if (panNumber.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber.trim().toUpperCase())) {
+      setErrorMessage('Invalid PAN format (Expected 10-character alphanumeric PAN).');
       return false;
     }
     return true;
@@ -75,25 +87,45 @@ export default function CompanyRegisterScreen() {
     setErrorMessage('');
     setLoading(true);
 
+    const safePayload = {
+      companyName: companyName.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      address: address.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      pincode: pincode.trim(),
+      businessType: businessType.trim() || 'Services',
+      description: description.trim() || `Company on Jobnest platform`,
+      gstNumber: gstNumber.trim().toUpperCase() || undefined,
+      panNumber: panNumber.trim().toUpperCase() || undefined,
+      website: website.trim() || undefined,
+      authorizedPersonName: authorizedPersonName.trim() || companyName.trim(),
+      authorizedPersonPhone: authorizedPersonPhone.trim() || phone.trim(),
+      password,
+      confirmPassword,
+    };
+
+    console.log('[COMPANY_REGISTER_START]', { email: safePayload.email, companyName: safePayload.companyName });
+    console.log('[COMPANY_REGISTER_REQUEST]', {
+      url: `${api.defaults.baseURL}/company/register`,
+      email: safePayload.email,
+      phone: safePayload.phone,
+      city: safePayload.city,
+      hasGst: Boolean(safePayload.gstNumber),
+      hasPan: Boolean(safePayload.panNumber),
+    });
+
     try {
-      const response = await api.post('/company/register', {
-        companyName: companyName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        address: address.trim(),
-        city: city.trim(),
-        state: state.trim(),
-        pincode: pincode.trim(),
-        businessType: businessType.trim() || 'Services',
-        description: description.trim() || `Company on Jobnest platform`,
-        gstNumber: gstNumber.trim(),
-        panNumber: panNumber.trim(),
-        website: website.trim(),
-        authorizedPersonName: authorizedPersonName.trim() || companyName.trim(),
-        authorizedPersonPhone: authorizedPersonPhone.trim() || phone.trim(),
-        password,
-        confirmPassword,
+      const response = await api.post('/company/register', safePayload);
+
+      console.log('[COMPANY_REGISTER_RESPONSE]', {
+        status: response.status,
+        success: response.data?.success,
+        companyId: response.data?.company?.id,
+        userId: response.data?.user?.id || response.data?.user?._id,
       });
+      console.log('[COMPANY_REGISTER_SUCCESS]', { email: safePayload.email });
 
       Alert.alert(
         'Registration Successful 🎉',
@@ -106,8 +138,14 @@ export default function CompanyRegisterScreen() {
         ]
       );
     } catch (err: any) {
+      console.error('[COMPANY_REGISTER_FAILURE]', {
+        status: err.response?.status,
+        message: err.response?.data?.message || err.message,
+        errorCode: err.response?.data?.errorCode,
+      });
+
       const msg =
-        err.response?.data?.message || err.message || 'Company registration failed. Please try again.';
+        err.response?.data?.message || err.userMessage || err.message || 'Company registration failed. Please try again.';
       setErrorMessage(msg);
     } finally {
       setLoading(false);

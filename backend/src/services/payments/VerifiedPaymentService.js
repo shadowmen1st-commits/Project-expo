@@ -28,6 +28,8 @@ import Booking from '../../models/Booking.js';
 import AuditLog from '../../models/AuditLog.js';
 import Notification from '../../models/Notification.js';
 import LedgerPostingService from './LedgerPostingService.js';
+import { emitToUser, emitToRoom } from '../../socketServer.js';
+import { toSafeBookingDTO } from '../../utils/dto.js';
 
 class VerifiedPaymentServiceClass {
     /**
@@ -221,6 +223,26 @@ class VerifiedPaymentServiceClass {
                     idempotencyKey: workerNotifyKey,
                 });
             }
+        }
+
+        // ── 14. Emit Real-Time Socket.IO Booking Update ───────────────────────────
+        try {
+            const populatedBooking = await Booking.findById(booking._id)
+                .populate('customerId', 'name phone email profileImage')
+                .populate('workerId', 'name phone email profileImage')
+                .populate('serviceCategoryId', 'name icon description');
+            const safeDTO = toSafeBookingDTO(populatedBooking || updatedBooking);
+
+            if (booking.workerId) {
+                emitToUser(booking.workerId.toString(), 'booking:updated', safeDTO);
+                emitToUser(booking.workerId.toString(), 'booking:created', safeDTO);
+            }
+            if (booking.customerId) {
+                emitToUser(booking.customerId.toString(), 'booking:updated', safeDTO);
+            }
+            emitToRoom(`tracking:${booking._id.toString()}`, 'booking:updated', safeDTO);
+        } catch (socketErr) {
+            console.warn('[SOCKET:EMIT_ERROR]', socketErr?.message || socketErr);
         }
 
         return {

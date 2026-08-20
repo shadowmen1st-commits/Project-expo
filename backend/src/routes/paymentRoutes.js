@@ -18,6 +18,7 @@ router.use(authMiddleware);
 
 // Create a Razorpay payment order for a PAYMENT_PENDING booking
 router.post('/orders', createOrder);
+router.post('/create-order', createOrder);
 
 // Verify Razorpay checkout callback signature
 router.post('/verify', verifyPayment);

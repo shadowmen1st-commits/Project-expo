@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,67 +9,180 @@ import {
   ActivityIndicator,
   RefreshControl
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useLocationContext } from '../../context/LocationContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import Badge from '../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../config/api';
+import api, { SOCKET_BASE_URL } from '../../config/api';
 import { storage } from '../../utils/storage';
 import { WorkerLocationService } from '../../utils/WorkerLocationService';
+import { io, Socket } from 'socket.io-client';
 
 export default function WorkerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
+  const {
+    displayName,
+    city,
+    state,
+    latitude,
+    longitude,
+    loading: locationLoading,
+    error: locationError,
+    refreshLocation,
+  } = useLocationContext();
 
   const [isAvailable, setIsAvailable] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [wallet, setWallet] = useState<any>(null);
   const [assignedJobs, setAssignedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const socketRef = useRef<Socket | null>(null);
+
+  const workerId = user?._id || user?.id || (user as any)?.userId;
+
   const fetchWorkerData = useCallback(async () => {
+    console.log('[WORKER_DASHBOARD_START]', { timestamp: new Date().toISOString() });
+    console.log('[WORKER_ID_RESOLVED]', { workerId, email: user?.email, role: user?.role });
+
     try {
-      const [profRes, jobRes] = await Promise.allSettled([
-        api.get('/v1/worker/verification'),
-        api.get('/bookings/worker').catch(() => api.get('/bookings/worker/my-jobs'))
+      console.log('[WORKER_BOOKINGS_REQUEST] endpoint=/bookings/worker');
+
+      const [profRes, jobRes, walletRes] = await Promise.allSettled([
+        api.get('/v1/worker/verification').catch(() => null),
+        api.get('/bookings/worker').catch(async () => {
+          return api.get('/bookings');
+        }),
+        api.get('/wallet/details').catch(async () => {
+          return api.get('/v1/wallet/details');
+        })
       ]);
 
-      if (profRes.status === 'fulfilled' && profRes.value.data) {
+      if (profRes.status === 'fulfilled' && profRes.value?.data) {
         setProfile(profRes.value.data.profile || profRes.value.data);
       }
 
-      if (jobRes.status === 'fulfilled' && jobRes.value.data) {
-        const list = Array.isArray(jobRes.value.data)
-          ? jobRes.value.data
-          : jobRes.value.data.jobs || jobRes.value.data.data || [];
+      if (jobRes.status === 'fulfilled' && jobRes.value?.data) {
+        const raw = jobRes.value.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : raw.bookings || raw.jobs || raw.data || [];
+        
+        console.log('[WORKER_BOOKINGS_RESPONSE]', { count: list.length });
         setAssignedJobs(list);
 
         // Synchronize background location tracking for any active job
         const token = await storage.getItem('accessToken');
-        if (token && user?._id) {
-          WorkerLocationService.syncWorkerTracking(list, token, user._id);
+        if (token && workerId) {
+          WorkerLocationService.syncWorkerTracking(list, token, workerId);
         }
+      } else {
+        console.warn('[WORKER_BOOKINGS_ERROR] Failed resolving bookings', (jobRes as any).reason);
       }
-    } catch (err) {
-      console.error('Failed fetching worker dashboard data:', err);
+
+      if (walletRes.status === 'fulfilled' && walletRes.value?.data) {
+        setWallet(walletRes.value.data);
+      }
+    } catch (err: any) {
+      console.error('[WORKER_DASHBOARD_ERROR]', err?.message || err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?._id]);
+  }, [workerId, user?.email, user?.role]);
 
+  // Synchronize Worker Real GPS location to backend
   useEffect(() => {
-    fetchWorkerData();
-  }, [fetchWorkerData]);
+    if (latitude && longitude && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      api.post('/worker/location', {
+        latitude,
+        longitude,
+        city: displayName || city || undefined,
+        state: state || undefined,
+      }).catch((err) => {
+        console.log('[WORKER_LOCATION_SYNC_FAIL]', err?.message);
+      });
+    }
+  }, [latitude, longitude, displayName, city, state]);
+
+  // Screen focus auto-refresh
+  useFocusEffect(
+    useCallback(() => {
+      fetchWorkerData();
+    }, [fetchWorkerData])
+  );
+
+  // Setup real-time socket updates
+  useEffect(() => {
+    let socket: Socket | null = null;
+    const setupSocket = async () => {
+      const token = await storage.getItem('accessToken');
+      if (!token) return;
+
+      try {
+        socket = io(SOCKET_BASE_URL, {
+          auth: { token },
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: 5,
+        });
+
+        socket.on('connect', () => {
+          console.log('[WORKER_SOCKET_CONNECTED]', { id: socket?.id, workerId });
+        });
+
+        socket.on('booking:created', (data) => {
+          console.log('[WORKER_SOCKET_BOOKING_CREATED]', data?.bookingNumber || data?.id);
+          fetchWorkerData();
+        });
+
+        socket.on('booking:updated', (data) => {
+          console.log('[WORKER_SOCKET_BOOKING_UPDATED]', data?.bookingNumber || data?.id);
+          fetchWorkerData();
+        });
+
+        socket.on('notification', () => {
+          fetchWorkerData();
+        });
+
+        socketRef.current = socket;
+      } catch (e) {
+        console.warn('[WORKER_SOCKET_SETUP_ERROR]', e);
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [workerId, fetchWorkerData]);
 
   const onRefresh = () => {
     setRefreshing(true);
+    refreshLocation(true);
     fetchWorkerData();
   };
 
-  const verificationStatus = profile?.verificationStatus || 'APPROVED';
+  const verificationStatus = profile?.verificationStatus || user?.verificationStatus || 'NOT_SUBMITTED';
+
+  // Calculate real earnings from wallet or completed bookings
+  const completedJobs = assignedJobs.filter((j) => (j.bookingStatus || j.status) === 'COMPLETED');
+  const fallbackEarnings = completedJobs.reduce((sum, j) => sum + (j.workerEarning || j.totalAmount || 0), 0);
+  const totalEarningsVal = wallet?.balances?.totalEarned != null
+    ? (wallet.balances.totalEarned / 100).toFixed(0)
+    : fallbackEarnings.toFixed(0);
+
+  const ratingVal = profile?.averageRating != null
+    ? Number(profile.averageRating).toFixed(1)
+    : '5.0';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -77,11 +190,46 @@ export default function WorkerDashboard() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
       >
-        {/* Worker Header Banner */}
+        {/* Worker Header Banner with Real GPS Location */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greetingSub}>Pro Portal 👋</Text>
+          <View style={styles.headerLeft}>
+            {/* Real-time Location Pill */}
+            <View style={styles.locationPill}>
+              {locationLoading ? (
+                <>
+                  <ActivityIndicator size="small" color="#EA580C" style={{ transform: [{ scale: 0.75 }], marginRight: 2 }} />
+                  <Text style={styles.locationText}>Detecting your location...</Text>
+                </>
+              ) : locationError ? (
+                <>
+                  <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+                  <Text style={[styles.locationText, { color: '#EF4444' }]}>Location Unavailable</Text>
+                  <TouchableOpacity
+                    onPress={() => refreshLocation(true)}
+                    style={styles.locationRefreshBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="refresh-outline" size={13} color="#EF4444" />
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="location-sharp" size={13} color="#EA580C" />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {displayName || city || 'Current Location'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => refreshLocation(true)}
+                    style={styles.locationRefreshBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="refresh-outline" size={13} color="#EA580C" />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
             <Text style={styles.greetingTitle}>{user?.name || 'Worker Pro'}</Text>
+            <Text style={styles.greetingSub}>Pro Portal 👋</Text>
           </View>
           <TouchableOpacity onPress={() => router.push('/(worker)/profile')}>
             <ProfileAvatar user={user} size="lg" showBadge />
@@ -121,23 +269,31 @@ export default function WorkerDashboard() {
               style={styles.verifBtn}
               onPress={() => router.push('/(worker)/profile')}
             >
-              <Text style={styles.verifBtnText}>View KYC</Text>
+              <Text style={styles.verifBtnText}>
+                {verificationStatus === 'APPROVED'
+                  ? 'View KYC'
+                  : ['PENDING_APPROVAL', 'UNDER_REVIEW', 'SUBMITTED'].includes(verificationStatus)
+                  ? 'View Status'
+                  : verificationStatus === 'REJECTED'
+                  ? 'Resubmit KYC'
+                  : 'Complete KYC'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Stats Grid */}
         <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statVal}>₹{profile?.totalEarnings || 14500}</Text>
+          <TouchableOpacity style={styles.statBox} onPress={() => router.push('/(worker)/earnings')}>
+            <Text style={styles.statVal}>₹{totalEarningsVal}</Text>
             <Text style={styles.statLbl}>Total Earnings</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statVal}>{assignedJobs.length || 8}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statBox} onPress={() => router.push('/(worker)/bookings')}>
+            <Text style={styles.statVal}>{assignedJobs.length}</Text>
             <Text style={styles.statLbl}>Total Jobs</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statBox}>
-            <Text style={styles.statVal}>4.9 ★</Text>
+            <Text style={styles.statVal}>{ratingVal} ★</Text>
             <Text style={styles.statLbl}>Rating</Text>
           </View>
         </View>
@@ -146,56 +302,68 @@ export default function WorkerDashboard() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Assigned Jobs</Text>
           <TouchableOpacity onPress={() => router.push('/(worker)/bookings')}>
-            <Text style={styles.seeAllText}>Manage All</Text>
+            <Text style={styles.seeAllText}>Manage All ({assignedJobs.length})</Text>
           </TouchableOpacity>
         </View>
 
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color="#EA580C" style={{ marginVertical: 20 }} />
         ) : assignedJobs.length > 0 ? (
-          assignedJobs.slice(0, 3).map((job) => (
-            <TouchableOpacity
-              key={job._id}
-              style={styles.jobCard}
-              onPress={() => router.push('/(worker)/bookings')}
-            >
-              <View style={styles.jobHeader}>
-                <Text style={styles.jobCategory}>{job.serviceCategoryName || 'Service Request'}</Text>
-                <Badge status={job.status} />
-              </View>
-              <Text style={styles.jobAddress} numberOfLines={1}>
-                📍 {job.address || 'Customer Location'}
-              </Text>
-              <View style={styles.jobFooter}>
-                <Text style={styles.jobPrice}>₹{job.totalAmount || 600}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  {['CONFIRMED', 'IN_PROGRESS', 'PAID', 'WORKER_EN_ROUTE', 'STARTED'].includes(job.status) && (
-                    <TouchableOpacity
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        router.push(`/(worker)/tracking/${job._id || job.id}` as any);
-                      }}
-                      style={{
-                        backgroundColor: '#EA580C',
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        borderRadius: 6,
-                      }}
-                    >
-                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>GPS Share</Text>
-                    </TouchableOpacity>
-                  )}
-                  <Text style={styles.jobTime}>
-                    {new Date(job.bookingDate || Date.now()).toLocaleDateString()}
-                  </Text>
+          assignedJobs.slice(0, 5).map((job) => {
+            const currentStatus = job.bookingStatus || job.status || 'PENDING';
+            const categoryTitle = job.category?.name || job.serviceCategoryName || job.categoryName || 'Service Request';
+            const customerTitle = job.customer?.name || job.customerName || 'Customer';
+            const addressTitle = job.serviceAddress || job.addressSnapshot?.addressLine || job.address || 'Customer Location';
+            const priceVal = job.workerEarning || job.totalAmount || 0;
+            const dateStr = job.bookingDate || (job.scheduledStart ? new Date(job.scheduledStart).toLocaleDateString() : 'Scheduled');
+            const timeStr = job.bookingTime || '';
+            const isActive = ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'STARTED', 'IN_PROGRESS'].includes(currentStatus);
+
+            return (
+              <TouchableOpacity
+                key={job.id || job._id}
+                style={styles.jobCard}
+                onPress={() => router.push('/(worker)/bookings')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.jobHeader}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={styles.jobCategory} numberOfLines={1}>{categoryTitle}</Text>
+                    <Text style={styles.jobCustomer}>{customerTitle}</Text>
+                  </View>
+                  <Badge status={currentStatus} />
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))
+                <Text style={styles.jobAddress} numberOfLines={1}>
+                  📍 {addressTitle}
+                </Text>
+                <View style={styles.jobFooter}>
+                  <Text style={styles.jobPrice}>₹{priceVal}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {isActive && (
+                      <TouchableOpacity
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          router.push(`/(worker)/tracking/${job.id || job._id}` as any);
+                        }}
+                        style={styles.gpsShareBtn}
+                      >
+                        <Ionicons name="navigate" size={11} color="#FFFFFF" />
+                        <Text style={styles.gpsShareText}>Live GPS</Text>
+                      </TouchableOpacity>
+                    )}
+                    <Text style={styles.jobTime}>
+                      {dateStr} {timeStr}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
         ) : (
           <View style={styles.emptyCard}>
             <Ionicons name="briefcase-outline" size={36} color="#94A3B8" />
             <Text style={styles.emptyText}>No assigned jobs right now.</Text>
+            <Text style={styles.emptySubText}>New customer bookings assigned to you will appear here instantly.</Text>
           </View>
         )}
       </ScrollView>
@@ -218,6 +386,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12
+  },
+  headerLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  locationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFF7ED',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
+    maxWidth: '92%',
+  },
+  locationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EA580C',
+    marginLeft: 4,
+    marginRight: 2,
+    flexShrink: 1,
+  },
+  locationRefreshBtn: {
+    padding: 2,
+    marginLeft: 4,
   },
   greetingSub: {
     fontSize: 13,
@@ -334,12 +531,17 @@ const styles = StyleSheet.create({
   jobHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'flex-start'
   },
   jobCategory: {
     fontSize: 15,
     fontWeight: '700',
     color: '#0F172A'
+  },
+  jobCustomer: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2
   },
   jobAddress: {
     fontSize: 13,
@@ -360,6 +562,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#EA580C'
   },
+  gpsShareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#EA580C',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6
+  },
+  gpsShareText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700'
+  },
   jobTime: {
     fontSize: 12,
     color: '#64748B'
@@ -374,8 +590,15 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9'
   },
   emptyText: {
-    color: '#64748B',
-    fontSize: 14,
+    color: '#0F172A',
+    fontSize: 15,
+    fontWeight: '700',
     marginTop: 8
+  },
+  emptySubText: {
+    color: '#64748B',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4
   }
 });

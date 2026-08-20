@@ -181,7 +181,9 @@ export default function WorkerDetailScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={18} color={colors.primaryDark} />
             <Text style={styles.infoLabel}>Coverage Area:</Text>
-            <Text style={styles.infoValue}>{worker.city || 'Indiranagar & Nearby (10km)'}</Text>
+            <Text style={styles.infoValue}>
+              {worker.city ? `${worker.city} & Surrounding Areas` : worker.serviceArea || 'Local City & Surrounding Areas'}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>

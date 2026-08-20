@@ -59,9 +59,10 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   const fontSize = fontSizes[size] || 16;
 
   const isVerified =
-    user?.verificationBadge ||
-    user?.isVerified ||
-    user?.verificationStatus === 'APPROVED';
+    user?.verificationBadge === true ||
+    user?.isKycVerified === true ||
+    user?.verificationStatus === 'APPROVED' ||
+    user?.kycStatus === 'APPROVED';
 
   return (
     <View style={{ position: 'relative', width: dim, height: dim }}>

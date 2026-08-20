@@ -4,7 +4,7 @@ import PriceQuote from '../models/PriceQuote.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import BookingLocation from '../models/BookingLocation.js';
-import { getIO } from '../socketServer.js';
+import { getIO, emitToUser, emitToRoom } from '../socketServer.js';
 import {
     availabilityCheckSchema,
     bookingCreateSchema,
@@ -334,6 +334,8 @@ export const createBooking = async (req, res, next) => {
 
         await booking.save();
 
+        console.log(`[BOOKING_ASSIGNED] bookingId=${booking._id} workerId=${booking.workerId}`);
+
         // 7. Mark PriceQuote CONSUMED Atomically
         if (activeQuote) {
             activeQuote.status = 'CONSUMED';
@@ -350,6 +352,15 @@ export const createBooking = async (req, res, next) => {
             type: 'INFO',
             bookingId: booking._id,
         }).save();
+
+        // 9. Emit Real-Time Socket.IO Booking Creation to Worker
+        try {
+            if (booking.workerId) {
+                emitToUser(booking.workerId.toString(), 'booking:created', toSafeBookingDTO(booking));
+            }
+        } catch (socketErr) {
+            console.warn('[SOCKET:EMIT_ERROR]', socketErr?.message || socketErr);
+        }
 
         res.status(201).json({
             success: true,
@@ -387,8 +398,8 @@ export const getCustomerBookings = async (req, res, next) => {
 
         const skip = (Number(page) - 1) * Number(limit);
         const bookings = await Booking.find(query)
-            .populate('customerId', 'name profileImage')
-            .populate('workerId', 'name profileImage')
+            .populate('customerId', 'name phone email profileImage')
+            .populate('workerId', 'name phone email profileImage')
             .populate('serviceCategoryId', 'name icon description')
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -421,20 +432,23 @@ export const getWorkerBookings = async (req, res, next) => {
         return;
     }
     try {
-        const { status, page = 1, limit = 20 } = req.query;
+        const { status, page = 1, limit = 50 } = req.query;
         const query = { workerId: user.userId };
         if (status) query.bookingStatus = status;
 
         const skip = (Number(page) - 1) * Number(limit);
         const bookings = await Booking.find(query)
-            .populate('customerId', 'name profileImage')
-            .populate('workerId', 'name profileImage')
+            .populate('customerId', 'name phone email profileImage')
+            .populate('workerId', 'name phone email profileImage')
             .populate('serviceCategoryId', 'name icon description')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(Number(limit));
 
         const total = await Booking.countDocuments(query);
+
+        console.log(`[WORKER_BOOKINGS] workerId=${user.userId} count=${total}`);
+
         res.status(200).json({
             success: true,
             bookings: bookings.map(toSafeBookingDTO),
@@ -744,8 +758,8 @@ export const acceptBooking = async (req, res, next) => {
         if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
             return res.status(403).json({
                 statusCode: 403,
-                errorCode: 'UNAUTHORIZED',
-                message: 'Your account must be APPROVED to accept bookings.'
+                errorCode: 'KYC_NOT_APPROVED',
+                message: 'Your account must be APPROVED with completed KYC to accept bookings.'
             });
         }
         const updated = await BookingStatusTransitionService.transition({
@@ -790,6 +804,14 @@ export const rejectBooking = async (req, res, next) => {
 export const markEnRoute = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const workerProfile = await WorkerProfile.findOne({ userId: req.user.userId });
+        if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
+            return res.status(403).json({
+                statusCode: 403,
+                errorCode: 'KYC_NOT_APPROVED',
+                message: 'Your account must be APPROVED with completed KYC to start en route.'
+            });
+        }
         const updated = await BookingStatusTransitionService.transition({
             bookingId: id,
             targetStatus: 'WORKER_EN_ROUTE',
@@ -814,8 +836,8 @@ export const startBooking = async (req, res, next) => {
         if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
             return res.status(403).json({
                 statusCode: 403,
-                errorCode: 'UNAUTHORIZED',
-                message: 'Your account must be APPROVED to start service.'
+                errorCode: 'KYC_NOT_APPROVED',
+                message: 'Your account must be APPROVED with completed KYC to start service.'
             });
         }
         const updated = await BookingStatusTransitionService.transition({
@@ -842,8 +864,8 @@ export const requestCompletion = async (req, res, next) => {
         if (!workerProfile || workerProfile.verificationStatus !== 'APPROVED') {
             return res.status(403).json({
                 statusCode: 403,
-                errorCode: 'UNAUTHORIZED',
-                message: 'Your account must be APPROVED to request completion.'
+                errorCode: 'KYC_NOT_APPROVED',
+                message: 'Your account must be APPROVED with completed KYC to request completion.'
             });
         }
         const updated = await BookingStatusTransitionService.transition({
@@ -1176,6 +1198,15 @@ export const getWorkerLocation = async (req, res, next) => {
 
         if (!isCustomer && !isWorker && !isAdmin && !isCompany) {
             return res.status(403).json({ success: false, statusCode: 403, message: 'Access denied.' });
+        }
+
+        // Privacy rule: Expose worker location to customer ONLY when booking is in active tracking status
+        if (isCustomer && !['CONFIRMED', 'PAID', 'ACCEPTED', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'COMPLETION_REQUESTED', 'COMPLETED'].includes(booking.bookingStatus)) {
+            return res.status(200).json({
+                success: true,
+                location: null,
+                message: 'Live tracking will be active once service is confirmed.'
+            });
         }
 
         const latestLocationDoc = await BookingLocation.findOne({ bookingId: booking._id }).sort({ createdAt: -1 });

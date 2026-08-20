@@ -234,7 +234,9 @@ export const verifyWorker = async (req, res, next) => {
             if (workerUser && workerUser.role === 'WORKER') {
                 profile = await WorkerProfile.create({
                     userId: id,
-                    verificationStatus: 'PENDING'
+                    verificationStatus: 'NOT_SUBMITTED',
+                    isPubliclyVisible: false,
+                    verificationBadge: false
                 });
             } else {
                 return res.status(404).json({ success: false, message: 'Worker profile not found.' });

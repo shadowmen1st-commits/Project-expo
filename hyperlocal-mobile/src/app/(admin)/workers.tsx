@@ -104,7 +104,7 @@ export default function AdminWorkersScreen() {
         for (const item of aList) {
           const itemWorkerId = extractWorkerId(item);
           if (itemWorkerId && !combined.some((c) => extractWorkerId(c) === itemWorkerId)) {
-            combined.push({ ...item, verificationStatus: item.verificationStatus || 'APPROVED' });
+            combined.push({ ...item, verificationStatus: item.verificationStatus || 'NOT_SUBMITTED' });
           }
         }
       }

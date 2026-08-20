@@ -19,6 +19,14 @@ const blockedRangeSchema = new Schema(
     { _id: false }
 );
 
+const pointSchema = new Schema(
+    {
+        type: { type: String, enum: ['Point'], default: 'Point', required: true },
+        coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    },
+    { _id: false }
+);
+
 const workerProfileSchema = new Schema(
     {
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
@@ -52,10 +60,7 @@ const workerProfileSchema = new Schema(
             relationship: { type: String, trim: true }
         },
         timezone: { type: String, default: 'Asia/Kolkata' },
-        location: {
-            type: { type: String, enum: ['Point'], default: 'Point' },
-            coordinates: { type: [Number], default: [77.5946, 12.9716] }, // [longitude, latitude]
-        },
+        location: { type: pointSchema, default: undefined },
         averageRating: { type: Number, default: null, min: 0, max: 5 },
         ratingCount: { type: Number, default: 0, min: 0 },
         completedBookings: { type: Number, default: 0, min: 0 },
@@ -63,15 +68,18 @@ const workerProfileSchema = new Schema(
         verificationStatus: {
             type: String,
             enum: [
+                'NOT_SUBMITTED',
                 'INCOMPLETE_PROFILE',
                 'DRAFT',
+                'SUBMITTED',
                 'PENDING_APPROVAL',
+                'UNDER_REVIEW',
                 'CHANGES_REQUIRED',
                 'APPROVED',
                 'REJECTED',
                 'SUSPENDED'
             ],
-            default: 'INCOMPLETE_PROFILE',
+            default: 'NOT_SUBMITTED',
         },
         onboardingProgressPercent: { type: Number, default: 0 },
         submittedAt: { type: Date },
@@ -116,7 +124,7 @@ workerProfileSchema.index({ hourlyRate: 1 });
 workerProfileSchema.index({ dailyRate: 1 });
 workerProfileSchema.index({ isOnline: 1 });
 workerProfileSchema.index({ isPubliclyVisible: 1 });
-workerProfileSchema.index({ location: '2dsphere' });
+workerProfileSchema.index({ location: '2dsphere' }, { sparse: true });
 workerProfileSchema.index({ verificationStatus: 1, serviceCategoryIds: 1, isPubliclyVisible: 1 });
 
 export const WorkerProfile = model('WorkerProfile', workerProfileSchema);

@@ -21,7 +21,7 @@ import { EmptyState } from '../../../components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
 import { useAuth } from '../../../context/AuthContext';
-import { useLocation } from '../../../hooks/useLocation';
+import { useLocationContext } from '../../../context/LocationContext';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
 import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
 import { resolveWorkerImage } from '../../../utils/imageUtils';
@@ -125,7 +125,17 @@ export default function CreateBookingScreen() {
   const { workerId } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { location: customerLocation, loading: locationLoading, requestLocation } = useLocation(true);
+  const {
+    city: detectedCity,
+    state: detectedState,
+    postalCode: detectedPostalCode,
+    street: detectedStreet,
+    district: detectedDistrict,
+    latitude: customerLat,
+    longitude: customerLng,
+    loading: locationLoading,
+    refreshLocation,
+  } = useLocationContext();
 
   const rawWorkerId = Array.isArray(workerId) ? workerId[0] : workerId;
   const canonicalParamId = getCanonicalWorkerId(rawWorkerId);
@@ -150,14 +160,21 @@ export default function CreateBookingScreen() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [availabilityWarning, setAvailabilityWarning] = useState('');
 
-  // Address State
-  const [houseNo, setHouseNo] = useState('142');
-  const [street, setStreet] = useState('12th Main Road, HAL 2nd Stage');
-  const [landmark, setLandmark] = useState('Near Metro Station');
-  const [city, setCity] = useState('Bengaluru');
-  const [pincode, setPincode] = useState('560038');
+  // Address State — dynamically populated from real GPS
+  const [houseNo, setHouseNo] = useState('');
+  const [street, setStreet] = useState(detectedStreet || detectedDistrict || '');
+  const [landmark, setLandmark] = useState('');
+  const [city, setCity] = useState(detectedCity || '');
+  const [pincode, setPincode] = useState(detectedPostalCode || '');
   const [instructions, setInstructions] = useState('');
   const [addressType, setAddressType] = useState<'HOME' | 'OFFICE' | 'OTHER'>('HOME');
+
+  // Auto-sync address if location finishes detecting after mount
+  useEffect(() => {
+    if (detectedCity && !city) setCity(detectedCity);
+    if (detectedPostalCode && !pincode) setPincode(detectedPostalCode);
+    if ((detectedStreet || detectedDistrict) && !street) setStreet(detectedStreet || detectedDistrict || '');
+  }, [detectedCity, detectedPostalCode, detectedStreet, detectedDistrict]);
 
   const [loadingWorker, setLoadingWorker] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -442,9 +459,14 @@ export default function CreateBookingScreen() {
     const startIso = formatToISTIsoString(date, startTime);
     const endIso = calculateScheduledEndIso(startIso, duration || 2);
 
-    const fullAddress = `${houseNo.trim()}, ${street.trim()}${
-      landmark.trim() ? ', ' + landmark.trim() : ''
-    }, ${city.trim()}, Karnataka - ${pincode.trim()}`;
+    const fullAddress = [
+      houseNo.trim(),
+      street.trim(),
+      landmark.trim() ? `Near ${landmark.trim()}` : '',
+      city.trim(),
+      detectedState ? detectedState.trim() : '',
+      pincode.trim() ? `PIN: ${pincode.trim()}` : '',
+    ].filter(Boolean).join(', ');
 
     setErrorMsg('');
     setSubmitting(true);
@@ -476,15 +498,15 @@ export default function CreateBookingScreen() {
           street: street.trim(),
           locality: landmark.trim() || street.trim(),
           landmark: landmark.trim() || undefined,
-          city: city.trim() || 'Bengaluru',
-          state: 'Karnataka',
+          city: city.trim() || detectedCity || 'Current Location',
+          state: detectedState ? detectedState.trim() : 'India',
           pincode: pincode.trim(),
           addressType,
           instructions: instructions.trim() || undefined,
-          ...(customerLocation?.latitude && customerLocation?.longitude
+          ...(customerLat && customerLng
             ? {
-                latitude: customerLocation.latitude,
-                longitude: customerLocation.longitude,
+                latitude: customerLat,
+                longitude: customerLng,
               }
             : {}),
         },
@@ -708,16 +730,16 @@ export default function CreateBookingScreen() {
               <Text style={styles.sectionTitle}>3. Service Address</Text>
               <TouchableOpacity
                 style={styles.gpsButton}
-                onPress={() => requestLocation({ forceHighAccuracy: true, promptIfDenied: true })}
+                onPress={() => refreshLocation(true)}
                 activeOpacity={0.7}
               >
                 <Ionicons
-                  name={customerLocation ? 'location' : 'location-outline'}
+                  name={customerLat && customerLng ? 'location' : 'location-outline'}
                   size={13}
-                  color={customerLocation ? colors.success : colors.accent}
+                  color={customerLat && customerLng ? colors.success : colors.accent}
                 />
-                <Text style={[styles.gpsButtonText, customerLocation && { color: colors.success }]}>
-                  {locationLoading ? 'Detecting GPS...' : customerLocation ? 'GPS Captured' : 'Detect GPS'}
+                <Text style={[styles.gpsButtonText, !!(customerLat && customerLng) && { color: colors.success }]}>
+                  {locationLoading ? 'Detecting GPS...' : customerLat && customerLng ? 'GPS Captured' : 'Detect GPS'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -745,7 +767,7 @@ export default function CreateBookingScreen() {
               <View style={{ flex: 1 }}>
                 <AppInput
                   label="Flat / House No *"
-                  placeholder="e.g. 142"
+                  placeholder="e.g. Flat 302 / House 12"
                   value={houseNo}
                   onChangeText={setHouseNo}
                 />
@@ -753,7 +775,7 @@ export default function CreateBookingScreen() {
               <View style={{ flex: 1.5 }}>
                 <AppInput
                   label="Street / Area *"
-                  placeholder="e.g. 12th Main Road"
+                  placeholder="e.g. Main Road, Sector 5"
                   value={street}
                   onChangeText={setStreet}
                 />
@@ -762,7 +784,7 @@ export default function CreateBookingScreen() {
 
             <AppInput
               label="Landmark (Optional)"
-              placeholder="e.g. Near Indiranagar Metro Station"
+              placeholder="e.g. Near Metro Station / Main Market"
               value={landmark}
               onChangeText={setLandmark}
             />
@@ -771,7 +793,7 @@ export default function CreateBookingScreen() {
               <View style={{ flex: 1 }}>
                 <AppInput
                   label="City *"
-                  placeholder="Bengaluru"
+                  placeholder={detectedCity || "Enter City"}
                   value={city}
                   onChangeText={setCity}
                 />
@@ -779,7 +801,7 @@ export default function CreateBookingScreen() {
               <View style={{ flex: 1 }}>
                 <AppInput
                   label="Pincode (6 digits) *"
-                  placeholder="560038"
+                  placeholder={detectedPostalCode || "e.g. 110001"}
                   value={pincode}
                   onChangeText={setPincode}
                   keyboardType="numeric"

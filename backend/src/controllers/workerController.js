@@ -5,8 +5,11 @@ import User from '../models/User.js';
 import Job from '../models/Job.js';
 import JobApplication from '../models/JobApplication.js';
 import WorkerAssignment from '../models/WorkerAssignment.js';
+import Booking from '../models/Booking.js';
+import BookingLocation from '../models/BookingLocation.js';
 import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
+import { getIO } from '../socketServer.js';
 import { workerOnboardingSchema } from '../utils/validation.js';
 import { encryptText, maskDocumentNumber } from '../utils/crypto.js';
 
@@ -94,25 +97,89 @@ export const updateLocation = async (req, res, next) => {
         res.status(403).json({ success: false, message: 'Forbidden' });
         return;
     }
-    const { latitude, longitude } = req.body;
+    const { latitude, longitude, city, state, address } = req.body;
     if (latitude === undefined || longitude === undefined) {
         res.status(400).json({ success: false, message: 'Latitude and longitude are required.' });
         return;
     }
     try {
+        const latNum = Number(latitude);
+        const lngNum = Number(longitude);
+        if (!Number.isFinite(latNum) || !Number.isFinite(lngNum) || latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+            res.status(400).json({ success: false, message: 'Invalid latitude or longitude coordinates.' });
+            return;
+        }
+
         let profile = await WorkerProfile.findOne({ userId: user.userId });
         if (!profile) {
             profile = new WorkerProfile({
                 userId: user.userId,
-                verificationStatus: 'DRAFT',
+                verificationStatus: 'NOT_SUBMITTED',
             });
         }
         profile.location = {
             type: 'Point',
-            coordinates: [Number(longitude), Number(latitude)],
+            coordinates: [lngNum, latNum],
         };
+        if (city) profile.city = city;
+        if (state) profile.state = state;
+        if (address) profile.address = address;
         await profile.save();
-        res.status(200).json({ success: true, message: 'Location updated successfully.' });
+
+        console.log(`[WORKER_LOCATION_UPDATED] workerId=${user.userId} lat=${latNum} lng=${lngNum} city=${city || profile.city}`);
+
+        // Automatically sync latest location to active bookings
+        try {
+            const activeStatuses = ['CONFIRMED', 'PAID', 'ACCEPTED', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'COMPLETION_REQUESTED'];
+            const activeBookings = await Booking.find({
+                workerId: user.userId,
+                bookingStatus: { $in: activeStatuses },
+            });
+
+            if (activeBookings.length > 0) {
+                const io = getIO();
+                for (const b of activeBookings) {
+                    const ping = await BookingLocation.create({
+                        bookingId: b._id,
+                        workerId: user.userId,
+                        latitude: latNum,
+                        longitude: lngNum,
+                        heading: 0,
+                        speed: 0,
+                        accuracy: 5,
+                        timestamp: new Date(),
+                    });
+
+                    if (io) {
+                        const payload = {
+                            bookingId: b._id.toString(),
+                            workerId: user.userId.toString(),
+                            latitude: latNum,
+                            longitude: lngNum,
+                            heading: 0,
+                            speed: 0,
+                            accuracy: 5,
+                            timestamp: ping.timestamp,
+                        };
+                        io.to(`tracking:${b._id.toString()}`).emit('location:updated', payload);
+                        io.to(`conversation:${b._id.toString()}`).emit('location:updated', payload);
+                    }
+                }
+            }
+        } catch (activeBookingErr) {
+            console.warn('[WORKER_ACTIVE_BOOKING_LOCATION_SYNC_FAIL]', activeBookingErr?.message);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Location updated successfully.',
+            location: {
+                latitude: latNum,
+                longitude: lngNum,
+                city: profile.city || null,
+                state: profile.state || null
+            }
+        });
     } catch (error) {
         next(error);
     }
@@ -155,12 +222,15 @@ export const searchWorkers = async (req, res, next) => {
             query.averageRating = { $gte: Number(minRating) };
         }
 
-        if (latitude !== undefined && longitude !== undefined) {
-            const radiusKm = Number(maxDistanceKm) || 10;
+        const queryLat = latitude !== undefined ? latitude : req.query.lat;
+        const queryLng = longitude !== undefined ? longitude : req.query.lng;
+
+        if (queryLat !== undefined && queryLng !== undefined && !isNaN(Number(queryLat)) && !isNaN(Number(queryLng))) {
+            const radiusKm = Number(maxDistanceKm) || 15;
             const radiusRadians = radiusKm / 6378.1;
             query.location = {
                 $geoWithin: {
-                    $centerSphere: [[Number(longitude), Number(latitude)], radiusRadians],
+                    $centerSphere: [[Number(queryLng), Number(queryLat)], radiusRadians],
                 },
             };
         }
@@ -231,7 +301,9 @@ export const getWorkerProfile = async (req, res, next) => {
             if (targetUser && (targetUser.role === 'WORKER' || targetUser.role === 'COMPANY')) {
                 profile = new WorkerProfile({
                     userId: targetUser._id,
-                    verificationStatus: 'DRAFT',
+                    verificationStatus: 'NOT_SUBMITTED',
+                    isPubliclyVisible: false,
+                    verificationBadge: false,
                 });
                 await profile.save();
                 profile = await WorkerProfile.findById(profile._id).populate({
@@ -256,8 +328,10 @@ export const getWorkerProfile = async (req, res, next) => {
             dailyRate: profile.dailyRate,
             averageRating: profile.averageRating,
             ratingCount: profile.ratingCount,
-            verificationBadge: profile.verificationBadge,
+            verificationBadge: profile.verificationBadge || false,
             verificationStatus: profile.verificationStatus,
+            kycStatus: profile.verificationStatus,
+            isKycVerified: profile.verificationStatus === 'APPROVED',
             isOnline: profile.isOnline,
             location: profile.location,
         };

@@ -96,7 +96,7 @@ export const getVerificationStatus = async (req, res, next) => {
         const workerId = req.user.userId;
         let profile = await WorkerProfile.findOne({ userId: workerId });
         if (!profile) {
-            profile = new WorkerProfile({ userId: workerId, verificationStatus: 'INCOMPLETE_PROFILE' });
+            profile = new WorkerProfile({ userId: workerId, verificationStatus: 'NOT_SUBMITTED', isPubliclyVisible: false, verificationBadge: false });
             await profile.save();
         }
 
@@ -157,6 +157,9 @@ export const getVerificationStatus = async (req, res, next) => {
                     dailyRate: profile.dailyRate,
                     serviceRadiusKm: profile.serviceRadiusKm,
                     verificationStatus: profile.verificationStatus,
+                    kycStatus: profile.verificationStatus,
+                    isKycVerified: profile.verificationStatus === 'APPROVED',
+                    verificationBadge: profile.verificationBadge || false,
                     onboardingProgressPercent: profile.onboardingProgressPercent,
                     rejectionReason: profile.rejectionReason,
                     suspensionReason: profile.suspensionReason

@@ -85,6 +85,8 @@ export const createApp = () => {
     app.use('/api/v1/dev', devRoutes);
     app.use('/api/workers', workerRoutes);
     app.use('/api/worker', workerRoutes);
+    app.use('/api/v1/workers', workerRoutes);
+    app.use('/api/v1/worker', workerRoutes);
     app.use('/api/bookings', bookingRoutes);
     app.use('/api/v1/bookings', bookingRoutes);
     app.use('/api/pricing', pricingRoutes);
@@ -92,6 +94,7 @@ export const createApp = () => {
     app.use('/api/payments', paymentRoutes);
     app.use('/api/v1/payments', paymentRoutes);
     app.use('/api/wallet', walletRoutes);
+    app.use('/api/v1/wallet', walletRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/v1/admin', adminRoutes);
     app.use('/api/v1/disputes', disputeRoutes);
@@ -104,6 +107,7 @@ export const createApp = () => {
     app.use('/api/v1/support', supportRoutes);
     app.use('/api/v1', verificationRoutes);
     app.use('/api/company', companyRoutes);
+    app.use('/api/v1/company', companyRoutes);
     app.get('/api/categories', getCategories);
     app.get('/api/categories/:id', getCategoryById);
     app.get('/api/services', getCategories);

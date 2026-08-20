@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Modal,
   TextInput,
   Platform,
@@ -27,7 +26,15 @@ import {
   resolveBookingId,
 } from '../../../../utils/formatters';
 
-type PaymentMethod = 'UPI' | 'CARD' | 'NETBANKING';
+export type PaymentMethod = 'upi' | 'card' | 'netbanking' | 'wallet';
+
+export type PaymentFlowState =
+  | 'SELECT_METHOD'
+  | 'CREATING_ORDER'
+  | 'CHECKOUT_OPEN'
+  | 'VERIFYING'
+  | 'SUCCESS'
+  | 'FAILED';
 
 export default function BookingPaymentScreen() {
   const { id } = useLocalSearchParams();
@@ -38,20 +45,25 @@ export default function BookingPaymentScreen() {
 
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
-  const [paymentStatusText, setPaymentStatusText] = useState('Creating secure payment order...');
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('UPI');
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [flowState, setFlowState] = useState<PaymentFlowState>('SELECT_METHOD');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentStatusText, setPaymentStatusText] = useState('Connecting to secure payment gateway...');
+  const [verifiedTxnDetails, setVerifiedTxnDetails] = useState<{
+    paymentId: string;
+    transactionNumber: string;
+  } | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [methodSelectionError, setMethodSelectionError] = useState('');
 
-  // Razorpay Interactive Gateway Modal state
-  const [showGatewayModal, setShowGatewayModal] = useState(false);
+  // Razorpay Gateway Modal state
   const [gatewayOrderData, setGatewayOrderData] = useState<any>(null);
   const [upiIdInput, setUpiIdInput] = useState(user?.email ? `${user.email.split('@')[0]}@okaxis` : 'customer@upi');
   const [cardNumberInput, setCardNumberInput] = useState('4532 •••• •••• 8892');
   const [cardExpiryInput, setCardExpiryInput] = useState('12/28');
   const [cardCvvInput, setCardCvvInput] = useState('321');
   const [selectedBank, setSelectedBank] = useState('HDFC Bank');
+  const [selectedWallet, setSelectedWallet] = useState('Paytm');
 
   const isProcessingRef = useRef(false);
 
@@ -70,11 +82,15 @@ export default function BookingPaymentScreen() {
         paymentStatus === 'PAID' ||
         ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS', 'COMPLETED'].includes(status)
       ) {
-        setPaymentSuccess(true);
+        setFlowState('SUCCESS');
+        setVerifiedTxnDetails({
+          paymentId: b.paymentTransactionId || b.paymentId || 'PAY_VERIFIED_HISTORIC',
+          transactionNumber: b.transactionNumber || `TXN-${b.bookingNumber || rawId.substring(0, 8)}`,
+        });
       }
     } catch (err: any) {
       console.error('Fetch booking error:', err?.response?.data || err.message);
-      setErrorMessage(err?.response?.data?.message || 'Failed to load booking details.');
+      setErrorMessage(err?.response?.data?.message || err.userMessage || 'Failed to load booking details.');
     } finally {
       setLoading(false);
     }
@@ -82,19 +98,40 @@ export default function BookingPaymentScreen() {
 
   useEffect(() => {
     fetchBooking();
-    console.log('[PAYMENT_SCREEN]', { bookingId: rawId });
+    console.log('[PAYMENT_SCREEN_INIT]', { bookingId: rawId });
   }, [fetchBooking, rawId]);
 
-  // Step 1: Initiate Payment Order creation when customer presses "Pay ₹XXX Now"
-  const handleInitiatePayment = async () => {
-    if (paying || isProcessingRef.current || !booking) return;
+  // Handle Payment Method Selection: ONLY updates state, NEVER triggers payment
+  const handleSelectPaymentMethod = (method: PaymentMethod) => {
+    console.log(`[PAYMENT_METHOD_SELECTED] method=${method}`);
+    setSelectedMethod(method);
+    setMethodSelectionError('');
+    setErrorMessage('');
+    if (flowState === 'FAILED') {
+      setFlowState('SELECT_METHOD');
+    }
+  };
+
+  // Continue to Payment Button Handler: Validates method, creates order, and opens Razorpay Checkout
+  const handleContinueToPayment = async () => {
+    if (!selectedMethod) {
+      setMethodSelectionError('Please select a payment method');
+      return;
+    }
+
+    if (isProcessingPayment || flowState === 'CREATING_ORDER' || flowState === 'VERIFYING' || isProcessingRef.current || !booking) {
+      return;
+    }
+
     const bId = resolveBookingId(booking) || rawId;
     isProcessingRef.current = true;
-    setPaying(true);
+    setIsProcessingPayment(true);
+    setFlowState('CREATING_ORDER');
     setPaymentStatusText('Creating secure payment order...');
     setErrorMessage('');
+    setMethodSelectionError('');
 
-    console.log('[PAYMENT_ORDER_START]', { bookingId: bId });
+    console.log(`[PAYMENT_CONTINUE] method=${selectedMethod}`);
 
     try {
       const randKey = `idemp-pay-${bId}-${Date.now()}`;
@@ -112,26 +149,18 @@ export default function BookingPaymentScreen() {
       const internalPaymentOrderId = orderData.internalPaymentOrderId || orderData.orderId;
       const razorpayOrderId = orderData.razorpayOrderId;
 
-      console.log('[PAYMENT_ORDER_SUCCESS]', {
-        bId,
-        internalPaymentOrderId,
-        razorpayOrderId,
-      });
-
-      console.log('[PAYMENT_CHECKOUT]', {
-        orderId: razorpayOrderId,
-        amount: orderData.amount,
-        currency: orderData.currency || 'INR',
-      });
+      console.log(`[PAYMENT_ORDER_CREATED] bookingId=${bId}`);
+      console.log('[RAZORPAY_OPEN]');
 
       setGatewayOrderData({
         ...orderData,
         bookingId: bId,
         internalPaymentOrderId,
         razorpayOrderId,
+        preferredMethod: selectedMethod,
       });
 
-      // Web standard checkout support if on Web platform
+      // Web platform standard Razorpay checkout support
       if (typeof window !== 'undefined' && (Platform.OS === 'web' || (window as any).document)) {
         if (!(window as any).Razorpay) {
           await new Promise<void>((resolve, reject) => {
@@ -148,28 +177,31 @@ export default function BookingPaymentScreen() {
           key: orderData.publicKeyId,
           amount: orderData.amount,
           currency: orderData.currency || 'INR',
-          name: 'JobNest Services',
+          name: 'Jobnest Services',
           description: `Payment for booking #${orderData.bookingNumber || bId}`,
           order_id: razorpayOrderId,
           prefill: {
             name: user?.name || '',
             email: user?.email || '',
             contact: user?.phone || '',
+            method: selectedMethod,
           },
           notes: {
             bookingId: bId,
             bookingNumber: orderData.bookingNumber,
           },
-          theme: { color: '#F97316' },
+          theme: { color: '#EA580C' },
           modal: {
             ondismiss: function () {
-              console.log('[PAYMENT_FAILURE]', 'Payment was cancelled by user');
+              console.log('[PAYMENT_FAILED] reason=Customer cancelled payment');
+              setFlowState('FAILED');
               setErrorMessage('Payment was not completed. You can try again.');
-              setPaying(false);
+              setIsProcessingPayment(false);
               isProcessingRef.current = false;
             },
           },
           handler: async function (response: any) {
+            console.log(`[RAZORPAY_SUCCESS] paymentId=${response.razorpay_payment_id}`);
             await handleVerifyPaymentSignature({
               internalPaymentOrderId,
               razorpay_order_id: response.razorpay_order_id,
@@ -182,35 +214,36 @@ export default function BookingPaymentScreen() {
 
         const rzp = new (window as any).Razorpay(options);
         rzp.on('payment.failed', (resp: any) => {
-          console.log('[PAYMENT_FAILURE]', resp?.error?.description);
-          setErrorMessage(resp?.error?.description || 'Payment transaction failed.');
-          setPaying(false);
+          console.log('[PAYMENT_FAILED]', resp?.error?.description || 'Checkout failed');
+          setFlowState('FAILED');
+          setErrorMessage(resp?.error?.description || 'Payment was not completed. You can try again.');
+          setIsProcessingPayment(false);
           isProcessingRef.current = false;
         });
         rzp.open();
         return;
       }
 
-      // On Native Mobile: Open dedicated interactive Razorpay Checkout Gateway
-      setShowGatewayModal(true);
-      setPaying(false);
+      // Native mobile checkout modal
+      setFlowState('CHECKOUT_OPEN');
+      setIsProcessingPayment(false);
       isProcessingRef.current = false;
     } catch (err: any) {
-      console.log('[PAYMENT_FAILURE]', err?.response?.data?.message || err.message);
-      setErrorMessage(err?.response?.data?.message || err.message || 'Payment processing error.');
-      setPaying(false);
+      console.log('[PAYMENT_FAILED]', err?.response?.data?.message || err.message);
+      setFlowState('FAILED');
+      setErrorMessage(err?.response?.data?.message || err.userMessage || 'Payment was not completed. You can try again.');
+      setIsProcessingPayment(false);
       isProcessingRef.current = false;
     }
   };
 
-  // Step 2: Handle customer authorization from the Razorpay Gateway
+  // Step 2: Customer authorizes payment in gateway modal
   const handleAuthorizeGatewayPayment = async () => {
-    if (!gatewayOrderData) return;
-    setPaying(true);
-    setPaymentStatusText('Authorizing & verifying payment with bank...');
-
+    if (!gatewayOrderData || isProcessingPayment) return;
     const simulatedPaymentId = `pay_rzp_${Date.now()}`;
     const signature = 'SANDBOX_MOCK_SIGNATURE';
+
+    console.log(`[RAZORPAY_SUCCESS] paymentId=${simulatedPaymentId}`);
 
     await handleVerifyPaymentSignature({
       internalPaymentOrderId: gatewayOrderData.internalPaymentOrderId,
@@ -221,7 +254,7 @@ export default function BookingPaymentScreen() {
     });
   };
 
-  // Step 3: Call backend signature verification endpoint
+  // Step 3: Backend signature verification & confirmation
   const handleVerifyPaymentSignature = async ({
     internalPaymentOrderId,
     razorpay_order_id,
@@ -235,12 +268,12 @@ export default function BookingPaymentScreen() {
     razorpay_signature: string;
     bId: string;
   }) => {
+    setIsProcessingPayment(true);
+    setFlowState('VERIFYING');
+    setPaymentStatusText('Authorizing & verifying payment with bank...');
+
     try {
-      console.log('[PAYMENT_VERIFY_START]', {
-        internalPaymentOrderId,
-        razorpay_order_id,
-        razorpay_payment_id,
-      });
+      console.log('[PAYMENT_VERIFY_START]');
 
       const verifyRes = await api.post('/payments/verify', {
         internalPaymentOrderId,
@@ -250,26 +283,56 @@ export default function BookingPaymentScreen() {
       });
 
       if (verifyRes.data?.success) {
-        console.log('[PAYMENT_SUCCESS]', { bId });
-        console.log('[TRACKING_NAV]', `/(customer)/booking/tracking/${bId}`);
-        console.log('[TRACKING_BOOKING_ID]', bId);
+        console.log('[PAYMENT_VERIFY_SUCCESS]');
+        setFlowState('SUCCESS');
+        setVerifiedTxnDetails({
+          paymentId: razorpay_payment_id,
+          transactionNumber: verifyRes.data?.data?.transactionNumber || `TXN-${Date.now()}`,
+        });
 
-        setShowGatewayModal(false);
-        setPaymentSuccess(true);
-
-        setTimeout(() => {
-          router.replace(`/(customer)/booking/tracking/${bId}` as any);
-        }, 1200);
+        // Refresh booking state
+        fetchBooking();
       } else {
-        console.log('[PAYMENT_FAILURE]', verifyRes.data?.message);
+        console.log('[PAYMENT_FAILED]', verifyRes.data?.message);
+        setFlowState('FAILED');
         setErrorMessage(verifyRes.data?.message || 'Payment verification rejected.');
       }
     } catch (vErr: any) {
-      console.log('[PAYMENT_FAILURE]', vErr.response?.data?.message || vErr.message);
-      setErrorMessage(vErr.response?.data?.message || 'Payment verification failed.');
+      console.log('[PAYMENT_FAILED]', vErr.response?.data?.message || vErr.message);
+      setFlowState('FAILED');
+      setErrorMessage(vErr.response?.data?.message || vErr.userMessage || 'Payment verification failed.');
     } finally {
-      setPaying(false);
+      setIsProcessingPayment(false);
       isProcessingRef.current = false;
+    }
+  };
+
+  const handleDismissGatewayModal = () => {
+    console.log('[PAYMENT_FAILED] reason=Customer cancelled payment');
+    setFlowState('FAILED');
+    setErrorMessage('Payment was not completed. You can try again.');
+    setIsProcessingPayment(false);
+    isProcessingRef.current = false;
+  };
+
+  const handleRetryPayment = () => {
+    setFlowState('SELECT_METHOD');
+    setErrorMessage('');
+    setMethodSelectionError('');
+  };
+
+  const getMethodDisplayName = (m: PaymentMethod | null) => {
+    switch (m) {
+      case 'upi':
+        return 'UPI (Google Pay, PhonePe, Paytm, BHIM)';
+      case 'card':
+        return 'Credit / Debit Card';
+      case 'netbanking':
+        return 'Net Banking';
+      case 'wallet':
+        return 'Wallets (Paytm, Mobikwik, PhonePe)';
+      default:
+        return 'None selected';
     }
   };
 
@@ -290,8 +353,8 @@ export default function BookingPaymentScreen() {
           icon="alert-circle-outline"
           title="Booking Not Found"
           description="Could not locate the requested booking for payment."
-          actionTitle="Back to Home"
-          onAction={() => router.replace('/(customer)/dashboard')}
+          actionTitle="Back to Bookings"
+          onAction={() => router.replace('/(customer)/bookings')}
         />
       </View>
     );
@@ -311,43 +374,114 @@ export default function BookingPaymentScreen() {
   const workerObj = booking.worker || booking.workerId;
   const workerName = workerObj?.name || booking.workerName || 'Assigned Professional';
 
+  const isSuccess = flowState === 'SUCCESS';
+
   return (
     <View style={styles.container}>
-      <MobileHeader title="Complete Payment" showBack />
+      <MobileHeader title={isSuccess ? "Booking Confirmed" : "Choose Payment Method"} showBack />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Payment Success State */}
-        {paymentSuccess ? (
+        {isSuccess ? (
           <View style={styles.successCard}>
             <View style={styles.successIconContainer}>
-              <Ionicons name="checkmark-circle" size={54} color="#16A34A" />
+              <Ionicons name="checkmark-circle" size={58} color="#16A34A" />
             </View>
-            <Text style={styles.successTitle}>Payment Successful!</Text>
+            <Text style={styles.successTitle}>PAYMENT SUCCESSFUL</Text>
             <Text style={styles.successSub}>
-              ₹{amountStr} paid securely for booking #{booking.bookingNumber || bId.substring(0, 8)}.
+              ₹{amountStr} received securely via Razorpay Escrow.
             </Text>
+
+            {/* Confirmation details */}
+            <View style={styles.confirmDetailsBox}>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Booking ID</Text>
+                <Text style={styles.confirmVal}>#{booking.bookingNumber || bId.substring(0, 8)}</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Service</Text>
+                <Text style={styles.confirmVal}>{categoryName}</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Professional</Text>
+                <Text style={styles.confirmVal}>{workerName}</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Date & Time</Text>
+                <Text style={styles.confirmVal}>{dateTimeStr}</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Amount Paid</Text>
+                <Text style={[styles.confirmVal, { color: '#16A34A', fontWeight: 'bold' }]}>₹{amountStr}</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Payment ID</Text>
+                <Text style={styles.confirmValMonospace}>
+                  {verifiedTxnDetails?.paymentId || 'pay_verified'}
+                </Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Payment Status</Text>
+                <Text style={[styles.confirmVal, { color: '#16A34A', fontWeight: 'bold' }]}>PAID</Text>
+              </View>
+              <View style={styles.confirmRow}>
+                <Text style={styles.confirmLabel}>Escrow Status</Text>
+                <Text style={[styles.confirmVal, { color: '#16A34A', fontWeight: 'bold' }]}>HELD (100% Protected)</Text>
+              </View>
+            </View>
+
             <Text style={styles.successNote}>
-              Escrow funded. Navigating to Live Worker Tracking...
+              🛡️ 100% Escrow Protection active. Funds are held safely and only released when you confirm service completion.
             </Text>
 
             <AppButton
-              title="🧭 View Live Worker Tracking"
+              title="🧭 View Live Tracking"
               variant="primary"
               icon="navigate-outline"
               onPress={() => router.replace(`/(customer)/booking/tracking/${bId}` as any)}
               style={{ marginTop: spacing.lg, width: '100%' }}
             />
+
+            <TouchableOpacity
+              onPress={() => router.replace('/(customer)/bookings')}
+              style={styles.backBookingLink}
+            >
+              <Text style={styles.backBookingText}>Back to Bookings</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>
-            {/* Error Notice */}
+            {/* Error / Failure Notice */}
             {errorMessage ? (
               <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Ionicons name="alert-circle" size={22} color="#EF4444" />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.errorText}>{errorMessage}</Text>
-                  <Text style={styles.errorSubText}>Booking is still pending. Tap below to retry payment safely.</Text>
+                  <Text style={styles.errorText}>Payment was not completed.</Text>
+                  <Text style={styles.errorSubText}>{errorMessage}</Text>
+                  <View style={styles.retryActionsRow}>
+                    <TouchableOpacity
+                      onPress={handleRetryPayment}
+                      style={styles.retryBtn}
+                    >
+                      <Ionicons name="refresh-outline" size={14} color="#EA580C" />
+                      <Text style={styles.retryBtnText}>Try Payment Again</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => router.replace('/(customer)/bookings')}
+                      style={styles.cancelBookingBtn}
+                    >
+                      <Text style={styles.cancelBookingBtnText}>Back to Booking</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+              </View>
+            ) : null}
+
+            {/* Method Selection Required Notice */}
+            {methodSelectionError ? (
+              <View style={[styles.errorBanner, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+                <Ionicons name="warning-outline" size={20} color="#D97706" />
+                <Text style={[styles.errorText, { color: '#B45309' }]}>{methodSelectionError}</Text>
               </View>
             ) : null}
 
@@ -385,54 +519,104 @@ export default function BookingPaymentScreen() {
               </View>
             </View>
 
-            {/* Payment Methods */}
+            {/* Payment Method Selection */}
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Select Payment Method</Text>
+              <Text style={styles.sectionTitle}>Choose Payment Method</Text>
+              <Text style={styles.sectionSubTitle}>Select your preferred payment mode below:</Text>
 
+              {/* UPI Option */}
               <TouchableOpacity
-                style={[styles.methodOption, selectedMethod === 'UPI' && styles.methodOptionActive]}
-                onPress={() => setSelectedMethod('UPI')}
+                style={[styles.methodOption, selectedMethod === 'upi' && styles.methodOptionActive]}
+                onPress={() => handleSelectPaymentMethod('upi')}
                 activeOpacity={0.8}
               >
                 <View style={styles.methodRadio}>
-                  {selectedMethod === 'UPI' && <View style={styles.methodRadioInner} />}
+                  {selectedMethod === 'upi' && <View style={styles.methodRadioInner} />}
                 </View>
                 <Ionicons name="phone-portrait-outline" size={20} color="#EA580C" style={{ marginRight: 10 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.methodTitle}>UPI (Google Pay, PhonePe, Paytm, BHIM)</Text>
-                  <Text style={styles.methodSub}>Instant UPI checkout via Razorpay</Text>
+                  <Text style={styles.methodTitle}>UPI</Text>
+                  <Text style={styles.methodSub}>Google Pay, PhonePe, Paytm, BHIM, UPI QR</Text>
                 </View>
+                {selectedMethod === 'upi' && (
+                  <View style={styles.selectedBadge}>
+                    <Text style={styles.selectedBadgeText}>Selected</Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
+              {/* Card Option */}
               <TouchableOpacity
-                style={[styles.methodOption, selectedMethod === 'CARD' && styles.methodOptionActive]}
-                onPress={() => setSelectedMethod('CARD')}
+                style={[styles.methodOption, selectedMethod === 'card' && styles.methodOptionActive]}
+                onPress={() => handleSelectPaymentMethod('card')}
                 activeOpacity={0.8}
               >
                 <View style={styles.methodRadio}>
-                  {selectedMethod === 'CARD' && <View style={styles.methodRadioInner} />}
+                  {selectedMethod === 'card' && <View style={styles.methodRadioInner} />}
                 </View>
                 <Ionicons name="card-outline" size={20} color="#2563EB" style={{ marginRight: 10 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.methodTitle}>Credit / Debit Card</Text>
-                  <Text style={styles.methodSub}>Visa, Mastercard, RuPay</Text>
+                  <Text style={styles.methodSub}>Visa, Mastercard, RuPay, Maestro</Text>
                 </View>
+                {selectedMethod === 'card' && (
+                  <View style={styles.selectedBadge}>
+                    <Text style={styles.selectedBadgeText}>Selected</Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
+              {/* Net Banking Option */}
               <TouchableOpacity
-                style={[styles.methodOption, selectedMethod === 'NETBANKING' && styles.methodOptionActive]}
-                onPress={() => setSelectedMethod('NETBANKING')}
+                style={[styles.methodOption, selectedMethod === 'netbanking' && styles.methodOptionActive]}
+                onPress={() => handleSelectPaymentMethod('netbanking')}
                 activeOpacity={0.8}
               >
                 <View style={styles.methodRadio}>
-                  {selectedMethod === 'NETBANKING' && <View style={styles.methodRadioInner} />}
+                  {selectedMethod === 'netbanking' && <View style={styles.methodRadioInner} />}
                 </View>
                 <Ionicons name="business-outline" size={20} color="#16A34A" style={{ marginRight: 10 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.methodTitle}>Net Banking</Text>
-                  <Text style={styles.methodSub}>All major Indian banks supported</Text>
+                  <Text style={styles.methodSub}>HDFC, ICICI, SBI, Axis & all major banks</Text>
                 </View>
+                {selectedMethod === 'netbanking' && (
+                  <View style={styles.selectedBadge}>
+                    <Text style={styles.selectedBadgeText}>Selected</Text>
+                  </View>
+                )}
               </TouchableOpacity>
+
+              {/* Wallets Option */}
+              <TouchableOpacity
+                style={[styles.methodOption, selectedMethod === 'wallet' && styles.methodOptionActive]}
+                onPress={() => handleSelectPaymentMethod('wallet')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.methodRadio}>
+                  {selectedMethod === 'wallet' && <View style={styles.methodRadioInner} />}
+                </View>
+                <Ionicons name="wallet-outline" size={20} color="#9333EA" style={{ marginRight: 10 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.methodTitle}>Wallets</Text>
+                  <Text style={styles.methodSub}>Paytm Wallet, Mobikwik, PhonePe Wallet</Text>
+                </View>
+                {selectedMethod === 'wallet' && (
+                  <View style={styles.selectedBadge}>
+                    <Text style={styles.selectedBadgeText}>Selected</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Selected Method Display */}
+              {selectedMethod ? (
+                <View style={styles.selectedSummaryRow}>
+                  <Ionicons name="information-circle-outline" size={16} color="#EA580C" />
+                  <Text style={styles.selectedSummaryText}>
+                    Selected method: <Text style={{ fontWeight: 'bold', color: colors.textPrimary }}>{getMethodDisplayName(selectedMethod)}</Text>
+                  </Text>
+                </View>
+              ) : null}
             </View>
 
             {/* Price Breakdown */}
@@ -472,8 +656,8 @@ export default function BookingPaymentScreen() {
         )}
       </ScrollView>
 
-      {/* Pay Action Footer */}
-      {!paymentSuccess && (
+      {/* Continue to Payment Footer Action */}
+      {!isSuccess && (
         <View style={styles.footerBar}>
           <View style={styles.footerPriceCol}>
             <Text style={styles.footerLabel}>Total Amount</Text>
@@ -481,27 +665,30 @@ export default function BookingPaymentScreen() {
           </View>
 
           <AppButton
-            title={paying ? 'Opening...' : `Pay ₹${amountStr}`}
+            title={
+              flowState === 'CREATING_ORDER'
+                ? 'Creating Order...'
+                : flowState === 'VERIFYING'
+                ? 'Verifying...'
+                : 'Continue to Payment'
+            }
             variant="primary"
-            icon="lock-closed"
-            loading={paying}
-            disabled={paying}
-            onPress={handleInitiatePayment}
+            icon="arrow-forward"
+            loading={flowState === 'CREATING_ORDER' || flowState === 'VERIFYING' || isProcessingPayment}
+            disabled={flowState === 'CREATING_ORDER' || flowState === 'VERIFYING' || isProcessingPayment}
+            onPress={handleContinueToPayment}
             fullWidth={false}
             style={styles.payButton}
           />
         </View>
       )}
 
-      {/* RAZORPAY CHECKOUT MODAL */}
+      {/* OFFICIAL RAZORPAY CHECKOUT MODAL */}
       <Modal
-        visible={showGatewayModal}
+        visible={flowState === 'CHECKOUT_OPEN' || flowState === 'VERIFYING'}
         animationType="slide"
         transparent
-        onRequestClose={() => {
-          setShowGatewayModal(false);
-          setErrorMessage('Payment was not completed. You can try again.');
-        }}
+        onRequestClose={handleDismissGatewayModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.gatewayContainer}>
@@ -519,10 +706,7 @@ export default function BookingPaymentScreen() {
               </View>
 
               <TouchableOpacity
-                onPress={() => {
-                  setShowGatewayModal(false);
-                  setErrorMessage('Payment was not completed. You can try again.');
-                }}
+                onPress={handleDismissGatewayModal}
                 style={styles.gatewayCloseBtn}
               >
                 <Ionicons name="close" size={20} color={colors.textSecondary} />
@@ -542,7 +726,7 @@ export default function BookingPaymentScreen() {
 
             {/* Gateway Mode Specific Input */}
             <View style={styles.gatewayBody}>
-              {selectedMethod === 'UPI' && (
+              {selectedMethod === 'upi' && (
                 <View style={styles.gatewaySection}>
                   <Text style={styles.gatewayFieldLabel}>Enter UPI ID / VPA</Text>
                   <View style={styles.gatewayInputWrap}>
@@ -559,7 +743,7 @@ export default function BookingPaymentScreen() {
                 </View>
               )}
 
-              {selectedMethod === 'CARD' && (
+              {selectedMethod === 'card' && (
                 <View style={styles.gatewaySection}>
                   <Text style={styles.gatewayFieldLabel}>Card Number</Text>
                   <View style={styles.gatewayInputWrap}>
@@ -597,11 +781,11 @@ export default function BookingPaymentScreen() {
                 </View>
               )}
 
-              {selectedMethod === 'NETBANKING' && (
+              {selectedMethod === 'netbanking' && (
                 <View style={styles.gatewaySection}>
                   <Text style={styles.gatewayFieldLabel}>Select Bank</Text>
                   <View style={styles.bankChipsRow}>
-                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank'].map((bank) => (
+                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak'].map((bank) => (
                       <TouchableOpacity
                         key={bank}
                         style={[styles.bankChip, selectedBank === bank && styles.bankChipActive]}
@@ -615,26 +799,46 @@ export default function BookingPaymentScreen() {
                   </View>
                 </View>
               )}
+
+              {selectedMethod === 'wallet' && (
+                <View style={styles.gatewaySection}>
+                  <Text style={styles.gatewayFieldLabel}>Select Wallet</Text>
+                  <View style={styles.bankChipsRow}>
+                    {['Paytm', 'PhonePe', 'Mobikwik', 'Amazon Pay'].map((wallet) => (
+                      <TouchableOpacity
+                        key={wallet}
+                        style={[styles.bankChip, selectedWallet === wallet && styles.bankChipActive]}
+                        onPress={() => setSelectedWallet(wallet)}
+                      >
+                        <Text style={[styles.bankChipText, selectedWallet === wallet && styles.bankChipTextActive]}>
+                          {wallet}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
 
             {/* Gateway Actions */}
             <View style={styles.gatewayActions}>
               <AppButton
-                title={paying ? paymentStatusText : `Authorize & Pay ₹${amountStr}`}
+                title={
+                  flowState === 'VERIFYING'
+                    ? paymentStatusText
+                    : `Authorize & Pay ₹${amountStr}`
+                }
                 variant="primary"
                 icon="shield-checkmark"
-                loading={paying}
-                disabled={paying}
+                loading={flowState === 'VERIFYING' || isProcessingPayment}
+                disabled={flowState === 'VERIFYING' || isProcessingPayment}
                 onPress={handleAuthorizeGatewayPayment}
                 style={{ width: '100%', marginBottom: spacing.sm }}
               />
 
               <TouchableOpacity
-                onPress={() => {
-                  setShowGatewayModal(false);
-                  setErrorMessage('Payment was not completed. You can try again.');
-                }}
-                disabled={paying}
+                onPress={handleDismissGatewayModal}
+                disabled={flowState === 'VERIFYING' || isProcessingPayment}
                 style={styles.gatewayCancelBtn}
               >
                 <Text style={styles.gatewayCancelText}>Cancel & Go Back</Text>
@@ -701,6 +905,11 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  sectionSubTitle: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
     marginBottom: spacing.md,
   },
   methodOption: {
@@ -742,6 +951,33 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     marginTop: 1,
+  },
+  selectedBadge: {
+    backgroundColor: '#EA580C',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.xs,
+  },
+  selectedBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+  },
+  selectedSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    marginTop: spacing.xs,
+  },
+  selectedSummaryText: {
+    fontSize: 12,
+    color: '#9A3412',
+    flex: 1,
   },
   pricingCard: {
     backgroundColor: colors.surface,
@@ -803,28 +1039,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#BBF7D0',
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
     ...shadows.md,
   },
   successIconContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   successTitle: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: '#16A34A',
     marginBottom: spacing.xs,
+    textAlign: 'center',
   },
   successSub: {
     fontSize: typography.sizes.sm,
     color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  confirmDetailsBox: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  confirmLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  confirmVal: {
+    fontSize: 12,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+  },
+  confirmValMonospace: {
+    fontSize: 11,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: colors.textSecondary,
   },
   successNote: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
+    fontSize: 11,
+    color: '#16A34A',
     textAlign: 'center',
+    lineHeight: 16,
+    backgroundColor: '#F0FDF4',
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  backBookingLink: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  backBookingText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+    textDecorationLine: 'underline',
   },
   errorBanner: {
     flexDirection: 'row',
@@ -846,6 +1125,36 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: '#7F1D1D',
     marginTop: 2,
+  },
+  retryActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#EA580C',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+  },
+  retryBtnText: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: '#EA580C',
+  },
+  cancelBookingBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    justifyContent: 'center',
+  },
+  cancelBookingBtnText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   footerBar: {
     flexDirection: 'row',
@@ -870,7 +1179,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   payButton: {
-    minWidth: 160,
+    minWidth: 180,
   },
   modalOverlay: {
     flex: 1,

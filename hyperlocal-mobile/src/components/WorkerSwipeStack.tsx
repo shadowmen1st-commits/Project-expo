@@ -308,7 +308,9 @@ export const WorkerSwipeStack: React.FC<WorkerSwipeStackProps> = ({
                 <View style={styles.cardFooterRow}>
                   <View style={styles.locationBox}>
                     <Ionicons name="location-outline" size={13} color={colors.textSecondary} />
-                    <Text style={styles.locationText}>Indiranagar, BLR</Text>
+                    <Text style={styles.locationText}>
+                      {current.city || current.serviceArea || current.district || 'Verified Professional'}
+                    </Text>
                   </View>
                   <Text style={styles.viewProfilePrompt}>View Profile →</Text>
                 </View>

@@ -6,11 +6,16 @@ import { storage } from '../utils/storage';
 
 export interface UserType {
   _id: string;
+  id?: string;
   name: string;
   email: string;
   role: 'CUSTOMER' | 'WORKER' | 'ADMIN' | 'COMPANY';
   phone?: string;
   profileImage?: string | null;
+  verificationStatus?: string;
+  kycStatus?: string;
+  isKycVerified?: boolean;
+  verificationBadge?: boolean;
   isVerified?: boolean;
 }
 

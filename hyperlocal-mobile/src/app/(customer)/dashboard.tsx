@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useLocationContext } from '../../context/LocationContext';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { ServiceCard } from '../../components/ServiceCard';
 import { WorkerSwipeStack } from '../../components/WorkerSwipeStack';
@@ -23,6 +24,15 @@ export default function CustomerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const {
+    displayName,
+    city,
+    loading: locationLoading,
+    error: locationError,
+    refreshLocation,
+    latitude,
+    longitude,
+  } = useLocationContext();
 
   const [categories, setCategories] = useState<any[]>([]);
   const [workers, setWorkers] = useState<any[]>([]);
@@ -32,9 +42,10 @@ export default function CustomerDashboard() {
 
   const fetchData = useCallback(async () => {
     try {
+      const searchParams = latitude && longitude ? { lat: latitude, lng: longitude } : {};
       const [catRes, workerRes, bookingRes] = await Promise.allSettled([
         api.get('/categories'),
-        api.get('/workers/search'),
+        api.get('/workers/search', { params: searchParams }),
         api.get('/bookings/customer').catch(() => api.get('/bookings/customer/my-bookings')),
       ]);
 
@@ -64,7 +75,7 @@ export default function CustomerDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [latitude, longitude]);
 
   useEffect(() => {
     fetchData();
@@ -72,6 +83,7 @@ export default function CustomerDashboard() {
 
   const onRefresh = () => {
     setRefreshing(true);
+    refreshLocation(true);
     fetchData();
   };
 
@@ -109,12 +121,42 @@ export default function CustomerDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
         }
       >
-        {/* 1. Header Greeting & Location */}
+        {/* 1. Header Greeting & Dynamic Real GPS Location */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.locationPill}>
-              <Ionicons name="location-sharp" size={12} color={colors.accent} />
-              <Text style={styles.locationText}>Indiranagar, Bengaluru</Text>
+              {locationLoading ? (
+                <>
+                  <ActivityIndicator size="small" color={colors.accent} style={{ transform: [{ scale: 0.75 }], marginRight: 2 }} />
+                  <Text style={styles.locationText}>Detecting your location...</Text>
+                </>
+              ) : locationError ? (
+                <>
+                  <Ionicons name="alert-circle-outline" size={13} color={colors.error} />
+                  <Text style={[styles.locationText, { color: colors.error }]}>Location Unavailable</Text>
+                  <TouchableOpacity
+                    onPress={() => refreshLocation(true)}
+                    style={styles.locationRefreshBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="refresh-outline" size={13} color={colors.error} />
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="location-sharp" size={13} color={colors.accent} />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {displayName || city || 'Current Location'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => refreshLocation(true)}
+                    style={styles.locationRefreshBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="refresh-outline" size={13} color={colors.accent} />
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
             <Text style={styles.greetingTitle}>Hello, {user?.name?.split(' ')[0] || 'Customer'} 👋</Text>
           </View>
@@ -402,6 +444,11 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.textSecondary,
+    maxWidth: 220,
+  },
+  locationRefreshBtn: {
+    marginLeft: 4,
+    padding: 2,
   },
   greetingTitle: {
     fontSize: typography.sizes.xxl,

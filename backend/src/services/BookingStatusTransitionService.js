@@ -4,6 +4,8 @@ import Notification from '../models/Notification.js';
 import WorkerProfile from '../models/WorkerProfile.js';
 import { recordTransaction } from './ledger.js';
 import LedgerPostingService from './payments/LedgerPostingService.js';
+import { emitToUser, emitToRoom } from '../socketServer.js';
+import { toSafeBookingDTO } from '../utils/dto.js';
 
 // Strict transition matrix per spec
 const ALLOWED_TRANSITIONS = {
@@ -195,6 +197,25 @@ export class BookingStatusTransitionService {
             type: targetStatus === 'CANCELLED' || targetStatus === 'REJECTED' ? 'WARNING' : 'SUCCESS',
             bookingId: booking._id,
         }).save();
+
+        // 7. Emit Real-Time Socket.IO Booking Update
+        try {
+            const populatedBooking = await Booking.findById(booking._id)
+                .populate('customerId', 'name phone email profileImage')
+                .populate('workerId', 'name phone email profileImage')
+                .populate('serviceCategoryId', 'name icon description');
+            const safeDTO = toSafeBookingDTO(populatedBooking || booking);
+
+            if (booking.workerId) {
+                emitToUser(booking.workerId.toString(), 'booking:updated', safeDTO);
+            }
+            if (booking.customerId) {
+                emitToUser(booking.customerId.toString(), 'booking:updated', safeDTO);
+            }
+            emitToRoom(`tracking:${booking._id.toString()}`, 'booking:updated', safeDTO);
+        } catch (socketErr) {
+            console.warn('[SOCKET:EMIT_ERROR]', socketErr?.message || socketErr);
+        }
 
         return booking;
     }

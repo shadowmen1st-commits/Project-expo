@@ -2,28 +2,39 @@
  * Safe DTO transformations to prevent private data leakage
  */
 
-export const toSafeUserDTO = (user) => {
+export const toSafeUserDTO = (user, profile = null) => {
     if (!user) return null;
     const doc = user.toObject ? user.toObject() : user;
+    const id = (doc._id || doc.id)?.toString();
+    const vStatus = profile?.verificationStatus || doc.verificationStatus || (doc.role === 'WORKER' ? 'NOT_SUBMITTED' : (doc.role === 'COMPANY' ? 'PENDING' : undefined));
     return {
-        id: doc._id || doc.id,
+        id,
+        _id: id,
         name: doc.name || 'User',
+        phone: doc.phone || null,
+        email: doc.email || null,
         profileImage: doc.profileImage || null,
         role: doc.role,
+        status: doc.status,
         emailVerified: !!doc.emailVerified,
         phoneVerified: !!doc.phoneVerified,
+        verificationStatus: vStatus,
+        kycStatus: vStatus,
+        isKycVerified: vStatus === 'APPROVED' || vStatus === 'VERIFIED',
     };
 };
 
 export const toSafeBookingDTO = (booking) => {
     if (!booking) return null;
     const b = booking.toObject ? booking.toObject() : booking;
+    const bookingId = (b._id || b.id)?.toString();
 
     const customer = b.customerId && typeof b.customerId === 'object' ? toSafeUserDTO(b.customerId) : b.customerId;
     const worker = b.workerId && typeof b.workerId === 'object' ? toSafeUserDTO(b.workerId) : b.workerId;
     const category = b.serviceCategoryId && typeof b.serviceCategoryId === 'object'
         ? {
-            id: b.serviceCategoryId._id || b.serviceCategoryId.id,
+            id: (b.serviceCategoryId._id || b.serviceCategoryId.id)?.toString(),
+            _id: (b.serviceCategoryId._id || b.serviceCategoryId.id)?.toString(),
             name: b.serviceCategoryId.name,
             icon: b.serviceCategoryId.icon,
             description: b.serviceCategoryId.description,
@@ -31,7 +42,8 @@ export const toSafeBookingDTO = (booking) => {
         : b.serviceCategoryId;
 
     return {
-        id: b._id || b.id,
+        id: bookingId,
+        _id: bookingId,
         bookingNumber: b.bookingNumber,
         customer,
         worker,
