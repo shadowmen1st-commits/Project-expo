@@ -184,19 +184,46 @@ export class RazorpayProvider extends PaymentProvider {
      * @returns {Promise<object>} Razorpay order
      */
     async createOrder({ amountPaise, currency, receipt, notes = {} }) {
-        const client = getRazorpayClient();
-        if (!client) {
+        const keyId = config.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh';
+        const keySecret = config.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || 'UVmoRQl5c51d7CoCxJqa3hvY';
+
+        if (!keyId || !keySecret) {
             const err = new Error('Payment provider credentials are not configured.');
             err.errorCode = 'PAYMENT_PROVIDER_NOT_CONFIGURED';
             err.statusCode = 503;
             throw err;
         }
-        return await client.orders.create({
-            amount: amountPaise,   // Razorpay expects paise
-            currency,
-            receipt: receipt.substring(0, 40),  // Razorpay limit
-            notes,
-        });
+
+        try {
+            const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+            const res = await fetch('https://api.razorpay.com/v1/orders', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Basic ${auth}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    amount: Math.round(Number(amountPaise)),
+                    currency: currency || 'INR',
+                    receipt: (receipt || `BK-${Date.now()}`).substring(0, 40),
+                    notes,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                console.error('[RAZORPAY_DIRECT_API_ERROR]', data);
+                const err = new Error(data?.error?.description || data?.message || 'Razorpay order creation failed.');
+                err.statusCode = res.status;
+                err.errorCode = 'PAYMENT_PROVIDER_ERROR';
+                throw err;
+            }
+
+            return data;
+        } catch (apiErr) {
+            console.error('[RAZORPAY_CREATE_ORDER_FAILED]', apiErr);
+            throw apiErr;
+        }
     }
 
     /**
