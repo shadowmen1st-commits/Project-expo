@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../../config/api';
 import { useAuth } from '../../../context/AuthContext';
 import { useLocationContext } from '../../../context/LocationContext';
+import { LocationPickerModal, CustomerAddressData } from '../../../components/LocationPickerModal';
 import { colors, spacing, typography, radius, shadows } from '../../../theme';
 import { getCanonicalWorkerId, isValidObjectId, normalizeWorkerData } from '../../../utils/workerUtils';
 import { resolveWorkerImage } from '../../../utils/imageUtils';
@@ -160,7 +161,7 @@ export default function CreateBookingScreen() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [availabilityWarning, setAvailabilityWarning] = useState('');
 
-  // Address State — dynamically populated from real GPS
+  // Address State — dynamically populated from real GPS or manual selection
   const [houseNo, setHouseNo] = useState('Flat 101');
   const [street, setStreet] = useState(detectedStreet || detectedDistrict || '');
   const [landmark, setLandmark] = useState('');
@@ -168,13 +169,31 @@ export default function CreateBookingScreen() {
   const [pincode, setPincode] = useState(detectedPostalCode || '');
   const [instructions, setInstructions] = useState('');
   const [addressType, setAddressType] = useState<'HOME' | 'OFFICE' | 'OTHER'>('HOME');
+  const [locationSource, setLocationSource] = useState<'GPS' | 'MANUAL'>('GPS');
+  const [selectedLat, setSelectedLat] = useState<number | null>(customerLat || 28.6139);
+  const [selectedLng, setSelectedLng] = useState<number | null>(customerLng || 77.2090);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   // Auto-sync address if location finishes detecting after mount
   useEffect(() => {
     if (detectedCity && !city) setCity(detectedCity);
     if (detectedPostalCode && !pincode) setPincode(detectedPostalCode);
     if ((detectedStreet || detectedDistrict) && !street) setStreet(detectedStreet || detectedDistrict || '');
-  }, [detectedCity, detectedPostalCode, detectedStreet, detectedDistrict]);
+    if (customerLat && !selectedLat) setSelectedLat(customerLat);
+    if (customerLng && !selectedLng) setSelectedLng(customerLng);
+  }, [detectedCity, detectedPostalCode, detectedStreet, detectedDistrict, customerLat, customerLng]);
+
+  const handleLocationPicked = (loc: CustomerAddressData) => {
+    setHouseNo(loc.houseNumber);
+    setStreet(loc.street);
+    setLandmark(loc.landmark);
+    setCity(loc.city);
+    setPincode(loc.pincode);
+    setAddressType(loc.addressType);
+    setSelectedLat(loc.latitude);
+    setSelectedLng(loc.longitude);
+    setLocationSource(loc.source);
+  };
 
   const [loadingWorker, setLoadingWorker] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -496,12 +515,9 @@ export default function CreateBookingScreen() {
           pincode: effectivePincode,
           addressType,
           instructions: instructions.trim() || undefined,
-          ...(customerLat && customerLng
-            ? {
-                latitude: customerLat,
-                longitude: customerLng,
-              }
-            : {}),
+          latitude: selectedLat ?? customerLat ?? 28.6139,
+          longitude: selectedLng ?? customerLng ?? 77.2090,
+          source: locationSource,
         },
         customerNotes: instructions.trim() || 'Jobnest Mobile Service Request',
       };
@@ -717,24 +733,55 @@ export default function CreateBookingScreen() {
             </View>
           </View>
 
-          {/* Address Details */}
+          {/* Address Details & Location Selection */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>3. Service Address</Text>
-              <TouchableOpacity
-                style={styles.gpsButton}
-                onPress={() => refreshLocation(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={customerLat && customerLng ? 'location' : 'location-outline'}
-                  size={13}
-                  color={customerLat && customerLng ? colors.success : colors.accent}
-                />
-                <Text style={[styles.gpsButtonText, !!(customerLat && customerLng) && { color: colors.success }]}>
-                  {locationLoading ? 'Detecting GPS...' : customerLat && customerLng ? 'GPS Captured' : 'Detect GPS'}
-                </Text>
-              </TouchableOpacity>
+              <Text style={styles.sectionTitle}>3. Service Location</Text>
+            </View>
+
+            {/* Location Banner Card with Source & Actions */}
+            <View style={styles.locationCard}>
+              <View style={styles.locationCardTop}>
+                <View style={[styles.sourceBadge, locationSource === 'GPS' ? styles.gpsSourceBadge : styles.manualSourceBadge]}>
+                  <Ionicons
+                    name={locationSource === 'GPS' ? 'navigate-circle' : 'create'}
+                    size={13}
+                    color={locationSource === 'GPS' ? colors.success : colors.accent}
+                  />
+                  <Text style={[styles.sourceBadgeText, locationSource === 'GPS' ? { color: colors.success } : { color: colors.accent }]}>
+                    {locationSource === 'GPS' ? 'Location detected automatically' : 'Location selected manually'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.locationSummaryText}>
+                {houseNo ? `${houseNo}, ` : ''}{street ? `${street}, ` : ''}{city || 'New Delhi'}{pincode ? ` - ${pincode}` : ''}
+              </Text>
+
+              <View style={styles.locationActionRow}>
+                <TouchableOpacity
+                  style={styles.locationActionBtn}
+                  onPress={async () => {
+                    await refreshLocation(true);
+                    setLocationSource('GPS');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="navigate" size={14} color={colors.accent} />
+                  <Text style={styles.locationActionBtnText}>
+                    {locationLoading ? 'Detecting GPS...' : 'Use Current Location'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.locationActionBtn, styles.manualPickerBtn]}
+                  onPress={() => setShowLocationPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="search" size={14} color="#FFF" />
+                  <Text style={[styles.locationActionBtnText, { color: '#FFF' }]}>Select Manually</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.addressTypeRow}>
@@ -981,11 +1028,94 @@ export default function CreateBookingScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Dedicated Customer Location Picker Modal */}
+      <LocationPickerModal
+        visible={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handleLocationPicked}
+        initialAddress={{
+          houseNumber: houseNo,
+          street,
+          landmark,
+          city,
+          state: detectedState || 'Delhi',
+          pincode,
+          addressType,
+          latitude: selectedLat,
+          longitude: selectedLng,
+          source: locationSource,
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  locationCard: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  locationCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  sourceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  gpsSourceBadge: {
+    backgroundColor: '#ECFDF5',
+  },
+  manualSourceBadge: {
+    backgroundColor: '#FFF7ED',
+  },
+  sourceBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  locationSummaryText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    marginVertical: spacing.xs,
+  },
+  locationActionRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  locationActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.sm,
+  },
+  manualPickerBtn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  locationActionBtnText: {
+    fontSize: 11,
+    fontWeight: typography.weights.bold,
+    color: colors.accent,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

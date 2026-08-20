@@ -69,6 +69,9 @@ export const addressSnapshotSchema = z.object({
     pincode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
     addressType: z.enum(['HOME', 'OFFICE', 'OTHER']).optional().default('HOME'),
     instructions: z.string().optional(),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+    source: z.enum(['GPS', 'MANUAL']).optional().default('MANUAL'),
 });
 
 export const bookingCreateSchema = z.object({

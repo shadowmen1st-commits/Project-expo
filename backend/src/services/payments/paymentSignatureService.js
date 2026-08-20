@@ -78,7 +78,10 @@ export async function verifyCheckoutCallback({
     }
 
     // ── 6. Duplicate payment ID check ────────────────────────────────────────────
-    const dupTxn = await PaymentTransaction.findOne({ providerPaymentId: razorpayPaymentId });
+    const dupTxn = await PaymentTransaction.findOne({
+        providerPaymentId: razorpayPaymentId,
+        status: { $in: ['SUCCESS', 'SETTLED', 'PROCESSING'] }
+    });
     if (dupTxn) {
         // Already processed — idempotent return
         return {

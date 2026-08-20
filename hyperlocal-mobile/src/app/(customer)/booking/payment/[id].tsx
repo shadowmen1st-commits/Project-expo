@@ -9,6 +9,7 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MobileHeader } from '../../../../components/MobileHeader';
 import { AppButton } from '../../../../components/AppButton';
@@ -232,10 +233,58 @@ export default function BookingPaymentScreen() {
         return;
       }
 
-      // Native mobile checkout modal
-      setFlowState('CHECKOUT_OPEN');
-      setIsProcessingPayment(false);
-      isProcessingRef.current = false;
+      // Native mobile: Open Official Razorpay Checkout session in browser modal
+      const checkoutUrl = `${api.defaults.baseURL}/payments/checkout/${internalPaymentOrderId}`;
+      console.log('[PAYMENT] Opening official Razorpay checkout URL:', checkoutUrl);
+
+      const browserResult = await WebBrowser.openAuthSessionAsync(
+        checkoutUrl,
+        'jobnest://payment-callback'
+      );
+
+      console.log('[PAYMENT] Browser session finished:', browserResult);
+
+      if (browserResult.type === 'success' && browserResult.url) {
+        const callbackUrl = browserResult.url;
+        const queryIdx = callbackUrl.indexOf('?');
+        const queryStr = queryIdx !== -1 ? callbackUrl.substring(queryIdx + 1) : '';
+        const params = new URLSearchParams(queryStr);
+
+        const rzpOrderId = params.get('razorpay_order_id');
+        const rzpPaymentId = params.get('razorpay_payment_id');
+        const rzpSig = params.get('razorpay_signature');
+        const errParam = params.get('error');
+        const cancelled = params.get('cancelled');
+
+        if (errParam || cancelled) {
+          console.log('[PAYMENT_FAILED] Checkout cancelled or failed:', errParam);
+          setFlowState('FAILED');
+          setErrorMessage(errParam || 'Payment was cancelled.');
+          setIsProcessingPayment(false);
+          isProcessingRef.current = false;
+          return;
+        }
+
+        if (rzpOrderId && rzpPaymentId && rzpSig) {
+          console.log('[PAYMENT] Official Razorpay payment captured:', { rzpOrderId, rzpPaymentId });
+          await handleVerifyPaymentSignature({
+            internalPaymentOrderId,
+            razorpay_order_id: rzpOrderId,
+            razorpay_payment_id: rzpPaymentId,
+            razorpay_signature: rzpSig,
+            bId,
+          });
+          return;
+        }
+      }
+
+      if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+        console.log('[PAYMENT_FAILED] Customer dismissed checkout window');
+        setFlowState('FAILED');
+        setErrorMessage('Payment was not completed. You can try again.');
+        setIsProcessingPayment(false);
+        isProcessingRef.current = false;
+      }
     } catch (err: any) {
       console.log('[PAYMENT_FAILED]', err?.response?.data?.message || err.message);
       setFlowState('FAILED');
@@ -243,26 +292,6 @@ export default function BookingPaymentScreen() {
       setIsProcessingPayment(false);
       isProcessingRef.current = false;
     }
-  };
-
-  // Step 2: Customer authorizes payment in gateway modal
-  const handleAuthorizeGatewayPayment = async () => {
-    if (!gatewayOrderData || isProcessingPayment) return;
-    const simulatedPaymentId = `pay_rzp_${Date.now()}`;
-    const signature = 'SANDBOX_MOCK_SIGNATURE';
-
-    console.log('[PAYMENT] Checkout success');
-    console.log('[PAYMENT] Payment ID:', simulatedPaymentId);
-    console.log('[PAYMENT] Order ID:', gatewayOrderData.razorpayOrderId);
-    console.log('[PAYMENT] Signature received');
-
-    await handleVerifyPaymentSignature({
-      internalPaymentOrderId: gatewayOrderData.internalPaymentOrderId,
-      razorpay_order_id: gatewayOrderData.razorpayOrderId,
-      razorpay_payment_id: simulatedPaymentId,
-      razorpay_signature: signature,
-      bId: gatewayOrderData.bookingId,
-    });
   };
 
   // Step 3: Backend signature verification & confirmation
@@ -692,166 +721,6 @@ export default function BookingPaymentScreen() {
             fullWidth={false}
             style={styles.payButton}
           />
-        </View>
-      )}
-
-      {/* OFFICIAL RAZORPAY CHECKOUT OVERLAY */}
-      {(flowState === 'CHECKOUT_OPEN' || flowState === 'VERIFYING') && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.gatewayContainer}>
-            {/* Gateway Header */}
-            <View style={styles.gatewayHeader}>
-              <View style={styles.gatewayBrandRow}>
-                <View style={styles.razorpayBadge}>
-                  <Ionicons name="card" size={16} color="#FFFFFF" />
-                  <Text style={styles.razorpayBadgeText}>Razorpay</Text>
-                </View>
-                <View style={styles.securePill}>
-                  <Ionicons name="shield-checkmark" size={12} color="#16A34A" />
-                  <Text style={styles.securePillText}>256-BIT ENCRYPTION</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                onPress={handleDismissGatewayModal}
-                style={styles.gatewayCloseBtn}
-              >
-                <Ionicons name="close" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Gateway Order Summary */}
-            <View style={styles.gatewayOrderCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.gatewayMerchant}>Jobnest Services</Text>
-                <Text style={styles.gatewayOrderId} numberOfLines={1}>
-                  Order #{gatewayOrderData?.razorpayOrderId || 'rzp_order'}
-                </Text>
-              </View>
-              <Text style={styles.gatewayAmount}>₹{amountStr}</Text>
-            </View>
-
-            {/* Gateway Mode Specific Input */}
-            <View style={styles.gatewayBody}>
-              {selectedMethod === 'upi' && (
-                <View style={styles.gatewaySection}>
-                  <Text style={styles.gatewayFieldLabel}>Enter UPI ID / VPA</Text>
-                  <View style={styles.gatewayInputWrap}>
-                    <Ionicons name="at-outline" size={18} color="#EA580C" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={styles.gatewayInput}
-                      value={upiIdInput}
-                      onChangeText={setUpiIdInput}
-                      placeholder="e.g. yourname@okhdfcbank"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  <Text style={styles.gatewayHint}>Supports Google Pay, PhonePe, Paytm, BHIM</Text>
-                </View>
-              )}
-
-              {selectedMethod === 'card' && (
-                <View style={styles.gatewaySection}>
-                  <Text style={styles.gatewayFieldLabel}>Card Number</Text>
-                  <View style={styles.gatewayInputWrap}>
-                    <Ionicons name="card-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={styles.gatewayInput}
-                      value={cardNumberInput}
-                      onChangeText={setCardNumberInput}
-                      placeholder="4532 0000 0000 0000"
-                      keyboardType="numeric"
-                    />
-                  </View>
-                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.gatewayFieldLabel}>Expiry</Text>
-                      <TextInput
-                        style={[styles.gatewayInputWrap, styles.gatewayInput]}
-                        value={cardExpiryInput}
-                        onChangeText={setCardExpiryInput}
-                        placeholder="MM/YY"
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.gatewayFieldLabel}>CVV</Text>
-                      <TextInput
-                        style={[styles.gatewayInputWrap, styles.gatewayInput]}
-                        value={cardCvvInput}
-                        onChangeText={setCardCvvInput}
-                        placeholder="123"
-                        secureTextEntry
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                </View>
-              )}
-
-              {selectedMethod === 'netbanking' && (
-                <View style={styles.gatewaySection}>
-                  <Text style={styles.gatewayFieldLabel}>Select Bank</Text>
-                  <View style={styles.bankChipsRow}>
-                    {['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak'].map((bank) => (
-                      <TouchableOpacity
-                        key={bank}
-                        style={[styles.bankChip, selectedBank === bank && styles.bankChipActive]}
-                        onPress={() => setSelectedBank(bank)}
-                      >
-                        <Text style={[styles.bankChipText, selectedBank === bank && styles.bankChipTextActive]}>
-                          {bank}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-              )}
-
-              {selectedMethod === 'wallet' && (
-                <View style={styles.gatewaySection}>
-                  <Text style={styles.gatewayFieldLabel}>Select Wallet</Text>
-                  <View style={styles.bankChipsRow}>
-                    {['Paytm', 'PhonePe', 'Mobikwik', 'Amazon Pay'].map((wallet) => (
-                      <TouchableOpacity
-                        key={wallet}
-                        style={[styles.bankChip, selectedWallet === wallet && styles.bankChipActive]}
-                        onPress={() => setSelectedWallet(wallet)}
-                      >
-                        <Text style={[styles.bankChipText, selectedWallet === wallet && styles.bankChipTextActive]}>
-                          {wallet}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* Gateway Actions */}
-            <View style={styles.gatewayActions}>
-              <AppButton
-                title={
-                  flowState === 'VERIFYING'
-                    ? paymentStatusText
-                    : `Authorize & Pay ₹${amountStr}`
-                }
-                variant="primary"
-                icon="shield-checkmark"
-                loading={flowState === 'VERIFYING' || isProcessingPayment}
-                disabled={flowState === 'VERIFYING' || isProcessingPayment}
-                onPress={handleAuthorizeGatewayPayment}
-                style={{ width: '100%', marginBottom: spacing.sm }}
-              />
-
-              <TouchableOpacity
-                onPress={handleDismissGatewayModal}
-                disabled={flowState === 'VERIFYING' || isProcessingPayment}
-                style={styles.gatewayCancelBtn}
-              >
-                <Text style={styles.gatewayCancelText}>Cancel & Go Back</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </View>
       )}
     </View>

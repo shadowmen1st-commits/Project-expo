@@ -40,7 +40,20 @@ export const createApp = () => {
     // Health Check (Public - before any middleware)
     app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'UP', service: 'project-expo-api', timestamp: new Date().toISOString() }));
 
-    app.use(helmet());
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://checkout.razorpay.com"],
+                frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
+                connectSrc: ["'self'", "https://api.razorpay.com", "https://lumberjack.razorpay.com", "https://*.trycloudflare.com", "wss://*.trycloudflare.com", "http://localhost:*", "ws://localhost:*"],
+                imgSrc: ["'self'", "data:", "https:"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+                fontSrc: ["'self'", "https:", "data:"],
+            }
+        },
+        crossOriginOpenerPolicy: false,
+    }));
     const isOriginAllowed = (origin) => {
         if (!origin) return true;
         if (config.CORS_ALLOWED_ORIGINS.includes(origin)) return true;

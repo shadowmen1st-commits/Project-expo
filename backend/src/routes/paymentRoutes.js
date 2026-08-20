@@ -8,12 +8,18 @@ import {
     verifyPayment,
     getPaymentByBooking,
     getPaymentOrderById,
+    renderCheckoutPage,
+    handlePaymentRedirectCallback,
 } from '../controllers/paymentOrderController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = Router();
 
-// All customer payment routes require authentication
+// Public / Mobile WebBrowser checkout rendering and redirect callback routes
+router.get('/checkout/:paymentOrderId', renderCheckoutPage);
+router.all('/callback', handlePaymentRedirectCallback);
+
+// All customer payment API routes require authentication
 router.use(authMiddleware);
 
 // Create a Razorpay payment order for a PAYMENT_PENDING booking

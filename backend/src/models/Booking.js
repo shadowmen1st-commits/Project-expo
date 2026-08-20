@@ -21,6 +21,7 @@ const bookingSchema = new Schema(
             addressLine: String,
             latitude: Number,
             longitude: Number,
+            source: { type: String, enum: ['GPS', 'MANUAL'], default: 'MANUAL' },
         },
         scheduledStart: { type: Date, required: true },
         scheduledEnd: { type: Date, required: true },

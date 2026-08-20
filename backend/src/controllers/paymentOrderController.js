@@ -16,6 +16,7 @@
 import { createPaymentOrder, getPaymentStatusForBooking } from '../services/payments/paymentService.js';
 import { verifyCheckoutCallback } from '../services/payments/paymentSignatureService.js';
 import PaymentOrder from '../models/PaymentOrder.js';
+import { config } from '../config/env.js';
 import { z } from 'zod';
 
 const createOrderSchema = z.object({
@@ -250,3 +251,174 @@ export const getPaymentOrderById = async (req, res, next) => {
         next(err);
     }
 };
+
+/**
+ * GET /api/v1/payments/checkout/:paymentOrderId
+ * Serves the official Razorpay Checkout HTML page for mobile WebBrowser / WebView.
+ */
+export const renderCheckoutPage = async (req, res, next) => {
+    try {
+        const { paymentOrderId } = req.params;
+        const order = await PaymentOrder.findById(paymentOrderId).populate('customerId').lean();
+        if (!order) {
+            return res.status(404).send('<h1>Payment Order Not Found</h1>');
+        }
+
+        const razorpayKeyId = config.RAZORPAY_KEY_ID;
+        const customerName = order.customerId?.name || 'Customer';
+        const customerEmail = order.customerId?.email || 'customer@jobnest.com';
+        const customerPhone = order.customerId?.phone || '9999999999';
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobNest Razorpay Checkout</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    h2 { margin: 0 0 8px; color: #f59e0b; font-size: 22px; }
+    p { color: #94a3b8; font-size: 14px; margin: 0 0 24px; }
+    .amount-box {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      border: 1px solid #334155;
+    }
+    .amount-label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .amount-val { color: #22c55e; font-size: 28px; font-weight: bold; margin-top: 4px; }
+    .btn {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 20px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .btn:active { transform: scale(0.98); }
+    .badge {
+      display: inline-block;
+      background: #334155;
+      color: #cbd5e1;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>JobNest Secure Checkout</h2>
+    <p>Official Razorpay Payment Gateway</p>
+    <div class="amount-box">
+      <div class="amount-label">Amount Payable</div>
+      <div class="amount-val">&#8377;${(order.amountPaise / 100).toFixed(2)}</div>
+    </div>
+    <button class="btn" id="payBtn" onclick="openRazorpay()">Open Razorpay Checkout</button>
+    <div id="debugMsg" style="color: #ef4444; font-size: 12px; margin-top: 10px;"></div>
+  </div>
+
+  <script>
+    window.onerror = function(msg, url, line) {
+      document.getElementById('debugMsg').innerText = 'Error: ' + msg + ' (L' + line + ')';
+    };
+
+    const options = {
+      key: "${razorpayKeyId}",
+      amount: ${order.amountPaise},
+      currency: "${order.currency || 'INR'}",
+      name: "JobNest Services",
+      description: "Service Booking #${order.orderNumber}",
+      order_id: "${order.providerOrderId}",
+      callback_url: "/api/payments/callback?internalPaymentOrderId=${order._id}",
+      redirect: true,
+      prefill: {
+        name: "${customerName}",
+        email: "${customerEmail}",
+        contact: "${customerPhone}"
+      },
+      theme: { color: "#F59E0B" },
+      handler: function(response) {
+        const callbackUrl = 'jobnest://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id) +
+                            '&razorpay_payment_id=' + encodeURIComponent(response.razorpay_payment_id) +
+                            '&razorpay_signature=' + encodeURIComponent(response.razorpay_signature) +
+                            '&internalPaymentOrderId=${order._id}';
+        window.location.replace(callbackUrl);
+      },
+      modal: {
+        ondismiss: function() {
+          window.location.replace('jobnest://payment-callback?cancelled=true');
+        }
+      }
+    };
+
+    function openRazorpay() {
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(resp) {
+        alert(resp.error.description || 'Payment Failed');
+        window.location.href = 'jobnest://payment-callback?error=' + encodeURIComponent(resp.error.description || 'Payment Failed');
+      });
+      rzp.open();
+    }
+
+    window.onload = function() {
+      setTimeout(openRazorpay, 300);
+    };
+  </script>
+</body>
+</html>`;
+
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';");
+        return res.send(html);
+    } catch (err) {
+        next(err);
+    }
+};
+
+/**
+ * ALL /api/v1/payments/callback
+ * Accepts Razorpay redirect callback (GET/POST) and forwards 302 to jobnest:// scheme.
+ */
+export const handlePaymentRedirectCallback = (req, res) => {
+    const data = req.method === 'POST' ? req.body : req.query;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, internalPaymentOrderId, error, cancelled } = data || {};
+    const q = new URLSearchParams();
+    if (razorpay_order_id) q.set('razorpay_order_id', razorpay_order_id);
+    if (razorpay_payment_id) q.set('razorpay_payment_id', razorpay_payment_id);
+    if (razorpay_signature) q.set('razorpay_signature', razorpay_signature);
+    if (internalPaymentOrderId) q.set('internalPaymentOrderId', internalPaymentOrderId);
+    if (error) q.set('error', typeof error === 'string' ? error : JSON.stringify(error));
+    if (cancelled) q.set('cancelled', 'true');
+    const redirectUrl = `jobnest://payment-callback?${q.toString()}`;
+    return res.redirect(302, redirectUrl);
+};
+
