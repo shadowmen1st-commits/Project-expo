@@ -103,7 +103,7 @@ export default function BookingPaymentScreen() {
 
   // Handle Payment Method Selection: ONLY updates state, NEVER triggers payment
   const handleSelectPaymentMethod = (method: PaymentMethod) => {
-    console.log(`[PAYMENT_METHOD_SELECTED] method=${method}`);
+    console.log('[PAYMENT] Method selected:', method);
     setSelectedMethod(method);
     setMethodSelectionError('');
     setErrorMessage('');
@@ -131,7 +131,8 @@ export default function BookingPaymentScreen() {
     setErrorMessage('');
     setMethodSelectionError('');
 
-    console.log(`[PAYMENT_CONTINUE] method=${selectedMethod}`);
+    console.log('[PAYMENT] Method selected:', selectedMethod);
+    console.log('[PAYMENT] Creating Razorpay order');
 
     try {
       const randKey = `idemp-pay-${bId}-${Date.now()}`;
@@ -149,8 +150,12 @@ export default function BookingPaymentScreen() {
       const internalPaymentOrderId = orderData.internalPaymentOrderId || orderData.orderId;
       const razorpayOrderId = orderData.razorpayOrderId;
 
-      console.log(`[PAYMENT_ORDER_CREATED] bookingId=${bId}`);
-      console.log('[RAZORPAY_OPEN]');
+      console.log('[PAYMENT] Razorpay order created:', {
+        orderId: razorpayOrderId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+      });
+      console.log('[PAYMENT] Opening Razorpay Checkout');
 
       setGatewayOrderData({
         ...orderData,
@@ -201,7 +206,10 @@ export default function BookingPaymentScreen() {
             },
           },
           handler: async function (response: any) {
-            console.log(`[RAZORPAY_SUCCESS] paymentId=${response.razorpay_payment_id}`);
+            console.log('[PAYMENT] Checkout success');
+            console.log('[PAYMENT] Payment ID:', response.razorpay_payment_id);
+            console.log('[PAYMENT] Order ID:', response.razorpay_order_id);
+            console.log('[PAYMENT] Signature received');
             await handleVerifyPaymentSignature({
               internalPaymentOrderId,
               razorpay_order_id: response.razorpay_order_id,
@@ -243,7 +251,10 @@ export default function BookingPaymentScreen() {
     const simulatedPaymentId = `pay_rzp_${Date.now()}`;
     const signature = 'SANDBOX_MOCK_SIGNATURE';
 
-    console.log(`[RAZORPAY_SUCCESS] paymentId=${simulatedPaymentId}`);
+    console.log('[PAYMENT] Checkout success');
+    console.log('[PAYMENT] Payment ID:', simulatedPaymentId);
+    console.log('[PAYMENT] Order ID:', gatewayOrderData.razorpayOrderId);
+    console.log('[PAYMENT] Signature received');
 
     await handleVerifyPaymentSignature({
       internalPaymentOrderId: gatewayOrderData.internalPaymentOrderId,
@@ -273,7 +284,7 @@ export default function BookingPaymentScreen() {
     setPaymentStatusText('Authorizing & verifying payment with bank...');
 
     try {
-      console.log('[PAYMENT_VERIFY_START]');
+      console.log('[PAYMENT] Verifying signature');
 
       const verifyRes = await api.post('/payments/verify', {
         internalPaymentOrderId,
@@ -283,7 +294,8 @@ export default function BookingPaymentScreen() {
       });
 
       if (verifyRes.data?.success) {
-        console.log('[PAYMENT_VERIFY_SUCCESS]');
+        console.log('[PAYMENT] Signature verification successful');
+        console.log('[PAYMENT] Booking marked PAID');
         setFlowState('SUCCESS');
         setVerifiedTxnDetails({
           paymentId: razorpay_payment_id,
@@ -683,13 +695,8 @@ export default function BookingPaymentScreen() {
         </View>
       )}
 
-      {/* OFFICIAL RAZORPAY CHECKOUT MODAL */}
-      <Modal
-        visible={flowState === 'CHECKOUT_OPEN' || flowState === 'VERIFYING'}
-        animationType="slide"
-        transparent
-        onRequestClose={handleDismissGatewayModal}
-      >
+      {/* OFFICIAL RAZORPAY CHECKOUT OVERLAY */}
+      {(flowState === 'CHECKOUT_OPEN' || flowState === 'VERIFYING') && (
         <View style={styles.modalOverlay}>
           <View style={styles.gatewayContainer}>
             {/* Gateway Header */}
@@ -846,7 +853,7 @@ export default function BookingPaymentScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      )}
     </View>
   );
 }
@@ -1182,9 +1189,15 @@ const styles = StyleSheet.create({
     minWidth: 180,
   },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     justifyContent: 'flex-end',
+    zIndex: 9999,
+    elevation: 20,
   },
   gatewayContainer: {
     backgroundColor: '#FFFFFF',

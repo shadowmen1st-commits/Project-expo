@@ -162,7 +162,7 @@ class VerifiedPaymentServiceClass {
             escrowStatus: 'HELD',
         }, { new: true });
 
-        console.log('[PAYMENT:BOOKING_UPDATED]', {
+        console.log('[PAYMENT] Booking marked PAID:', {
             bookingId: booking._id.toString(),
             paymentStatus: updatedBooking.paymentStatus,
             bookingStatus: updatedBooking.bookingStatus,

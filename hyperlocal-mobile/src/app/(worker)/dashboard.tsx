@@ -7,7 +7,7 @@ import {
   Switch,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -60,7 +60,7 @@ export default function WorkerDashboard() {
         }),
         api.get('/wallet/details').catch(async () => {
           return api.get('/v1/wallet/details');
-        })
+        }),
       ]);
 
       if (profRes.status === 'fulfilled' && profRes.value?.data) {
@@ -72,17 +72,17 @@ export default function WorkerDashboard() {
         const list = Array.isArray(raw)
           ? raw
           : raw.bookings || raw.jobs || raw.data || [];
-        
+
         console.log('[WORKER_BOOKINGS_RESPONSE]', { count: list.length });
         setAssignedJobs(list);
 
-        // Synchronize background location tracking for any active job
+        // Synchronize background location tracking for any active job safely
         const token = await storage.getItem('accessToken');
         if (token && workerId) {
-          WorkerLocationService.syncWorkerTracking(list, token, workerId);
+          WorkerLocationService.syncWorkerTracking(list, token, workerId).catch(() => {});
         }
       } else {
-        console.warn('[WORKER_BOOKINGS_ERROR] Failed resolving bookings', (jobRes as any).reason);
+        console.warn('[WORKER_BOOKINGS_ERROR] Failed resolving bookings', (jobRes as any)?.reason);
       }
 
       if (walletRes.status === 'fulfilled' && walletRes.value?.data) {
@@ -96,7 +96,7 @@ export default function WorkerDashboard() {
     }
   }, [workerId, user?.email, user?.role]);
 
-  // Synchronize Worker Real GPS location to backend
+  // Synchronize Worker Real GPS location to backend safely
   useEffect(() => {
     if (latitude && longitude && Number.isFinite(latitude) && Number.isFinite(longitude)) {
       api.post('/worker/location', {
@@ -117,7 +117,7 @@ export default function WorkerDashboard() {
     }, [fetchWorkerData])
   );
 
-  // Setup real-time socket updates
+  // Setup real-time socket updates safely
   useEffect(() => {
     let socket: Socket | null = null;
     const setupSocket = async () => {
@@ -134,6 +134,10 @@ export default function WorkerDashboard() {
 
         socket.on('connect', () => {
           console.log('[WORKER_SOCKET_CONNECTED]', { id: socket?.id, workerId });
+        });
+
+        socket.on('connect_error', (e) => {
+          console.log('[WORKER_SOCKET_CONNECT_ERROR]', e?.message);
         });
 
         socket.on('booking:created', (data) => {
@@ -160,35 +164,56 @@ export default function WorkerDashboard() {
 
     return () => {
       if (socket) {
-        socket.disconnect();
+        try {
+          socket.disconnect();
+        } catch {}
       }
     };
   }, [workerId, fetchWorkerData]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    refreshLocation(true);
+    refreshLocation(true).catch(() => {});
     fetchWorkerData();
   };
 
-  const verificationStatus = profile?.verificationStatus || user?.verificationStatus || 'NOT_SUBMITTED';
+  const verificationStatus =
+    profile?.verificationStatus ||
+    user?.verificationStatus ||
+    profile?.kycStatus ||
+    user?.kycStatus ||
+    'NOT_SUBMITTED';
 
-  // Calculate real earnings from wallet or completed bookings
-  const completedJobs = assignedJobs.filter((j) => (j.bookingStatus || j.status) === 'COMPLETED');
-  const fallbackEarnings = completedJobs.reduce((sum, j) => sum + (j.workerEarning || j.totalAmount || 0), 0);
-  const totalEarningsVal = wallet?.balances?.totalEarned != null
-    ? (wallet.balances.totalEarned / 100).toFixed(0)
-    : fallbackEarnings.toFixed(0);
+  // Calculate real earnings from wallet or completed bookings safely
+  const safeAssignedJobs = Array.isArray(assignedJobs) ? assignedJobs : [];
+  const completedJobs = safeAssignedJobs.filter(
+    (j) => j && (j.bookingStatus || j.status) === 'COMPLETED'
+  );
+  const fallbackEarnings = completedJobs.reduce(
+    (sum, j) => sum + (j?.workerEarning || j?.totalAmount || 0),
+    0
+  );
+  const totalEarningsVal =
+    wallet?.balances?.totalEarned != null
+      ? (wallet.balances.totalEarned / 100).toFixed(0)
+      : fallbackEarnings.toFixed(0);
 
-  const ratingVal = profile?.averageRating != null
-    ? Number(profile.averageRating).toFixed(1)
-    : '5.0';
+  const ratingVal =
+    profile?.averageRating != null
+      ? Number(profile.averageRating).toFixed(1)
+      : '5.0';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#EA580C']} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#EA580C']}
+          />
+        }
       >
         {/* Worker Header Banner with Real GPS Location */}
         <View style={styles.header}>
@@ -197,15 +222,21 @@ export default function WorkerDashboard() {
             <View style={styles.locationPill}>
               {locationLoading ? (
                 <>
-                  <ActivityIndicator size="small" color="#EA580C" style={{ transform: [{ scale: 0.75 }], marginRight: 2 }} />
+                  <ActivityIndicator
+                    size="small"
+                    color="#EA580C"
+                    style={{ transform: [{ scale: 0.75 }], marginRight: 2 }}
+                  />
                   <Text style={styles.locationText}>Detecting your location...</Text>
                 </>
               ) : locationError ? (
                 <>
                   <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
-                  <Text style={[styles.locationText, { color: '#EF4444' }]}>Location Unavailable</Text>
+                  <Text style={[styles.locationText, { color: '#EF4444' }]}>
+                    Location Unavailable
+                  </Text>
                   <TouchableOpacity
-                    onPress={() => refreshLocation(true)}
+                    onPress={() => refreshLocation(true).catch(() => {})}
                     style={styles.locationRefreshBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -219,7 +250,7 @@ export default function WorkerDashboard() {
                     {displayName || city || 'Current Location'}
                   </Text>
                   <TouchableOpacity
-                    onPress={() => refreshLocation(true)}
+                    onPress={() => refreshLocation(true).catch(() => {})}
                     style={styles.locationRefreshBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
@@ -284,12 +315,18 @@ export default function WorkerDashboard() {
 
         {/* Stats Grid */}
         <View style={styles.statsRow}>
-          <TouchableOpacity style={styles.statBox} onPress={() => router.push('/(worker)/earnings')}>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() => router.push('/(worker)/earnings')}
+          >
             <Text style={styles.statVal}>₹{totalEarningsVal}</Text>
             <Text style={styles.statLbl}>Total Earnings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.statBox} onPress={() => router.push('/(worker)/bookings')}>
-            <Text style={styles.statVal}>{assignedJobs.length}</Text>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() => router.push('/(worker)/bookings')}
+          >
+            <Text style={styles.statVal}>{safeAssignedJobs.length}</Text>
             <Text style={styles.statLbl}>Total Jobs</Text>
           </TouchableOpacity>
           <View style={styles.statBox}>
@@ -302,22 +339,39 @@ export default function WorkerDashboard() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Assigned Jobs</Text>
           <TouchableOpacity onPress={() => router.push('/(worker)/bookings')}>
-            <Text style={styles.seeAllText}>Manage All ({assignedJobs.length})</Text>
+            <Text style={styles.seeAllText}>Manage All ({safeAssignedJobs.length})</Text>
           </TouchableOpacity>
         </View>
 
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color="#EA580C" style={{ marginVertical: 20 }} />
-        ) : assignedJobs.length > 0 ? (
-          assignedJobs.slice(0, 5).map((job) => {
+        ) : safeAssignedJobs.length > 0 ? (
+          safeAssignedJobs.slice(0, 5).map((job) => {
+            if (!job) return null;
             const currentStatus = job.bookingStatus || job.status || 'PENDING';
-            const categoryTitle = job.category?.name || job.serviceCategoryName || job.categoryName || 'Service Request';
+            const categoryTitle =
+              job.category?.name ||
+              job.serviceCategoryName ||
+              job.categoryName ||
+              'Service Request';
             const customerTitle = job.customer?.name || job.customerName || 'Customer';
-            const addressTitle = job.serviceAddress || job.addressSnapshot?.addressLine || job.address || 'Customer Location';
+            const addressTitle =
+              job.serviceAddress ||
+              job.addressSnapshot?.addressLine ||
+              job.address ||
+              'Customer Location';
             const priceVal = job.workerEarning || job.totalAmount || 0;
-            const dateStr = job.bookingDate || (job.scheduledStart ? new Date(job.scheduledStart).toLocaleDateString() : 'Scheduled');
+            const dateStr =
+              job.bookingDate ||
+              (job.scheduledStart ? new Date(job.scheduledStart).toLocaleDateString() : 'Scheduled');
             const timeStr = job.bookingTime || '';
-            const isActive = ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'STARTED', 'IN_PROGRESS'].includes(currentStatus);
+            const isActive = [
+              'CONFIRMED',
+              'PAID',
+              'WORKER_EN_ROUTE',
+              'STARTED',
+              'IN_PROGRESS',
+            ].includes(currentStatus);
 
             return (
               <TouchableOpacity
@@ -328,7 +382,9 @@ export default function WorkerDashboard() {
               >
                 <View style={styles.jobHeader}>
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.jobCategory} numberOfLines={1}>{categoryTitle}</Text>
+                    <Text style={styles.jobCategory} numberOfLines={1}>
+                      {categoryTitle}
+                    </Text>
                     <Text style={styles.jobCustomer}>{customerTitle}</Text>
                   </View>
                   <Badge status={currentStatus} />
@@ -363,7 +419,9 @@ export default function WorkerDashboard() {
           <View style={styles.emptyCard}>
             <Ionicons name="briefcase-outline" size={36} color="#94A3B8" />
             <Text style={styles.emptyText}>No assigned jobs right now.</Text>
-            <Text style={styles.emptySubText}>New customer bookings assigned to you will appear here instantly.</Text>
+            <Text style={styles.emptySubText}>
+              New customer bookings assigned to you will appear here instantly.
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -374,10 +432,10 @@ export default function WorkerDashboard() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFDF9'
+    backgroundColor: '#FFFDF9',
   },
   scrollContent: {
-    paddingBottom: 110
+    paddingBottom: 110,
   },
   header: {
     flexDirection: 'row',
@@ -385,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 12
+    paddingBottom: 12,
   },
   headerLeft: {
     flex: 1,
@@ -419,12 +477,12 @@ const styles = StyleSheet.create({
   greetingSub: {
     fontSize: 13,
     color: '#64748B',
-    fontWeight: '500'
+    fontWeight: '500',
   },
   greetingTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F172A'
+    color: '#0F172A',
   },
   availabilityCard: {
     flexDirection: 'row',
@@ -435,170 +493,172 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderColor: '#E2E8F0',
   },
   availTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A'
+    color: '#0F172A',
   },
   availSub: {
     fontSize: 12,
     color: '#64748B',
-    marginTop: 2
+    marginTop: 2,
   },
   verificationCard: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 14,
-    borderRadius: 14,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#FFEDD5'
+    borderColor: '#E2E8F0',
   },
   verifRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center'
   },
   verifLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155'
+    color: '#334155',
   },
   verifBtn: {
-    backgroundColor: '#EA580C',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   verifBtnText: {
-    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '700'
+    fontWeight: '600',
+    color: '#0F172A',
   },
   statsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
     gap: 10,
-    marginBottom: 16
   },
   statBox: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 14,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    alignItems: 'center'
   },
   statVal: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A'
+    color: '#0F172A',
   },
   statLbl: {
     fontSize: 11,
     color: '#64748B',
-    marginTop: 2
+    marginTop: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 12
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A'
+    color: '#0F172A',
   },
   seeAllText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#EA580C'
+    fontWeight: '600',
+    color: '#EA580C',
   },
   jobCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 12,
     padding: 16,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0'
+    borderColor: '#E2E8F0',
   },
   jobHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
   },
   jobCategory: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A'
+    color: '#0F172A',
   },
   jobCustomer: {
     fontSize: 12,
     color: '#64748B',
-    marginTop: 2
+    marginTop: 2,
   },
   jobAddress: {
     fontSize: 13,
     color: '#475569',
-    marginTop: 8
+    marginTop: 8,
   },
   jobFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 12,
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F8FAFC'
+    borderTopColor: '#F8FAFC',
   },
   jobPrice: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
-    color: '#EA580C'
+    color: '#EA580C',
+  },
+  jobTime: {
+    fontSize: 11,
+    color: '#94A3B8',
   },
   gpsShareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#EA580C',
+    backgroundColor: '#208AEF',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4,
   },
   gpsShareText: {
+    fontSize: 10,
+    fontWeight: '700',
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  jobTime: {
-    fontSize: 12,
-    color: '#64748B'
   },
   emptyCard: {
-    marginHorizontal: 20,
     backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 14,
+    marginHorizontal: 20,
+    padding: 30,
+    borderRadius: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F1F5F9'
+    borderColor: '#E2E8F0',
   },
   emptyText: {
-    color: '#0F172A',
     fontSize: 15,
     fontWeight: '700',
-    marginTop: 8
+    color: '#0F172A',
+    marginTop: 10,
   },
   emptySubText: {
-    color: '#64748B',
     fontSize: 12,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: 4
-  }
+    marginTop: 4,
+  },
 });

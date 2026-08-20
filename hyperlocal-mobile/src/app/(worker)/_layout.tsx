@@ -86,6 +86,8 @@ export default function WorkerLayout() {
           ),
         }}
       />
+      {/* Hidden sub-routes */}
+      <Tabs.Screen name="tracking/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

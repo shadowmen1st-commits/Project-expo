@@ -90,6 +90,7 @@ export async function verifyCheckoutCallback({
     }
 
     // ── 7. Signature verification (timing-safe) ─────────────────────────────────
+    console.log('[PAYMENT] Verifying signature for order:', razorpayOrderId);
     const sigVerified = razorpayProvider.verifyCheckoutSignature(
         razorpayOrderId,
         razorpayPaymentId,
@@ -105,10 +106,7 @@ export async function verifyCheckoutCallback({
         throw err;
     }
 
-    console.log('[PAYMENT:VERIFY_SUCCESS]', {
-        razorpayOrderId,
-        razorpayPaymentId,
-    });
+    console.log('[PAYMENT] Signature verification successful for order:', razorpayOrderId);
 
     // ── 8. Fetch payment details from Razorpay for amount/currency reconciliation ─
     let providerPayment = null;

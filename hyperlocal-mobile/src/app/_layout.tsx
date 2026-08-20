@@ -8,6 +8,8 @@ import { LocationGate } from '../components/LocationGate';
 import { StatusBar } from 'expo-status-bar';
 import { LogBox } from 'react-native';
 
+import * as SplashScreen from 'expo-splash-screen';
+
 // Suppress React Native Web deprecation warnings from internal Expo/RN components.
 // These are from library internals (not our code) and will be fixed upstream.
 LogBox.ignoreLogs([
@@ -18,6 +20,10 @@ LogBox.ignoreLogs([
 ]);
 
 export default function RootLayout() {
+  React.useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
   return (
     <SafeAreaProvider>
       <NetworkProvider>

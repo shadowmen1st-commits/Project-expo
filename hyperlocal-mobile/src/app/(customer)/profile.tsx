@@ -140,22 +140,11 @@ export default function CustomerProfileScreen() {
     }
   };
 
-  const handleLogoutConfirm = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to log out of your account?')) {
-        logout();
-      }
-    } else {
-      Alert.alert('Log Out', 'Are you sure you want to log out of your account?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]);
+  const handleLogoutConfirm = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error('Logout error:', e);
     }
   };
 

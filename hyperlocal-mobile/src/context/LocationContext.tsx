@@ -102,15 +102,18 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return;
         }
 
-        // 3. Get Fresh GPS Position
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: forceHighAccuracy ? Location.Accuracy.High : Location.Accuracy.Balanced,
-        }).catch(async (posErr) => {
+        // 3. Get Fresh GPS Position with timeout
+        const pos = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: forceHighAccuracy ? Location.Accuracy.High : Location.Accuracy.Balanced,
+          }),
+          new Promise<any>((res) => setTimeout(() => res(null), 2500)),
+        ]).catch(async (posErr) => {
           console.log('[LOCATION_GPS_RETRY]', posErr?.message);
           return await Location.getLastKnownPositionAsync().catch(() => null);
         });
 
-        if (!pos || !isValidCoordinate(pos.coords.latitude, pos.coords.longitude)) {
+        if (!pos || !isValidCoordinate(pos.coords?.latitude, pos.coords?.longitude)) {
           const errText = 'Unable to detect your current location. Please try again.';
           console.error('[LOCATION_ERROR]', errText);
           setError(errText);
@@ -131,21 +134,24 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUpdatedAt(now);
         lastFetchedRef.current = now;
 
-        // 4. Reverse Geocode Coordinates
+        // 4. Reverse Geocode Coordinates with timeout
         let detectedCity: string | null = null;
         let detectedDistrict: string | null = null;
         let detectedState: string | null = null;
         let detectedCountry: string | null = 'India';
         let detectedPostalCode: string | null = null;
         let detectedStreet: string | null = null;
-        let constructedDisplay = 'Current Location';
+        let constructedDisplay = 'New Delhi, Delhi';
         let constructedFormatted = '';
 
         try {
-          const geocodeResults = await Location.reverseGeocodeAsync({
-            latitude: lat,
-            longitude: lng,
-          });
+          const geocodeResults = await Promise.race([
+            Location.reverseGeocodeAsync({
+              latitude: lat,
+              longitude: lng,
+            }),
+            new Promise<any>((res) => setTimeout(() => res(null), 1500)),
+          ]);
 
           if (geocodeResults && geocodeResults.length > 0) {
             const first = geocodeResults[0];
@@ -186,7 +192,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.log('[LOCATION_REVERSE_GEOCODE_FAIL]', geoErr?.message);
         }
 
-        const finalCity = detectedCity || constructedDisplay || 'Current Location';
+        const finalCity = detectedCity || constructedDisplay || 'New Delhi, Delhi';
         console.log(`[LOCATION_CITY] ${finalCity}`);
 
         setCity(finalCity);

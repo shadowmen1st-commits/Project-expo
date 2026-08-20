@@ -67,6 +67,8 @@ export const createOrder = async (req, res, next) => {
             });
         }
 
+        console.log('[PAYMENT] Creating Razorpay order for booking:', validated.bookingId);
+
         const result = await createPaymentOrder({
             bookingId: validated.bookingId,
             customerId: user.id || user._id,
@@ -74,7 +76,7 @@ export const createOrder = async (req, res, next) => {
             requestId: req.requestId,
         });
 
-        console.log('[PAYMENT:ORDER_CREATED]', {
+        console.log('[PAYMENT] Razorpay order created:', {
             bookingId: validated.bookingId,
             internalPaymentOrderId: result.internalPaymentOrderId,
             razorpayOrderId: result.razorpayOrderId,

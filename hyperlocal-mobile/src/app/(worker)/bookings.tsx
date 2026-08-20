@@ -59,7 +59,7 @@ export default function WorkerBookingsScreen() {
 
       const token = await storage.getItem('accessToken');
       if (token && workerId) {
-        WorkerLocationService.syncWorkerTracking(data, token, workerId);
+        WorkerLocationService.syncWorkerTracking(data, token, workerId).catch(() => {});
       }
     } catch (err: any) {
       console.error('[WORKER_BOOKINGS_FETCH_ERROR]', err?.response?.status, err?.message);
@@ -207,6 +207,7 @@ export default function WorkerBookingsScreen() {
             />
           }
           renderItem={({ item }) => {
+            if (!item) return null;
             const bookingId = String(item.id || item._id);
             const status = item.bookingStatus || item.status || 'PENDING';
             const isProcessing = actionLoadingId === bookingId;
@@ -290,6 +291,7 @@ export default function WorkerBookingsScreen() {
                         <AppButton
                           title="Reject"
                           size="sm"
+                          fullWidth={false}
                           variant="secondary"
                           onPress={() => handleBookingAction(bookingId, 'reject')}
                           loading={isProcessing}
@@ -297,6 +299,7 @@ export default function WorkerBookingsScreen() {
                         <AppButton
                           title="Accept Job"
                           size="sm"
+                          fullWidth={false}
                           variant="primary"
                           onPress={() => handleBookingAction(bookingId, 'accept')}
                           loading={isProcessing}
@@ -308,6 +311,7 @@ export default function WorkerBookingsScreen() {
                           <AppButton
                             title="Live GPS"
                             size="sm"
+                            fullWidth={false}
                             variant="secondary"
                             onPress={() => router.push(`/(worker)/tracking/${bookingId}` as any)}
                           />
@@ -315,6 +319,7 @@ export default function WorkerBookingsScreen() {
                         <AppButton
                           title="Start En-Route"
                           size="sm"
+                          fullWidth={false}
                           variant="primary"
                           onPress={() => handleBookingAction(bookingId, 'en-route')}
                           loading={isProcessing}
@@ -325,12 +330,14 @@ export default function WorkerBookingsScreen() {
                         <AppButton
                           title="Live GPS"
                           size="sm"
+                          fullWidth={false}
                           variant="secondary"
                           onPress={() => router.push(`/(worker)/tracking/${bookingId}` as any)}
                         />
                         <AppButton
                           title="Start Job"
                           size="sm"
+                          fullWidth={false}
                           variant="primary"
                           onPress={() => handleBookingAction(bookingId, 'start')}
                           loading={isProcessing}
@@ -341,12 +348,14 @@ export default function WorkerBookingsScreen() {
                         <AppButton
                           title="Live GPS"
                           size="sm"
+                          fullWidth={false}
                           variant="secondary"
                           onPress={() => router.push(`/(worker)/tracking/${bookingId}` as any)}
                         />
                         <AppButton
                           title="Complete Job"
                           size="sm"
+                          fullWidth={false}
                           variant="primary"
                           onPress={() => handleBookingAction(bookingId, 'request-completion')}
                           loading={isProcessing}

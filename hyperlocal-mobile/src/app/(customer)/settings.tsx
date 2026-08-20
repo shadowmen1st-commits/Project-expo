@@ -14,22 +14,11 @@ export default function SettingsScreen() {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
 
-  const handleSignOut = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Are you sure you want to sign out of your account?')) {
-        logout();
-      }
-    } else {
-      Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]);
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error('Logout error:', e);
     }
   };
 

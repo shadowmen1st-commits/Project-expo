@@ -98,7 +98,7 @@ export default function WorkerEarningsScreen() {
 
   const totalEarned = wallet?.balances?.totalEarned != null
     ? (wallet.balances.totalEarned / 100).toFixed(2)
-    : completedBookings.reduce((sum, b) => sum + (b.workerEarning || b.totalAmount || 0), 0).toFixed(2);
+    : (completedBookings || []).reduce((sum, b) => sum + (b?.workerEarning || b?.totalAmount || 0), 0).toFixed(2);
 
   const pendingBal = wallet?.balances?.pending != null
     ? (wallet.balances.pending / 100).toFixed(2)

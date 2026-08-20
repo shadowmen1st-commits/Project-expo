@@ -32,6 +32,7 @@ export default function BookingDetailsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
   const isProcessingPaymentRef = useRef(false);
@@ -64,6 +65,18 @@ export default function BookingDetailsScreen() {
     if (!booking) return;
     const bId = booking.id || booking._id || rawId;
     router.push(`/(customer)/booking/payment/${bId}` as any);
+  };
+
+  const handleConfirmCompletion = async () => {
+    setConfirming(true);
+    try {
+      await api.post(`/bookings/${rawId}/confirm-completion`);
+      fetchDetails(true);
+    } catch (err: any) {
+      console.error('Confirm completion error:', err);
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const handleCancelBooking = async () => {
@@ -270,11 +283,23 @@ export default function BookingDetailsScreen() {
           />
         )}
 
+        {/* Completion Confirmation Action */}
+        {currentStatus === 'COMPLETION_REQUESTED' && (
+          <AppButton
+            title="Approve & Complete Service"
+            variant="primary"
+            icon="checkmark-circle-outline"
+            loading={confirming}
+            onPress={handleConfirmCompletion}
+            style={{ marginTop: spacing.md }}
+          />
+        )}
+
         {/* Live Tracking Action */}
-        {isPaid && (
+        {isPaid && currentStatus !== 'COMPLETED' && currentStatus !== 'CANCELLED' && (
           <AppButton
             title="Track Live Location"
-            variant="primary"
+            variant="secondary"
             icon="navigate-outline"
             onPress={() => router.push(`/(customer)/booking/tracking/${rawId}` as any)}
             style={{ marginTop: spacing.md }}
