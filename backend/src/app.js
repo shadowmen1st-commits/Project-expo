@@ -32,10 +32,22 @@ import companyRoutes from './routes/companyRoutes.js';
 
 export const createApp = () => {
     const app = express();
-    if (config.NODE_ENV === 'production') app.set('trust proxy', 1);
+    app.set('trust proxy', true);
     
     // Structured JSON Logging
     app.use(pinoHttp({ logger }));
+
+    // Safe Request Logger for mobile API diagnostics
+    app.use((req, res, next) => {
+        const start = Date.now();
+        res.on('finish', () => {
+            const duration = Date.now() - start;
+            const origin = req.headers.origin || 'Native/Direct';
+            const logMsg = `[API_REQ] ${req.method} ${req.originalUrl || req.url} -> HTTP ${res.statusCode} (${duration}ms) [Origin: ${origin}]`;
+            console.log(logMsg);
+        });
+        next();
+    });
 
     // Health Check (Public - before any middleware)
     app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'UP', service: 'project-expo-api', timestamp: new Date().toISOString() }));

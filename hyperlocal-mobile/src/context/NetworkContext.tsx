@@ -21,8 +21,9 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isServerReachable, setIsServerReachable] = useState<boolean | null>(null);
 
   const evaluateState = useCallback(async (state: NetInfoState) => {
-    const connected = Boolean(state.isConnected);
-    const reachable = state.isInternetReachable;
+    // On Android cellular, isConnected might be true while isInternetReachable is temporarily null
+    const connected = state.isConnected !== false;
+    const reachable = state.isInternetReachable ?? true;
     const type = state.type;
 
     setIsConnected(connected);

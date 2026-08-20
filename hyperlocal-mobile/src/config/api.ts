@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://strength-honor-annie-whereas.trycloudflare.com';
+const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://mapping-receive-salvador-babies.trycloudflare.com';
 
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
@@ -236,23 +236,26 @@ api.interceptors.response.use(
     // Determine user-facing friendly message
     if (!error.response) {
       const code = error.code || '';
+      const msg = (error.message || '').toLowerCase();
       let userFriendlyMsg = 'Internet connection unavailable.';
 
-      if (code === 'ECONNABORTED' || code === 'ETIMEDOUT') {
-        userFriendlyMsg = 'Jobnest server request timed out.';
-      } else if (code === 'ENOTFOUND') {
+      if (code === 'ECONNABORTED' || code === 'ETIMEDOUT' || msg.includes('timeout')) {
+        userFriendlyMsg = 'Jobnest server request timed out. Please check your connection and try again.';
+      } else if (code === 'ENOTFOUND' || code === 'EAI_AGAIN' || msg.includes('not found') || msg.includes('unknown host')) {
+        userFriendlyMsg = 'Unable to reach Jobnest server. Please verify your internet connection.';
+      } else if (code === 'ECONNREFUSED' || msg.includes('connection refused')) {
         userFriendlyMsg = 'Jobnest server is temporarily unavailable.';
-      } else if (code === 'ECONNREFUSED') {
-        userFriendlyMsg = 'Jobnest server is temporarily unavailable.';
-      } else if (code.includes('SSL') || code.includes('CERT')) {
-        userFriendlyMsg = 'Secure SSL/TLS connection failed. Please verify your connection.';
+      } else if (code.includes('SSL') || code.includes('CERT') || msg.includes('ssl') || msg.includes('cert')) {
+        userFriendlyMsg = 'Secure SSL/TLS connection failed. Please verify your device connection.';
+      } else if (msg.includes('network request failed') || msg.includes('network error')) {
+        userFriendlyMsg = 'Unable to connect to Jobnest server. Please check your network connection.';
       }
 
       console.error('[API_NETWORK_ERROR]', {
         message: error.message,
         code: error.code,
-        baseURL: originalRequest.baseURL || API_BASE_URL,
-        url: originalRequest.url,
+        baseURL: originalRequest?.baseURL || API_BASE_URL,
+        url: originalRequest?.url,
       });
 
       error.userMessage = userFriendlyMsg;
@@ -261,17 +264,21 @@ api.interceptors.response.use(
       const serverMsg = error.response.data?.message;
 
       if (status === 401) {
-        error.userMessage = serverMsg || 'Session expired. Please login again.';
+        error.userMessage = serverMsg || 'Session expired or invalid credentials. Please sign in again.';
       } else if (status === 403) {
-        error.userMessage = serverMsg || 'Access denied.';
+        error.userMessage = serverMsg || 'Access denied. You do not have permission for this action.';
       } else if (status === 404) {
-        error.userMessage = serverMsg || 'API endpoint not found.';
+        error.userMessage = serverMsg || 'Requested resource was not found.';
       } else if (status === 408) {
         error.userMessage = serverMsg || 'Request timed out. Please try again.';
       } else if (status === 429) {
-        error.userMessage = serverMsg || 'Too many requests. Please try again later.';
+        error.userMessage = serverMsg || 'Too many requests. Please wait a moment and try again.';
+      } else if (status === 502) {
+        error.userMessage = 'Jobnest gateway error (502). Server is starting up or reloading.';
+      } else if (status === 503) {
+        error.userMessage = serverMsg || 'Jobnest service is temporarily unavailable (503).';
       } else if (status >= 500) {
-        error.userMessage = serverMsg || 'Jobnest server error. Please try again.';
+        error.userMessage = serverMsg || 'Jobnest server encountered an error. Please try again.';
       } else {
         error.userMessage = serverMsg || error.message || 'Request failed. Please try again.';
       }
@@ -282,3 +289,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

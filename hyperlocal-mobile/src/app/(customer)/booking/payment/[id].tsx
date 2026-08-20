@@ -326,13 +326,30 @@ export default function BookingPaymentScreen() {
         console.log('[PAYMENT] Signature verification successful');
         console.log('[PAYMENT] Booking marked PAID');
         setFlowState('SUCCESS');
+        setIsProcessingPayment(false);
+        isProcessingRef.current = false;
+
+        const targetBookingId = verifyRes.data?.data?.bookingId || bId;
         setVerifiedTxnDetails({
           paymentId: razorpay_payment_id,
           transactionNumber: verifyRes.data?.data?.transactionNumber || `TXN-${Date.now()}`,
         });
 
-        // Refresh booking state
-        fetchBooking();
+        // 3. Confirm backend state by fetching fresh booking details
+        try {
+          const freshRes = await api.get(`/bookings/${targetBookingId}`);
+          const freshBooking = freshRes.data?.booking || freshRes.data;
+          if (freshBooking) {
+            setBooking(freshBooking);
+          }
+        } catch (fetchErr) {
+          console.warn('Post-payment silent refresh:', fetchErr);
+        }
+
+        // 7. Auto-navigate to Customer Booking Details screen after showing receipt
+        setTimeout(() => {
+          router.replace(`/(customer)/booking/details/${targetBookingId}` as any);
+        }, 2200);
       } else {
         console.log('[PAYMENT_FAILED]', verifyRes.data?.message);
         setFlowState('FAILED');
@@ -476,19 +493,24 @@ export default function BookingPaymentScreen() {
             </Text>
 
             <AppButton
-              title="🧭 View Live Tracking"
+              title="📄 View Booking Details"
               variant="primary"
-              icon="navigate-outline"
-              onPress={() => router.replace(`/(customer)/booking/tracking/${bId}` as any)}
+              icon="document-text-outline"
+              onPress={() => router.replace(`/(customer)/booking/details/${bId}` as any)}
               style={{ marginTop: spacing.lg, width: '100%' }}
             />
 
-            <TouchableOpacity
-              onPress={() => router.replace('/(customer)/bookings')}
-              style={styles.backBookingLink}
-            >
-              <Text style={styles.backBookingText}>Back to Bookings</Text>
-            </TouchableOpacity>
+            <AppButton
+              title="🧭 View Live Tracking"
+              variant="secondary"
+              icon="navigate-outline"
+              onPress={() => router.replace(`/(customer)/booking/tracking/${bId}` as any)}
+              style={{ marginTop: spacing.sm, width: '100%' }}
+            />
+
+            <Text style={[styles.successNote, { marginTop: spacing.md, color: colors.textMuted, fontStyle: 'italic' }]}>
+              Redirecting to your booking details in a moment...
+            </Text>
           </View>
         ) : (
           <>

@@ -263,6 +263,15 @@ export default function BookingDetailsScreen() {
             </Text>
           </View>
 
+          {isPaid && (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Escrow Protection</Text>
+              <Text style={[styles.priceVal, { color: '#16A34A', fontWeight: '700' }]}>
+                PROTECTED / HELD
+              </Text>
+            </View>
+          )}
+
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Amount</Text>
             <Text style={styles.totalVal}>
@@ -298,7 +307,7 @@ export default function BookingDetailsScreen() {
         {/* Live Tracking Action */}
         {isPaid && currentStatus !== 'COMPLETED' && currentStatus !== 'CANCELLED' && (
           <AppButton
-            title="Track Live Location"
+            title="🧭 Track Worker"
             variant="secondary"
             icon="navigate-outline"
             onPress={() => router.push(`/(customer)/booking/tracking/${rawId}` as any)}
