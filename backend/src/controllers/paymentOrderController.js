@@ -358,39 +358,44 @@ export const renderCheckoutPage = async (req, res, next) => {
       name: "JobNest Services",
       description: "Service Booking #${order.orderNumber}",
       order_id: "${order.providerOrderId}",
-      callback_url: "/api/payments/callback?internalPaymentOrderId=${order._id}",
-      redirect: true,
       prefill: {
-        name: "${customerName}",
-        email: "${customerEmail}",
-        contact: "${customerPhone}"
+        name: "${customerName.replace(/"/g, '')}",
+        email: "${customerEmail.replace(/"/g, '')}",
+        contact: "${customerPhone.replace(/"/g, '')}"
       },
       theme: { color: "#F59E0B" },
       handler: function(response) {
-        const callbackUrl = 'jobnest://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id) +
-                            '&razorpay_payment_id=' + encodeURIComponent(response.razorpay_payment_id) +
-                            '&razorpay_signature=' + encodeURIComponent(response.razorpay_signature) +
-                            '&internalPaymentOrderId=${order._id}';
-        window.location.replace(callbackUrl);
+        var callbackUrl = 'jobnest://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id || '') +
+                          '&razorpay_payment_id=' + encodeURIComponent(response.razorpay_payment_id || '') +
+                          '&razorpay_signature=' + encodeURIComponent(response.razorpay_signature || '') +
+                          '&internalPaymentOrderId=${order._id}';
+        window.location.href = callbackUrl;
       },
       modal: {
         ondismiss: function() {
-          window.location.replace('jobnest://payment-callback?cancelled=true');
+          window.location.href = 'jobnest://payment-callback?cancelled=true';
         }
       }
     };
 
     function openRazorpay() {
-      const rzp = new Razorpay(options);
-      rzp.on('payment.failed', function(resp) {
-        alert(resp.error.description || 'Payment Failed');
-        window.location.href = 'jobnest://payment-callback?error=' + encodeURIComponent(resp.error.description || 'Payment Failed');
-      });
-      rzp.open();
+      try {
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(resp) {
+          const desc = (resp && resp.error && resp.error.description) || 'Payment Failed';
+          document.getElementById('debugMsg').innerText = 'Payment failed: ' + desc;
+          setTimeout(function() {
+            window.location.href = 'jobnest://payment-callback?error=' + encodeURIComponent(desc);
+          }, 800);
+        });
+        rzp.open();
+      } catch (e) {
+        document.getElementById('debugMsg').innerText = 'Failed to open Razorpay: ' + e.message;
+      }
     }
 
     window.onload = function() {
-      setTimeout(openRazorpay, 300);
+      setTimeout(openRazorpay, 200);
     };
   </script>
 </body>
