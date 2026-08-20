@@ -121,9 +121,12 @@ export async function createPaymentOrder({ bookingId, customerId, idempotencyKey
     }
 
     // ── 8. Check attempt limit (prevent order-spam) ──────────────────────────────
-    const attemptCount = await PaymentOrder.countDocuments({ bookingId });
-    if (attemptCount >= 5) {
-        const err = new Error('Maximum payment attempts reached for this booking. Contact support.');
+    const attemptCount = await PaymentOrder.countDocuments({ 
+        bookingId, 
+        status: { $nin: ['FAILED', 'EXPIRED', 'CANCELLED'] } 
+    });
+    if (attemptCount >= 10) {
+        const err = new Error('Maximum active payment attempts reached for this booking. Contact support.');
         err.statusCode = 429;
         err.errorCode = 'PAYMENT_ATTEMPT_LIMIT_EXCEEDED';
         throw err;
