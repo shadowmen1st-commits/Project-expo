@@ -248,7 +248,7 @@ function buildSafeOrderResponse(orderRecord, booking) {
         razorpayOrderId: orderRecord.providerOrderId,
         amount: orderRecord.amountPaise,
         currency: orderRecord.currency,
-        publicKeyId: config.RAZORPAY_KEY_ID,  // Public key only — safe to expose
+        publicKeyId: 'rzp_test_TS38Ger2YMCfWh',  // Verified public key — safe to expose
         bookingNumber: booking.bookingNumber,
         orderNumber: orderRecord.orderNumber,
         expiresAt: orderRecord.expiresAt,
