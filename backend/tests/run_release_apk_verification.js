@@ -10,8 +10,8 @@ import axios from 'axios';
 import { io as ioClient } from 'socket.io-client';
 import crypto from 'crypto';
 
-const REMOTE_API_URL = 'https://resistant-marc-prints-seniors.trycloudflare.com/api';
-const REMOTE_SOCKET_URL = 'https://resistant-marc-prints-seniors.trycloudflare.com';
+const REMOTE_API_URL = 'https://project-expo-md7o.onrender.com/api';
+const REMOTE_SOCKET_URL = 'https://project-expo-md7o.onrender.com';
 const RAZORPAY_KEY_ID = 'rzp_test_TS38Ger2YMCfWh';
 const RAZORPAY_KEY_SECRET = 'UVmoRQl5c51d7CoCxJqa3hvY';
 
@@ -224,10 +224,15 @@ async function runSuite() {
     const category = categories[0];
     if (!category) throw new Error('No categories available for booking');
 
-    // 4. Create real booking for customer (unique dynamic time slot to avoid worker schedule overlap)
-    const futureOffsetHours = 48 + Math.floor(Math.random() * 500);
-    const scheduledStart = new Date(Date.now() + futureOffsetHours * 60 * 60 * 1000).toISOString();
-    const scheduledEnd = new Date(Date.now() + (futureOffsetHours + 2) * 60 * 60 * 1000).toISOString();
+    // 4. Create real booking for customer (within working hours 09:00 - 18:00)
+    const bookingDate = new Date();
+    bookingDate.setDate(bookingDate.getDate() + 2);
+    bookingDate.setUTCHours(5, 30, 0, 0); // 11:00 AM IST
+    const scheduledStart = bookingDate.toISOString();
+
+    const endDate = new Date(bookingDate);
+    endDate.setUTCHours(7, 30, 0, 0); // 1:00 PM IST
+    const scheduledEnd = endDate.toISOString();
 
     const bookingRes = await axios.post(
       `${REMOTE_API_URL}/bookings`,

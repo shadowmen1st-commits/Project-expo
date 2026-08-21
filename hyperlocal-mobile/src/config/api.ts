@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://resistant-marc-prints-seniors.trycloudflare.com';
+const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://project-expo-md7o.onrender.com';
 
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
