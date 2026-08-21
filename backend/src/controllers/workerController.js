@@ -225,8 +225,9 @@ export const searchWorkers = async (req, res, next) => {
         const queryLat = latitude !== undefined ? latitude : req.query.lat;
         const queryLng = longitude !== undefined ? longitude : req.query.lng;
 
-        if (queryLat !== undefined && queryLng !== undefined && !isNaN(Number(queryLat)) && !isNaN(Number(queryLng))) {
-            const radiusKm = Number(maxDistanceKm) || 100;
+        // If strict maxDistanceKm is provided, apply radius constraint; otherwise show all approved workers
+        if (maxDistanceKm && queryLat !== undefined && queryLng !== undefined && !isNaN(Number(queryLat)) && !isNaN(Number(queryLng))) {
+            const radiusKm = Number(maxDistanceKm);
             const radiusRadians = radiusKm / 6378.1;
             query.$or = [
                 {
@@ -242,7 +243,7 @@ export const searchWorkers = async (req, res, next) => {
             ];
         }
 
-        const profiles = await WorkerProfile.find(query)
+        let profiles = await WorkerProfile.find(query)
             .populate({
                 path: 'userId',
                 select: 'name profileImage emailVerified phoneVerified',
@@ -250,10 +251,26 @@ export const searchWorkers = async (req, res, next) => {
             .skip(skipCount)
             .limit(Number(limit));
 
-        const totalCount = await WorkerProfile.countDocuments(query);
+        let totalCount = await WorkerProfile.countDocuments(query);
+
+        // Fallback: If strict geo-filtering yielded 0 results, retrieve all available verified workers
+        if (profiles.length === 0 && query.$or) {
+            const fallbackQuery = { ...query };
+            delete fallbackQuery.$or;
+            profiles = await WorkerProfile.find(fallbackQuery)
+                .populate({
+                    path: 'userId',
+                    select: 'name profileImage emailVerified phoneVerified',
+                })
+                .skip(skipCount)
+                .limit(Number(limit));
+            totalCount = await WorkerProfile.countDocuments(fallbackQuery);
+        }
 
         const dtos = profiles.map((p) => ({
-            workerId: p.userId?._id,
+            id: p.userId?._id || p.userId || p._id,
+            _id: p._id,
+            workerId: p.userId?._id || p.userId,
             name: p.userId?.name,
             profileImage: p.userId?.profileImage || p.profilePhotoId,
             serviceCategoryIds: p.serviceCategoryIds,
@@ -323,6 +340,8 @@ export const getWorkerProfile = async (req, res, next) => {
             }
         }
         const safeProfile = {
+            id: profile.userId?._id || profile.userId || profile._id,
+            _id: profile._id,
             workerId: profile.userId?._id || profile.userId,
             name: profile.userId?.name || 'Worker',
             profileImage: profile.userId?.profileImage || profile.profilePhotoId,
