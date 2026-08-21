@@ -40,6 +40,17 @@ process.env.RAZORPAY_KEY_ID = RAZORPAY_KEY_ID;
 process.env.RAZORPAY_KEY_SECRET = RAZORPAY_KEY_SECRET;
 process.env.RAZORPAY_WEBHOOK_SECRET = RAZORPAY_WEBHOOK_SECRET;
 
+// Google OAuth variables
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_OAUTH_ENABLED = process.env.GOOGLE_OAUTH_ENABLED || 'true';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || (NODE_ENV === 'production' ? 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback' : 'http://localhost:5001/api/auth/oauth/google/callback');
+
+if (GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID;
+if (GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = GOOGLE_CLIENT_SECRET;
+process.env.GOOGLE_OAUTH_ENABLED = GOOGLE_OAUTH_ENABLED;
+process.env.GOOGLE_REDIRECT_URI = GOOGLE_REDIRECT_URI;
+
 const PAYMENT_PROVIDER = process.env.PAYMENT_PROVIDER || 'razorpay';
 const PAYMENT_PROVIDER_MODE = process.env.PAYMENT_PROVIDER_MODE || 'live';
 const PAYMENT_CURRENCY = process.env.PAYMENT_CURRENCY || 'INR';

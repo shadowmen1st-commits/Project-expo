@@ -47,16 +47,18 @@ export const oauthCallback = async (req, res, next) => {
         const payload = req.method === 'POST' ? req.body : req.query;
         const { state, code, id_token, user } = payload;
         
+        const frontendBase = (process.env.FRONTEND_URL || config.FRONTEND_URL || 'https://www.shadowmen.in').replace(/\/$/, '');
+        
         if (!state || !code) {
             // Usually this means user cancelled or an error occurred. Redirect to frontend with safe error.
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/oauth/callback?oauth=failed&errorCode=OAUTH_CALLBACK_FAILED`);
+            return res.redirect(`${frontendBase}/auth/oauth/callback?oauth=failed&errorCode=OAUTH_CALLBACK_FAILED`);
         }
 
         let attempt;
         try {
             attempt = await oauthService.validateStateAndConsumeAttempt(state, providerName.toUpperCase());
         } catch (e) {
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/oauth/callback?oauth=failed&errorCode=${e.message}`);
+            return res.redirect(`${frontendBase}/auth/oauth/callback?oauth=failed&errorCode=${e.message}`);
         }
 
         try {
@@ -83,7 +85,7 @@ export const oauthCallback = async (req, res, next) => {
             const { user: appUser } = await oauthService.findOrLinkIdentity(providerName.toUpperCase(), identityParams, attempt, req);
 
             if (appUser.status !== 'ACTIVE') {
-                return res.redirect(`${process.env.FRONTEND_URL}${attempt.frontendRedirectPath}?oauth=access_denied&errorCode=OAUTH_ACCOUNT_DISABLED`);
+                return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=access_denied&errorCode=OAUTH_ACCOUNT_DISABLED`);
             }
 
             // Create session
@@ -93,11 +95,11 @@ export const oauthCallback = async (req, res, next) => {
             attempt.status = 'COMPLETED';
             await attempt.save();
 
-            return res.redirect(`${process.env.FRONTEND_URL}${attempt.frontendRedirectPath}?oauth=success`);
+            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=success`);
         } catch (e) {
             console.error('OAuth Callback Error:', e);
             const errCode = e.message.startsWith('OAUTH_') ? e.message : 'OAUTH_CALLBACK_FAILED';
-            return res.redirect(`${process.env.FRONTEND_URL}${attempt.frontendRedirectPath}?oauth=failed&errorCode=${errCode}`);
+            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=failed&errorCode=${errCode}`);
         }
     } catch (error) {
         next(error);
