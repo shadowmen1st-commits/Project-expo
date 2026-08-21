@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://october-biz-bow-groups.trycloudflare.com').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://resistant-marc-prints-seniors.trycloudflare.com').replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`,

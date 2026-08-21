@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://october-biz-bow-groups.trycloudflare.com';
+const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://resistant-marc-prints-seniors.trycloudflare.com';
 
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
@@ -88,13 +88,11 @@ api.interceptors.request.use(
       delete config.headers.Authorization;
     }
 
-    if (__DEV__) {
-      console.log('[API_REQUEST]', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        baseURL: config.baseURL || API_BASE_URL,
-      });
-    }
+    console.log('[API_REQUEST]', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL || API_BASE_URL,
+    });
     return config;
   },
   (error) => Promise.reject(error)
@@ -156,12 +154,10 @@ export const checkServerHealth = async (): Promise<{ ok: boolean; status?: numbe
 // Response Interceptor: Safe status differentiation & error handling
 api.interceptors.response.use(
   (response) => {
-    if (__DEV__) {
-      console.log('[API_RESPONSE]', {
-        status: response.status,
-        url: response.config.url,
-      });
-    }
+    console.log('[API_RESPONSE]', {
+      status: response.status,
+      url: response.config.url,
+    });
     return response;
   },
   async (error) => {
