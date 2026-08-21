@@ -58,7 +58,7 @@ export const createApp = () => {
                 defaultSrc: ["'self'"],
                 scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://checkout.razorpay.com"],
                 frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
-                connectSrc: ["'self'", "https://api.razorpay.com", "https://lumberjack.razorpay.com", "https://*.trycloudflare.com", "wss://*.trycloudflare.com", "http://localhost:*", "ws://localhost:*"],
+                connectSrc: ["'self'", "https://api.razorpay.com", "https://lumberjack.razorpay.com", "https://*.onrender.com", "wss://*.onrender.com", "https://*.trycloudflare.com", "wss://*.trycloudflare.com", "http://localhost:*", "ws://localhost:*"],
                 imgSrc: ["'self'", "data:", "https:"],
                 styleSrc: ["'self'", "'unsafe-inline'", "https:"],
                 fontSrc: ["'self'", "https:", "data:"],
@@ -72,6 +72,7 @@ export const createApp = () => {
         if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
         if (/^capacitor:\/\/localhost$/.test(origin) || /^https:\/\/localhost$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+        if (/^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.loca\.lt$/.test(origin)) return true;
