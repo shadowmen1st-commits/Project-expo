@@ -21,9 +21,12 @@ class GoogleOAuthProvider {
     buildAuthorizationUrl(state, nonce) {
         if (!this.validateConfiguration()) throw new Error('OAUTH_PROVIDER_NOT_CONFIGURED');
         
+        const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback').trim();
+
         const params = new URLSearchParams({
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            client_id: clientId,
+            redirect_uri: redirectUri,
             response_type: 'code',
             scope: 'openid email profile',
             state: state,
@@ -35,19 +38,25 @@ class GoogleOAuthProvider {
     }
 
     async exchangeAuthorizationCode(code) {
+        const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+        const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback').trim();
+
         const response = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
-                client_id: process.env.GOOGLE_CLIENT_ID,
-                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                client_id: clientId,
+                client_secret: clientSecret,
                 code: code,
                 grant_type: 'authorization_code',
-                redirect_uri: process.env.GOOGLE_REDIRECT_URI
+                redirect_uri: redirectUri
             })
         });
 
         if (!response.ok) {
+            const errText = await response.text();
+            console.error('Google OAuth code exchange error:', response.status, errText);
             throw new Error('OAUTH_CODE_EXCHANGE_FAILED');
         }
 

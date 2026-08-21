@@ -10,6 +10,14 @@ const getProvider = (name) => {
     throw new Error('OAUTH_INVALID_PROVIDER');
 };
 
+const getFrontendBase = () => {
+    const raw = process.env.FRONTEND_URL || process.env.CUSTOMER_APP_URL || config.FRONTEND_URL;
+    if (raw && !raw.includes('localhost') && !raw.includes('127.0.0.1')) {
+        return raw.replace(/\/$/, '');
+    }
+    return 'https://www.shadowmen.in';
+};
+
 export const startOAuth = async (req, res, next) => {
     try {
         const providerName = req.params.provider;
@@ -47,7 +55,7 @@ export const oauthCallback = async (req, res, next) => {
         const payload = req.method === 'POST' ? req.body : req.query;
         const { state, code, id_token, user } = payload;
         
-        const frontendBase = (process.env.FRONTEND_URL || config.FRONTEND_URL || 'https://www.shadowmen.in').replace(/\/$/, '');
+        const frontendBase = getFrontendBase();
         
         if (!state || !code) {
             // Usually this means user cancelled or an error occurred. Redirect to frontend with safe error.

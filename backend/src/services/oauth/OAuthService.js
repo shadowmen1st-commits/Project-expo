@@ -112,43 +112,40 @@ class OAuthService {
             return { identity, user };
         }
 
-        // 2. Identity not found, handle SIGNUP or LOGIN (which might fallback to signup or require link)
-        if (attempt.mode === 'LOGIN') {
-            // Is there a user with this email? If so, we DO NOT AUTO-LINK. We require explicit link.
-            if (providerIdentity.email && providerIdentity.emailVerified) {
-                const existingUser = await User.findOne({ email: providerIdentity.email });
-                if (existingUser) {
-                    throw new Error('OAUTH_ACCOUNT_LINK_REQUIRED');
-                }
+        // 2. Identity not found: auto-link to existing user with verified email or create new account
+        if (providerIdentity.email && providerIdentity.emailVerified) {
+            const existingUser = await User.findOne({ email: providerIdentity.email });
+            if (existingUser) {
+                identity = await OAuthIdentity.create({
+                    userId: existingUser._id,
+                    provider: providerName,
+                    providerSubject: providerIdentity.providerSubject,
+                    providerEmailNormalized: providerIdentity.email,
+                    providerEmailVerified: providerIdentity.emailVerified,
+                    providerEmailPrivateRelay: providerIdentity.privateRelay,
+                    providerDisplayNameSafe: providerIdentity.name,
+                    providerAvatarUrlSafe: providerIdentity.picture,
+                    lastLoginAt: new Date()
+                });
+                await User.updateOne(
+                    { _id: existingUser._id },
+                    { $addToSet: { authenticationMethods: providerName } }
+                );
+                return { identity, user: existingUser };
             }
-            // Policy: We could reject LOGIN if unknown, but normally OAuth allows auto-signup if no conflict.
-            // But wait, the prompt says "Unknown provider identity should not silently create a new account unless business policy explicitly allows it" and "Return a controlled account not found; use signup flow where required".
-            // We will throw an error to redirect to signup.
-            throw new Error('OAUTH_ACCOUNT_NOT_FOUND');
         }
 
-        if (attempt.mode === 'SIGNUP') {
-            if (['ADMIN', 'SUPER_ADMIN'].includes(attempt.requestedRole)) {
-                throw new Error('OAUTH_INVALID_ROLE');
-            }
-
-            if (providerIdentity.email && providerIdentity.emailVerified) {
-                const existingUser = await User.findOne({ email: providerIdentity.email });
-                if (existingUser) {
-                    throw new Error('OAUTH_ACCOUNT_LINK_REQUIRED');
-                }
-            }
-
-            const role = attempt.requestedRole || 'CUSTOMER';
-            const user = await User.create({
-                name: providerIdentity.name || 'Unknown',
-                email: providerIdentity.email || `hidden-${providerIdentity.providerSubject}@example.com`,
-                role: role,
-                status: 'ACTIVE',
-                emailVerified: providerIdentity.emailVerified,
-                authenticationMethods: [providerName],
-                primaryAuthenticationMethod: providerName
-            });
+        // If no user exists, create new account
+        const role = attempt.requestedRole || 'CUSTOMER';
+        const user = await User.create({
+            name: providerIdentity.name || 'User',
+            email: providerIdentity.email || `hidden-${providerIdentity.providerSubject}@example.com`,
+            role: role,
+            status: 'ACTIVE',
+            emailVerified: providerIdentity.emailVerified,
+            authenticationMethods: [providerName],
+            primaryAuthenticationMethod: providerName
+        });
 
             if (role === 'WORKER' || role === 'COMPANY') {
                 await WorkerProfile.create({
