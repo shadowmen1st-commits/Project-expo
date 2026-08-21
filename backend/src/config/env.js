@@ -28,9 +28,12 @@ const PAYOUT_MAXIMUM_PAISE = parseInt(process.env.PAYOUT_MAXIMUM_PAISE || '50000
 const PAYOUT_MANUAL_REVIEW_THRESHOLD_PAISE = parseInt(process.env.PAYOUT_MANUAL_REVIEW_THRESHOLD_PAISE || '200000', 10);
 const PAYOUT_PROCESSING_STALE_HOURS = parseInt(process.env.PAYOUT_PROCESSING_STALE_HOURS || '24', 10);
 
-// Razorpay variables
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'UVmoRQl5c51d7CoCxJqa3hvY';
+// Razorpay variables — enforce verified credentials to prevent stale cloud environment overrides
+const VERIFIED_RAZORPAY_KEY_ID = 'rzp_test_TS38Ger2YMCfWh';
+const VERIFIED_RAZORPAY_KEY_SECRET = 'UVmoRQl5c51d7CoCxJqa3hvY';
+
+const RAZORPAY_KEY_ID = VERIFIED_RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = VERIFIED_RAZORPAY_KEY_SECRET;
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || 'sandboxWebhookSecretKey1234567890abcdef';
 
 process.env.RAZORPAY_KEY_ID = RAZORPAY_KEY_ID;

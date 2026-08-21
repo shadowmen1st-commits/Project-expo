@@ -264,7 +264,9 @@ export const renderCheckoutPage = async (req, res, next) => {
             return res.status(404).send('<h1>Payment Order Not Found</h1>');
         }
 
-        const razorpayKeyId = config.RAZORPAY_KEY_ID;
+        const razorpayKeyId = (config.RAZORPAY_KEY_ID && config.RAZORPAY_KEY_ID.startsWith('rzp_test_TS38')) 
+            ? config.RAZORPAY_KEY_ID 
+            : 'rzp_test_TS38Ger2YMCfWh';
         const customerName = order.customerId?.name || 'Customer';
         const customerEmail = order.customerId?.email || 'customer@jobnest.com';
         const customerPhone = order.customerId?.phone || '9999999999';
@@ -364,6 +366,7 @@ export const renderCheckoutPage = async (req, res, next) => {
         contact: "${customerPhone.replace(/"/g, '')}"
       },
       theme: { color: "#F59E0B" },
+      retry: { enabled: true, max_count: 3 },
       handler: function(response) {
         var callbackUrl = 'jobnest://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id || '') +
                           '&razorpay_payment_id=' + encodeURIComponent(response.razorpay_payment_id || '') +
@@ -380,6 +383,11 @@ export const renderCheckoutPage = async (req, res, next) => {
 
     function openRazorpay() {
       try {
+        if (typeof Razorpay === 'undefined') {
+          document.getElementById('debugMsg').innerText = 'Loading Razorpay SDK... please wait';
+          setTimeout(openRazorpay, 500);
+          return;
+        }
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', function(resp) {
           const desc = (resp && resp.error && resp.error.description) || 'Payment Failed';
