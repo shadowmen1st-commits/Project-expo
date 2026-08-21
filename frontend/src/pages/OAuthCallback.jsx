@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 export default function OAuthCallback() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { fetchUser } = useAuth();
+    const { restoreSession, fetchUser } = useAuth();
     const [status, setStatus] = useState('Processing authentication...');
 
     useEffect(() => {
@@ -13,28 +13,32 @@ export default function OAuthCallback() {
             const params = new URLSearchParams(location.search);
             const oauthStatus = params.get('oauth');
             const errorCode = params.get('errorCode');
+            const token = params.get('token');
 
             if (oauthStatus === 'success') {
                 setStatus('Authentication successful. Redirecting...');
                 try {
+                    if (token) {
+                        localStorage.setItem('accessToken', token);
+                    }
                     // Update auth context with new session
-                    const user = await fetchUser();
+                    const getUser = restoreSession || fetchUser;
+                    const user = await getUser();
                     
                     // Clear the query params securely from browser history
                     window.history.replaceState({}, document.title, window.location.pathname);
 
-                    if (user.role === 'CUSTOMER') {
+                    if (user?.role === 'CUSTOMER') {
                         navigate('/dashboard', { replace: true });
-                    } else if (user.role === 'WORKER') {
-                        // Check if pending approval
-                        if (user.status === 'ACTIVE') {
+                    } else if (user?.role === 'WORKER') {
+                        if (user?.status === 'ACTIVE') {
                             navigate('/worker', { replace: true });
                         } else {
                             navigate('/onboarding', { replace: true });
                         }
-                    } else if (user.role === 'COMPANY') {
+                    } else if (user?.role === 'COMPANY') {
                         navigate('/company', { replace: true });
-                    } else if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+                    } else if (['ADMIN', 'SUPER_ADMIN'].includes(user?.role)) {
                         navigate('/admin', { replace: true });
                     } else {
                         navigate('/dashboard', { replace: true });
@@ -42,7 +46,7 @@ export default function OAuthCallback() {
                 } catch (error) {
                     console.error('Failed to restore session after OAuth', error);
                     setStatus('Session error. Please try logging in again.');
-                    setTimeout(() => navigate('/login', { replace: true }), 3000);
+                    setTimeout(() => navigate('/login', { replace: true }), 2000);
                 }
             } else if (oauthStatus === 'failed' || oauthStatus === 'access_denied') {
                 setStatus(`Authentication failed: ${errorCode || 'Unknown error'}`);
@@ -54,7 +58,7 @@ export default function OAuthCallback() {
         };
 
         handleCallback();
-    }, [location.search, navigate, fetchUser]);
+    }, [location.search, navigate, restoreSession, fetchUser]);
 
     return (
         <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center p-4">

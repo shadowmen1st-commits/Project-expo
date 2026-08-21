@@ -4,17 +4,17 @@ const AuthContext=createContext(undefined);
 export const AuthProvider=({children})=>{
  const [user,setUser]=useState(null);const [loading,setLoading]=useState(true);
   const restoreSession = useCallback(async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token || token === 'null' || token === 'undefined' || !token.trim()) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
     try {
       const response = await api.get('/auth/me');
-      setUser(response.data.user);
+      if (response.data?.user) {
+        setUser(response.data.user);
+        return response.data.user;
+      }
+      setUser(null);
+      return null;
     } catch {
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export const AuthProvider=({children})=>{
     }
   };
   const updateUser = (data) => setUser(prev => prev ? { ...prev, ...data } : data);
-  return <AuthContext.Provider value={{user,setUser,updateUser,token:null,loading,login,registerUser,logout,restoreSession}}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{user,setUser,updateUser,token:null,loading,login,registerUser,logout,restoreSession,fetchUser:restoreSession}}>{children}</AuthContext.Provider>;
 };
 export const useAuth=()=>{const value=useContext(AuthContext);if(!value)throw new Error('useAuth must be used within an AuthProvider');return value;};
 export default AuthContext;

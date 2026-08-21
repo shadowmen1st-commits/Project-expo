@@ -103,7 +103,7 @@ export const oauthCallback = async (req, res, next) => {
             attempt.status = 'COMPLETED';
             await attempt.save();
 
-            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=success`);
+            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=success&token=${encodeURIComponent(session.accessToken)}`);
         } catch (e) {
             console.error('OAuth Callback Error:', e);
             const errCode = e.message.startsWith('OAUTH_') ? e.message : 'OAUTH_CALLBACK_FAILED';
