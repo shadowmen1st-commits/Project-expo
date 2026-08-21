@@ -147,41 +147,38 @@ class OAuthService {
             primaryAuthenticationMethod: providerName
         });
 
-            if (role === 'WORKER' || role === 'COMPANY') {
-                await WorkerProfile.create({
-                    userId: user._id,
-                    verificationStatus: 'PENDING_APPROVAL',
-                    isPubliclyVisible: false,
-                    isOnline: false
-                });
-            }
-
-            identity = await OAuthIdentity.create({
+        if (role === 'WORKER' || role === 'COMPANY') {
+            await WorkerProfile.create({
                 userId: user._id,
-                provider: providerName,
-                providerSubject: providerIdentity.providerSubject,
-                providerEmailNormalized: providerIdentity.email,
-                providerEmailVerified: providerIdentity.emailVerified,
-                providerEmailPrivateRelay: providerIdentity.privateRelay,
-                providerDisplayNameSafe: providerIdentity.name,
-                providerAvatarUrlSafe: providerIdentity.picture,
-                lastLoginAt: new Date()
+                verificationStatus: 'PENDING_APPROVAL',
+                isPubliclyVisible: false,
+                isOnline: false
             });
-
-            await AuditLog.create({
-                actor: user._id,
-                action: 'OAUTH_SIGNUP_COMPLETED',
-                resourceType: 'User',
-                resourceId: user._id.toString(),
-                afterSnapshot: { provider: providerName, role },
-                ipAddress: req.ip,
-                requestId: req.requestId
-            });
-
-            return { identity, user };
         }
 
-        throw new Error('OAUTH_INVALID_MODE');
+        identity = await OAuthIdentity.create({
+            userId: user._id,
+            provider: providerName,
+            providerSubject: providerIdentity.providerSubject,
+            providerEmailNormalized: providerIdentity.email,
+            providerEmailVerified: providerIdentity.emailVerified,
+            providerEmailPrivateRelay: providerIdentity.privateRelay,
+            providerDisplayNameSafe: providerIdentity.name,
+            providerAvatarUrlSafe: providerIdentity.picture,
+            lastLoginAt: new Date()
+        });
+
+        await AuditLog.create({
+            actor: user._id,
+            action: 'OAUTH_SIGNUP_COMPLETED',
+            resourceType: 'User',
+            resourceId: user._id.toString(),
+            afterSnapshot: { provider: providerName, role },
+            ipAddress: req.ip,
+            requestId: req.requestId
+        });
+
+        return { identity, user };
     }
 }
 
