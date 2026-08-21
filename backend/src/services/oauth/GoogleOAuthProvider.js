@@ -3,30 +3,33 @@ import { verifyJwtWithJwks } from './OAuthUtils.js';
 import crypto from 'crypto';
 
 class GoogleOAuthProvider {
+    get clientId() {
+        return (process.env.GOOGLE_CLIENT_ID || '').trim();
+    }
+
+    get clientSecret() {
+        return (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+    }
+
+    get redirectUri() {
+        return (process.env.GOOGLE_REDIRECT_URI || 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback').trim();
+    }
+
     get isEnabled() {
         return process.env.GOOGLE_OAUTH_ENABLED === 'true';
     }
 
     validateConfiguration() {
         if (!this.isEnabled) return false;
-        const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'];
-        for (const key of required) {
-            if (!process.env[key]) {
-                return false;
-            }
-        }
-        return true;
+        return Boolean(this.clientId && this.clientSecret && this.redirectUri);
     }
 
     buildAuthorizationUrl(state, nonce) {
         if (!this.validateConfiguration()) throw new Error('OAUTH_PROVIDER_NOT_CONFIGURED');
-        
-        const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback').trim();
 
         const params = new URLSearchParams({
-            client_id: clientId,
-            redirect_uri: redirectUri,
+            client_id: this.clientId,
+            redirect_uri: this.redirectUri,
             response_type: 'code',
             scope: 'openid email profile',
             state: state,
@@ -38,19 +41,15 @@ class GoogleOAuthProvider {
     }
 
     async exchangeAuthorizationCode(code) {
-        const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-        const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
-        const redirectUri = (process.env.GOOGLE_REDIRECT_URI || 'https://project-expo-md7o.onrender.com/api/auth/oauth/google/callback').trim();
-
         const response = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
-                client_id: clientId,
-                client_secret: clientSecret,
+                client_id: this.clientId,
+                client_secret: this.clientSecret,
                 code: code,
                 grant_type: 'authorization_code',
-                redirect_uri: redirectUri
+                redirect_uri: this.redirectUri
             })
         });
 
@@ -66,7 +65,7 @@ class GoogleOAuthProvider {
     async verifyIdToken(idToken, nonceHash = null) {
         try {
             const payload = await verifyJwtWithJwks(idToken, 'https://www.googleapis.com/oauth2/v3/certs', {
-                audience: process.env.GOOGLE_CLIENT_ID,
+                audience: this.clientId,
                 issuer: ['https://accounts.google.com', 'accounts.google.com']
             });
 
