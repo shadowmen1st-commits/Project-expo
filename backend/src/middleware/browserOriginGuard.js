@@ -6,6 +6,8 @@ const isOriginAllowed = (origin, allowedOrigins) => {
   if (allowedOrigins.includes(origin)) return true;
   if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
   if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  if (/^https:\/\/(www\.)?shadowmen\.in$/.test(origin)) return true;
+  if (/^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin)) return true;
   if (/^https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com$/.test(origin)) return true;
   if (/^https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app$/.test(origin)) return true;
   if (/^https:\/\/[a-zA-Z0-9-]+\.loca\.lt$/.test(origin)) return true;

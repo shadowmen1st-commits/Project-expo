@@ -80,6 +80,9 @@ if (NODE_ENV === 'test' && PAYMENT_PROVIDER_MODE === 'mock') {
 }
 
 const defaultDevOrigins = [
+    'https://shadowmen.in',
+    'https://www.shadowmen.in',
+    'https://project-expo-ebon.vercel.app',
     'http://localhost:8081',
     'http://localhost:8082',
     'http://localhost:19006',
