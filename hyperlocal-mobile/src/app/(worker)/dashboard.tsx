@@ -351,10 +351,16 @@ export default function WorkerDashboard() {
             const currentStatus = job.bookingStatus || job.status || 'PENDING';
             const categoryTitle =
               job.category?.name ||
+              job.serviceCategoryId?.name ||
               job.serviceCategoryName ||
               job.categoryName ||
               'Service Request';
-            const customerTitle = job.customer?.name || job.customerName || 'Customer';
+            const customerTitle =
+              job.customer?.name ||
+              job.customerId?.name ||
+              (typeof job.customer === 'string' ? job.customer : '') ||
+              job.customerName ||
+              'Customer';
             const addressTitle =
               job.serviceAddress ||
               job.addressSnapshot?.addressLine ||

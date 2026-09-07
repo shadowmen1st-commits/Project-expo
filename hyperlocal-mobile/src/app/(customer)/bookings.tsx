@@ -33,8 +33,12 @@ export default function CustomerBookingsScreen() {
     setErrorMessage('');
     try {
       if (__DEV__) console.log('AUTH: Fetching customer bookings, user:', user?.email);
-      const res = await api.get('/bookings/customer').catch(() => api.get('/bookings/customer/my-bookings'));
-      const data = Array.isArray(res.data) ? res.data : res.data?.bookings || res.data?.data || [];
+      const res = await api.get('/bookings/customer')
+        .catch(() => api.get('/bookings'))
+        .catch(() => api.get('/bookings/customer/my-bookings'));
+      const data = Array.isArray(res?.data)
+        ? res.data
+        : res?.data?.bookings || res?.data?.data || [];
       setBookings(data);
     } catch (err: any) {
       if (err.response?.status === 401) {
@@ -71,9 +75,25 @@ export default function CustomerBookingsScreen() {
   };
 
   const filteredBookings = bookings.filter((b) => {
-    const status = b.bookingStatus || b.status;
+    const status = (b.bookingStatus || b.status || '').toUpperCase();
     if (activeTab === 'ALL') return true;
-    if (activeTab === 'ACTIVE') return ['PENDING', 'PAYMENT_PENDING', 'ASSIGNED', 'IN_PROGRESS', 'CONFIRMED'].includes(status);
+    if (activeTab === 'ACTIVE') {
+      return [
+        'PENDING',
+        'REQUESTED',
+        'CREATED',
+        'PAYMENT_PENDING',
+        'ASSIGNED',
+        'ACCEPTED',
+        'CONFIRMED',
+        'PAID',
+        'WORKER_EN_ROUTE',
+        'ARRIVED',
+        'STARTED',
+        'IN_PROGRESS',
+        'COMPLETION_REQUESTED'
+      ].includes(status);
+    }
     if (activeTab === 'COMPLETED') return status === 'COMPLETED';
     if (activeTab === 'CANCELLED') return ['CANCELLED', 'REJECTED'].includes(status);
     return true;
@@ -125,7 +145,7 @@ export default function CustomerBookingsScreen() {
       ) : (
         <FlatList
           data={filteredBookings}
-          keyExtractor={(item) => item._id || item.id}
+          keyExtractor={(item) => String(item._id || item.id)}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
@@ -140,15 +160,16 @@ export default function CustomerBookingsScreen() {
             />
           }
           renderItem={({ item }) => {
-            const bookingId = item._id || item.id;
-            const currentStatus = item.bookingStatus || item.status;
-            const isPaid = item.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'IN_PROGRESS', 'STARTED'].includes(currentStatus);
-            const categoryName = item.serviceCategoryId?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
-            const workerName = item.workerId?.name || item.worker?.name || item.workerName || 'Assigned Professional';
+            const bookingId = String(item._id || item.id);
+            const currentStatus = item.bookingStatus || item.status || 'PENDING';
+            const isPaid = item.paymentStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'STARTED'].includes(currentStatus);
+            const categoryName = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
+            const workerName = item.worker?.name || item.workerId?.name || (typeof item.worker === 'string' ? item.worker : '') || item.workerName || 'Assigned Professional';
             const scheduledDate = item.scheduledStart || item.bookingDate;
             const dateStr = scheduledDate ? new Date(scheduledDate).toLocaleDateString() : 'Scheduled Date';
-            const timeStr = item.startTime || (scheduledDate ? new Date(scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM');
+            const timeStr = item.bookingTime || item.startTime || (scheduledDate ? new Date(scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM');
             const durationStr = item.durationMinutes ? `${Math.round(item.durationMinutes / 60)} hrs` : `${item.durationHours || 2} hrs`;
+            const priceVal = item.totalAmount || item.estimatedPrice || item.baseAmount || 500;
 
             return (
               <TouchableOpacity
@@ -175,7 +196,7 @@ export default function CustomerBookingsScreen() {
 
                 <View style={styles.cardFooter}>
                   <Text style={styles.priceText}>
-                    ₹{item.totalAmount || item.estimatedPrice || 500}
+                    ₹{priceVal}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                     {isPaid && (

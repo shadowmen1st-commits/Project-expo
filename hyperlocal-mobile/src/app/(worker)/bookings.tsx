@@ -40,19 +40,10 @@ export default function WorkerBookingsScreen() {
     setErrorState(null);
     console.log('[WORKER_BOOKINGS_FETCH_START]', { workerId });
     try {
-      let res = await api.get('/bookings/worker');
-      let data = Array.isArray(res.data)
+      let res = await api.get('/bookings/worker').catch(() => api.get('/bookings'));
+      let data = Array.isArray(res?.data)
         ? res.data
-        : res.data?.bookings || res.data?.jobs || res.data?.data || [];
-
-      if (!data || data.length === 0) {
-        try {
-          const fallbackRes = await api.get('/bookings');
-          data = Array.isArray(fallbackRes.data) ? fallbackRes.data : fallbackRes.data?.bookings || [];
-        } catch {
-          // Ignore fallback error
-        }
-      }
+        : res?.data?.bookings || res?.data?.jobs || res?.data?.data || [];
 
       console.log('[WORKER_BOOKINGS_FETCH_SUCCESS]', { count: data.length });
       setJobs(data);
@@ -212,8 +203,8 @@ export default function WorkerBookingsScreen() {
             const status = item.bookingStatus || item.status || 'PENDING';
             const isProcessing = actionLoadingId === bookingId;
 
-            const categoryTitle = item.category?.name || item.serviceCategoryName || item.categoryName || 'Service Request';
-            const customerName = item.customer?.name || item.customerName || 'Customer';
+            const categoryTitle = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || item.categoryName || 'Service Request';
+            const customerName = item.customer?.name || item.customerId?.name || (typeof item.customer === 'string' ? item.customer : '') || item.customerName || 'Customer';
             const customerPhone = item.customer?.phone || null;
             const address = item.serviceAddress || item.addressSnapshot?.addressLine || item.address || 'Customer Service Location';
             const bookingNum = item.bookingNumber || `BK-${bookingId.substring(0, 8).toUpperCase()}`;

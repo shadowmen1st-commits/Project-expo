@@ -46,7 +46,9 @@ export default function CustomerDashboard() {
       const [catRes, workerRes, bookingRes] = await Promise.allSettled([
         api.get('/categories'),
         api.get('/workers/search', { params: searchParams }),
-        api.get('/bookings/customer').catch(() => api.get('/bookings/customer/my-bookings')),
+        api.get('/bookings/customer')
+          .catch(() => api.get('/bookings'))
+          .catch(() => api.get('/bookings/customer/my-bookings')),
       ]);
 
       if (catRes.status === 'fulfilled' && catRes.value.data) {
@@ -381,7 +383,7 @@ export default function CustomerDashboard() {
             </View>
             <TouchableOpacity
               style={styles.recentBookingCard}
-              onPress={() => router.push(`/(customer)/booking/details/${recentBookings[0]._id}`)}
+              onPress={() => router.push(`/(customer)/booking/details/${recentBookings[0]._id || recentBookings[0].id}`)}
               activeOpacity={0.8}
             >
               <View style={styles.recentBookingRow}>
@@ -390,14 +392,14 @@ export default function CustomerDashboard() {
                 </View>
                 <View style={{ flex: 1, marginLeft: spacing.md }}>
                   <Text style={styles.recentBookingTitle}>
-                    {recentBookings[0].serviceCategoryName || 'Home Service Request'}
+                    {recentBookings[0].category?.name || recentBookings[0].serviceCategoryName || recentBookings[0].categoryName || 'Home Service Request'}
                   </Text>
                   <Text style={styles.recentBookingSub}>
-                    {new Date(recentBookings[0].bookingDate || recentBookings[0].scheduledStart || Date.now()).toLocaleDateString()}
+                    {new Date(recentBookings[0].scheduledStart || recentBookings[0].bookingDate || Date.now()).toLocaleDateString()}
                   </Text>
                 </View>
                 <View style={styles.statusPill}>
-                  <Text style={styles.recentBookingStatus}>{recentBookings[0].status}</Text>
+                  <Text style={styles.recentBookingStatus}>{recentBookings[0].bookingStatus || recentBookings[0].status || 'ACTIVE'}</Text>
                 </View>
               </View>
             </TouchableOpacity>
