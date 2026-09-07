@@ -18,6 +18,7 @@ import { EmptyState } from '../../../../components/EmptyState';
 import Badge from '../../../../components/Badge';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../../config/api';
+import { storage } from '../../../../utils/storage';
 import { useAuth } from '../../../../context/AuthContext';
 import { colors, spacing, typography, radius, shadows } from '../../../../theme';
 import {
@@ -236,6 +237,16 @@ export default function BookingPaymentScreen() {
       // Native mobile: Open Official Razorpay Checkout session in browser modal
       const checkoutUrl = `${api.defaults.baseURL}/payments/checkout/${internalPaymentOrderId}`;
       console.log('[PAYMENT] Opening official Razorpay checkout URL:', checkoutUrl);
+
+      // Persist pending payment context so callback handler can resolve if needed
+      await storage.setItem(
+        'JOBNEST_PENDING_PAYMENT',
+        JSON.stringify({
+          bookingId: bId,
+          internalPaymentOrderId,
+          razorpayOrderId,
+        })
+      );
 
       const browserResult = await WebBrowser.openAuthSessionAsync(
         checkoutUrl,
