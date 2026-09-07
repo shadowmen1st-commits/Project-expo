@@ -1,0 +1,1093 @@
+--------- beginning of main
+09-07 23:30:50.467  1644  1644 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+--------- beginning of system
+09-07 23:30:50.498   720  1683 I ActivityManager: Force stopping com.anonymous.hyperlocalmobile appid=10222 user=0: from pid 19425
+09-07 23:30:50.499   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.499   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.499   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.500   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.500   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.500   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.500   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.501   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.501   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.501   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.502   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.503   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.504   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.505   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.505   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.506   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.507   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.508   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.508   720  1683 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.509   720  1683 I AppsFilter: interaction: PackageSetting{9ce3086 com.android.microdroid.empty_payload/10209} -> PackageSetting{d37ad47 com.anonymous.hyperlocalmobile/10222} BLOCKED
+09-07 23:30:50.510   720  1683 I AppsFilter: interaction: PackageSetting{36a9974 com.example.keymapper/10235} -> PackageSetting{d37ad47 com.anonymous.hyperlocalmobile/10222} BLOCKED
+09-07 23:30:50.533  1085  1085 D CarrierSvcBindHelper: onHandleForceStop: [com.anonymous.hyperlocalmobile]
+09-07 23:30:50.534  1085  1085 D CarrierSvcBindHelper: No carrier app for: 0
+09-07 23:30:50.730   720  1683 W ActivityTaskManager: callingPackage for (uid=2000, pid=19430) has no WPC
+09-07 23:30:50.736   720  1683 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@16d73416 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-07 23:30:50.737   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_OVERRIDE
+09-07 23:30:50.737   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_FULLSCREEN_OVERRIDE
+09-07 23:30:50.738   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES
+09-07 23:30:50.738   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE
+09-07 23:30:50.742   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_ORIENTATION_OVERRIDE
+09-07 23:30:50.744   542  1160 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+09-07 23:30:50.748   720  1683 I ActivityTaskManager: START u0 {flg=0x10000000 xflg=0x5 cmp=com.anonymous.hyperlocalmobile/.MainActivity} with LAUNCH_SINGLE_TASK from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+09-07 23:30:50.751   966  1078 V WindowManagerShell: Transition requested (#108): android.os.BinderProxy@1a082ea TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=262 effectiveUid=10222 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.anonymous.hyperlocalmobile/.MainActivity } baseActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} topActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} origActivity=null realActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} numActivities=1 lastActiveTime=11516206 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@43739db} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{9868c78 com.anonymous.hyperlocalmobile.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(284, 660 - 796, 1740) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1080, 2400) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 108 }
+09-07 23:30:50.755   720   756 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@16d73416 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-07 23:30:50.780   966  1177 I ndroid.systemui: AssetManager2(0x7884a2c5ddd8) locale list changing from [] to [en-US]
+09-07 23:30:50.780   966  1078 D ShellSplitScreen: logExit: no-op, mLoggerSessionId is null
+09-07 23:30:50.792   720  1701 D CompatChangeReporter: Compat change id reported: 377864165; UID 10222; state: ENABLED
+09-07 23:30:50.802   542   542 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+09-07 23:30:50.803   489   489 D Zygote  : Forked child process 19433
+09-07 23:30:50.807 17017 17017 I cr_VideoPersist: Attempted picture-in-picture with result: 7
+09-07 23:30:50.811   720   766 W ActivityManager: Slow operation: 55ms so far, now at startProcess: returned from zygote!
+09-07 23:30:50.813   720   766 W ActivityManager: Slow operation: 58ms so far, now at startProcess: done updating battery stats
+09-07 23:30:50.814   720   766 W ActivityManager: Slow operation: 58ms so far, now at startProcess: building log message
+09-07 23:30:50.814   720   766 I ActivityManager: Start proc 19433:com.anonymous.hyperlocalmobile/u0a222 for next-top-activity {com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity}
+09-07 23:30:50.814   720   766 W ActivityManager: Slow operation: 58ms so far, now at startProcess: starting to update pids map
+09-07 23:30:50.814   720   766 I ActivityManager: ProcessObserver broadcast disabled
+09-07 23:30:50.814   720   766 W ActivityManager: Slow operation: 58ms so far, now at startProcess: done updating pids map
+09-07 23:30:50.826   966  1178 W HWUI    : Image decoding logging dropped!
+09-07 23:30:50.841   609   703 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:50.889   720  4179 D CoreBackPreview: Window{8ce7a5f u0 Splash Screen com.anonymous.hyperlocalmobile}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@4476d75, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-07 23:30:50.940 19433 19433 I yperlocalmobile: Using CollectorTypeCMC GC.
+09-07 23:30:50.946 19433 19433 W yperlocalmobile: Unexpected CPU variant for x86: x86_64.
+09-07 23:30:50.946 19433 19433 W yperlocalmobile: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, goldmont-without-sha-xsaves, tremont, kabylake, alderlake, default
+09-07 23:30:50.991 19433 19433 E yperlocalmobile: Not starting debugger since process cannot load the jdwp agent.
+09-07 23:30:51.011 19433 19433 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-07 23:30:51.047   720  4179 I AppsFilter: interaction: PackageSetting{9ce3086 com.android.microdroid.empty_payload/10209} -> PackageSetting{341710a com.anonymous.hyperlocalmobile/10222} BLOCKED
+09-07 23:30:51.047   720  4179 I AppsFilter: interaction: PackageSetting{36a9974 com.example.keymapper/10235} -> PackageSetting{341710a com.anonymous.hyperlocalmobile/10222} BLOCKED
+09-07 23:30:51.051   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:51.133   966  4625 V WindowManagerShell: onTransitionReady(transaction=3092376457188)
+09-07 23:30:51.136   966  1078 V WindowManagerShell: onTransitionReady (#108) android.os.BinderProxy@1a082ea: {id=108 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+09-07 23:30:51.136   966  1078 V WindowManagerShell:         {m=OPEN f=NONE leash=Surface(name=Task=262)/@0xad81da7 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1},
+09-07 23:30:51.136   966  1078 V WindowManagerShell:         {m=TO_BACK f=NONE leash=Surface(name=Task=255)/@0xd37b254 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1}
+09-07 23:30:51.136   966  1078 V WindowManagerShell:     ]}
+09-07 23:30:51.136   966  1078 V WindowManagerShell: Playing animation for (#108) android.os.BinderProxy@1a082ea@0
+09-07 23:30:51.137   966  1078 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+09-07 23:30:51.137   966  1078 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=108 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=NONE leash=Surface(name=Task=262)/@0xad81da7 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1},{m=TO_BACK f=NONE leash=Surface(name=Task=255)/@0xd37b254 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1}]}
+09-07 23:30:51.137   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=undefined independent=true modes=[CLOSE,TO_BACK] flags=IN_TASK_WITH_EMBEDDED_ACTIVITY mustBeTask=false order=ANY topActivity=null launchCookie=null taskFragmentToken=android.os.BinderProxy@cc8f358 windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@9c49cb1, appThread = android.app.IApplicationThread$Stub$Proxy@25ad596, debugName = overlayBackTransition }}
+09-07 23:30:51.137   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=dream independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{atype=home independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@5c4d517, appThread = android.app.IApplicationThread$Stub$Proxy@485ed04, debugName = LauncherToDream }}
+09-07 23:30:51.137   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null customAnim=true windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@5552ed, appThread = android.app.IApplicationThread$Stub$Proxy@3e6b522, debugName = QuickstepLaunchHome }}
+09-07 23:30:51.137   966  1078 V WindowManagerShell:  Delegate animation for (#108) to null
+09-07 23:30:51.138   966  1078 V WindowManagerShell: start default transition animation, info = {id=108 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=NONE leash=Surface(name=Task=262)/@0xad81da7 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1},{m=TO_BACK f=NONE leash=Surface(name=Task=255)/@0xd37b254 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1}]}
+09-07 23:30:51.139   966  1078 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@95eed43 animAttr=0x9 type=OPEN isEntrance=false
+09-07 23:30:51.140   966  1078 I ndroid.systemui: AssetManager2(0x7884a2c64b38) locale list changing from [] to [en-US]
+09-07 23:30:51.230   720   753 V WindowManager: Sent Transition (#108) createdAt=09-07 23:30:50.739 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=262 effectiveUid=10222 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.anonymous.hyperlocalmobile/.MainActivity } baseActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} topActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} origActivity=null realActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} numActivities=1 lastActiveTime=11516206 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{e93f6c8 Task{15f7b8b #262 type=standard A=10222:com.anonymous.hyperlocalmobile}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{e13361 com.anonymous.hyperlocalmobile.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=Rect(284, 660 - 796, 1740) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1080, 2400) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 108 }
+09-07 23:30:51.230   720   753 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+09-07 23:30:51.230   720   753 V WindowManager:     info={id=108 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+09-07 23:30:51.230   720   753 V WindowManager:         {WCT{RemoteToken{e93f6c8 Task{15f7b8b #262 type=standard A=10222:com.anonymous.hyperlocalmobile}}} m=OPEN f=NONE leash=Surface(name=Task=262)/@0x91100f3 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1},
+09-07 23:30:51.230   720   753 V WindowManager:         {WCT{RemoteToken{9e20c9b Task{ceb7010 #255 type=standard A=10150:com.android.chrome}}} m=TO_BACK f=NONE leash=Surface(name=Task=255)/@0x54e609e sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1}
+09-07 23:30:51.230   720   753 V WindowManager:     ]}
+09-07 23:30:51.233   966  1078 I ndroid.systemui: AssetManager2(0x7884a2c64818) locale list changing from [] to [en-US]
+09-07 23:30:51.238   966  1078 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@453be4a animAttr=0x8 type=OPEN isEntrance=true
+09-07 23:30:51.239   720  4179 W ActivityManager: Slow operation: 142ms so far, now at attachApplicationLocked: immediately after bindApplication
+09-07 23:30:51.239   720  4179 W ActivityManager: Slow operation: 142ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+09-07 23:30:51.240   720  4179 W ActivityManager: Slow operation: 143ms so far, now at attachApplicationLocked: after updateOomAdjLocked
+09-07 23:30:51.240   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:51.243   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:51.247   966  1078 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@c5b7831
+09-07 23:30:51.460 19433 19433 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+09-07 23:30:51.460 19433 19433 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+09-07 23:30:51.460 19433 19433 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+09-07 23:30:51.466 19433 19433 D nativeloader: Configuring clns-9 for other apk /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/lib/x86_64:/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.anonymous.hyperlocalmobile
+09-07 23:30:51.482 19433 19433 I yperlocalmobile: AssetManager2(0x7884a2c1a498) locale list changing from [] to [en-US]
+09-07 23:30:51.496 19433 19433 V GraphicsEnvironment: Currently set values for:
+09-07 23:30:51.497 19433 19433 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+09-07 23:30:51.497 19433 19433 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+09-07 23:30:51.497 19433 19433 V GraphicsEnvironment: com.anonymous.hyperlocalmobile is not listed in per-application setting
+09-07 23:30:51.497 19433 19433 V GraphicsEnvironment: ANGLE allowlist from config: com.dreamgames.royalmatch com.dts.freefiremax com.dxx.firenow com.gramgames.mergedragons com.ludo.king com.mojang.minecraftpe com.my.defense com.nintendo.zaka com.os.airforce com.playrix.fishdomdd.gplay io.teslatech.callbreak jp.konami.prospia net.peakgames.toonblast
+09-07 23:30:51.497 19433 19433 V GraphicsEnvironment: com.anonymous.hyperlocalmobile is not listed in ANGLE allowlist or settings, returning default
+09-07 23:30:51.498 19433 19433 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+09-07 23:30:51.564 19433 19433 W SoLoader: Initializing SoLoader: 0
+09-07 23:30:51.564 19433 19433 W SoLoader: Recording new base apk path: /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk
+09-07 23:30:51.564 19433 19433 W SoLoader: Previously recorded 0 base apk paths.
+09-07 23:30:51.567 19433 19433 I SoLoader: Preparing SO source: DirectorySoSource[root = /vendor/lib64 flags = 2]
+09-07 23:30:51.567 19433 19433 I SoLoader: Preparing SO source: DirectorySoSource[root = /system/lib64 flags = 2]
+09-07 23:30:51.567 19433 19433 I SoLoader: Preparing SO source: DirectApkSoSource[root = [/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64]]
+09-07 23:30:51.570 19433 19433 I SoLoader: Preparing SO source: ApplicationSoSource[DirectorySoSource[root = /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/lib/x86_64 flags = 0]]
+09-07 23:30:51.570 19433 19433 I SoLoader: init finish: 4 SO sources prepared
+09-07 23:30:51.570 19433 19433 W SoLoader: SoLoader initialized: 8
+09-07 23:30:51.578 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libc++_shared.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:51.755   966  1078 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#108) android.os.BinderProxy@1a082ea@0
+09-07 23:30:51.757   720   753 V WindowManager: Finish Transition (#108): created at 09-07 23:30:50.739 collect-started=0.061ms request-sent=8.592ms started=45.535ms ready=386.752ms sent=392.044ms commit=222.055ms finished=1018.035ms
+09-07 23:30:51.760 17017 17017 D VRI[ChromeTabbedActivity]: visibilityChanged oldVisibility=true newVisibility=false
+09-07 23:30:51.762   966  1078 V WindowManagerShell: Track 0 became idle
+09-07 23:30:51.762   966  1078 V WindowManagerShell: All active transition animations finished
+09-07 23:30:51.800 17017 17017 E cr_CompositorSurfaceMgr: surfaceDestroyed format : -3
+09-07 23:30:52.175 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libjsi.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.190 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libfbjni.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.239 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libreactnative.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Entering merged library JNI_OnLoad.
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing 13 pre-merged libs (including stub)
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libfabricjni_so.  onload_func: 0x7882e8bf7000
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreact_devsupportjni_so.  onload_func: 0x7882e8cdcb60
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreact_featureflagsjni_so.  onload_func: 0x7882e8cef690
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreact_newarchdefaults_so.  onload_func: 0x7882e8d2b670
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreact_tracingjni_so.  onload_func: 0x7882e8e33f00
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreactnativeblob_so.  onload_func: 0x7882e8e39260
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreactnativejni_so.  onload_func: 0x7882e8e45760
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libreactnativejni_common_so.  onload_func: 0x7882e8e485d0
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register librninstance_so.  onload_func: 0x7882e8e706f0
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libturbomodulejsijni_so.  onload_func: 0x7882e8f1f250
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libuimanagerjni_so.  onload_func: 0x7882e8f261b0
+09-07 23:30:52.241 19433 19433 D jni_lib_merge: Preparing to register libyoga_so.  onload_func: 0x7882e8f2d8b0
+09-07 23:30:52.242 19433 19433 D jni_lib_merge: About to register 12 actual methods.
+09-07 23:30:52.270 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libreact_codegen_rnscreens.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.270 19433 19433 D jni_lib_merge: Entering merged library JNI_OnLoad.
+09-07 23:30:52.270 19433 19433 D jni_lib_merge: Preparing 13 pre-merged libs (including stub)
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libfabricjni_so.  onload_func: 0x7882e8bf7000
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreact_devsupportjni_so.  onload_func: 0x7882e8cdcb60
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreact_featureflagsjni_so.  onload_func: 0x7882e8cef690
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreact_newarchdefaults_so.  onload_func: 0x7882e8d2b670
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreact_tracingjni_so.  onload_func: 0x7882e8e33f00
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreactnativeblob_so.  onload_func: 0x7882e8e39260
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreactnativejni_so.  onload_func: 0x7882e8e45760
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libreactnativejni_common_so.  onload_func: 0x7882e8e485d0
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register librninstance_so.  onload_func: 0x7882e8e706f0
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libturbomodulejsijni_so.  onload_func: 0x7882e8f1f250
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libuimanagerjni_so.  onload_func: 0x7882e8f261b0
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: Preparing to register libyoga_so.  onload_func: 0x7882e8f2d8b0
+09-07 23:30:52.271 19433 19433 D jni_lib_merge: About to register 12 actual methods.
+09-07 23:30:52.275 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libreact_codegen_safeareacontext.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.276 19433 19433 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libappmodules.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.310  1460  1460 W AiAiVC  : Unexpected capture event type: 11
+09-07 23:30:52.315   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ENABLE_FAKE_FOCUS
+09-07 23:30:52.320 19433 19433 I Choreographer: Skipped 46 frames!  The application may be doing too much work on its main thread.
+09-07 23:30:52.330 19433 19448 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+09-07 23:30:52.333   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:52.336   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:52.343 19433 19433 I yperlocalmobile: AssetManager2(0x7884a2c1a7b8) locale list changing from [] to [en-US]
+09-07 23:30:52.404 19433 19433 D AppCompatDelegate: Checking for metadata for AppLocalesMetadataHolderService : Service not found
+09-07 23:30:52.405 19433 19433 I yperlocalmobile: AssetManager2(0x7884a2c20bb8) locale list changing from [] to [en-US]
+09-07 23:30:52.422 19433 19433 E ashmem  : Pinning is deprecated since Android Q. Please use trim or other methods.
+09-07 23:30:52.471 19433 19448 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+09-07 23:30:52.472 19433 19448 I EGL_emulation: Opening libGLESv2_emulation.so
+09-07 23:30:52.473 19433 19433 D CompatChangeReporter: Compat change id reported: 377864165; UID 10222; state: ENABLED
+09-07 23:30:52.475 19433 19433 D DesktopModeFlags: Toggle override initialized to: OVERRIDE_UNSET
+09-07 23:30:52.509 19433 19448 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+09-07 23:30:52.509 19433 19448 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+09-07 23:30:52.712 19433 19433 W unknown:BridgelessReact: ReactHost{0}.startSurface(surfaceId = 0): Schedule
+09-07 23:30:52.712 19433 19433 W unknown:BridgelessReact: ReactHost{0}.attachSurface(surfaceId = 0)
+09-07 23:30:52.714 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask()
+09-07 23:30:52.714 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Start
+09-07 23:30:52.714 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getJSBundleLoader()
+09-07 23:30:52.716 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Creating BridgelessReactContext
+09-07 23:30:52.718 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Creating ReactInstance
+09-07 23:30:52.735 19433 19433 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+09-07 23:30:52.735 19433 19433 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+09-07 23:30:52.760 19433 19433 W unknown:BridgelessReact: ReactHost{0}.onHostResume(activity)
+09-07 23:30:52.760 19433 19433 W unknown:BridgelessReact: ReactHost{0}.ReactContext.onHostResume()
+09-07 23:30:52.795 19433 19452 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libhermesvm.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.798 19433 19452 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libhermestooling.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: Entering merged library JNI_OnLoad.
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: Preparing 4 pre-merged libs (including stub)
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: Preparing to register libhermes_executor_so.  onload_func: 0x7882e4e2d1d0
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: Preparing to register libhermesinstancejni_so.  onload_func: 0x7882e4e34b10
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: Preparing to register libjsijniprofiler_so.  onload_func: 0x7882e4e35350
+09-07 23:30:52.799 19433 19452 D jni_lib_merge: About to register 3 actual methods.
+09-07 23:30:52.821 19433 19433 W HWUI    : Unknown dataspace 0
+09-07 23:30:52.887   720  4179 D CoreBackPreview: Window{8d42c79 u0 com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@c351e1f, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-07 23:30:52.938   542   598 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10222 pid=0
+09-07 23:30:52.938   542  1160 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10222 pid=19433
+09-07 23:30:52.938   542   598 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10222 => denied (2920 us)
+09-07 23:30:52.938   542  1160 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10222 => denied (499 us)
+09-07 23:30:52.939   542  1160 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10222 pid=19433
+09-07 23:30:52.939   542   598 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10222 pid=0
+09-07 23:30:52.939   542  1160 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10222 => denied (385 us)
+09-07 23:30:52.939   542   598 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10222 => denied (435 us)
+09-07 23:30:52.939   542  1160 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10222 pid=19433
+09-07 23:30:52.939   542  1160 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10222 => denied (550 us)
+09-07 23:30:52.940   542   598 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10222 pid=0
+09-07 23:30:52.940   542   598 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10222 => denied (407 us)
+09-07 23:30:52.979 19433 19452 W ExpoModulesCore: Props class class expo.modules.ui.textfield.InnerTextFieldProps is not introspectable. Falling back to reflection-based props parsing, which may have performance implications. To fix this, annotate the props class with @OptimizedComposeProps.
+09-07 23:30:53.279 19433 19452 W ExpoModulesCore: Props class class expo.modules.ui.textfield.PlaceholderProps is not introspectable. Falling back to reflection-based props parsing, which may have performance implications. To fix this, annotate the props class with @OptimizedComposeProps.
+09-07 23:30:53.286  1333  1566 I FontLog : (REDACTED) Received query %s, URI %s
+09-07 23:30:53.289  1333  1566 I FontLog : (REDACTED) Query [%s] resolved to %s
+09-07 23:30:53.352  1333  1566 I FontLog : (REDACTED) Fetch %s end status %s
+09-07 23:30:53.370  1333  1566 I FontLog : (REDACTED) Pulling font file for id = %d, cache size = %d
+09-07 23:30:53.439 19433 19452 I ExpoModulesCore: ✅ AppContext was initialized
+09-07 23:30:53.444  1333  1566 I FontLog : (REDACTED) Pulling font file for id = %d, cache size = %d
+09-07 23:30:53.499 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Loading JS Bundle
+09-07 23:30:53.501 19433 19452 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): DevSupportManager.onNewReactContextCreated()
+09-07 23:30:53.502 19433 19452 W unknown:BridgelessReact: ReactHost{0}.startSurface(surfaceId = 0): Execute
+09-07 23:30:53.506 19433 19433 W unknown:BridgelessReact: ReactHost{0}.ReactContext.onHostResume()
+09-07 23:30:53.507 19433 19433 W unknown:BridgelessReact: ReactHost{0}.getOrCreateReactInstanceTask(): Executing ReactInstanceEventListeners
+09-07 23:30:53.601 19433 19453 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libworklets.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:53.615 19433 19453 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/libexpo-modules-core.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes3.dex): ok
+09-07 23:30:53.622 19433 19453 W BridgelessReactContext: [WARNING] Bridgeless doesn't support CatalystInstance. Accessing an API that's not part of the new architecture is not encouraged usage.
+09-07 23:30:53.734 19433 19453 I ExpoModulesCore: ✅ JSI interop was installed
+09-07 23:30:53.763 19433 19453 I ExpoModulesCore: ✅ Constants were exported
+09-07 23:30:53.957 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class expo.modules.kotlin.views.GroupViewManagerWrapper
+09-07 23:30:53.959 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.uimanager.LayoutShadowNode
+09-07 23:30:53.960 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenContainerViewManager
+09-07 23:30:53.961 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.reanimated.view.REASharedTransitionBoundaryManager
+09-07 23:30:53.963 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.tabs.host.TabsHostViewManager
+09-07 23:30:53.964 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenStackHeaderConfigViewManager
+09-07 23:30:53.964 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenStackHeaderSubviewManager
+09-07 23:30:53.965 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.modals.formsheet.FormSheetHostViewManager
+09-07 23:30:53.967 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.scrollviewmarker.ScrollViewMarkerViewManager
+09-07 23:30:53.969 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.modals.formsheet.FormSheetContentWrapperViewManager
+09-07 23:30:53.970 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenContentWrapperManager
+09-07 23:30:53.972 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.stack.screen.StackScreenViewManager
+09-07 23:30:53.974 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.th3rdwave.safeareacontext.SafeAreaViewManager
+09-07 23:30:53.976 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.th3rdwave.safeareacontext.SafeAreaViewShadowNode
+09-07 23:30:53.976 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenViewManager
+09-07 23:30:53.978 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.stack.header.config.StackHeaderConfigViewManager
+09-07 23:30:53.979 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.th3rdwave.safeareacontext.SafeAreaProviderManager
+09-07 23:30:53.980 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.SearchBarManager
+09-07 23:30:54.149 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.stack.host.StackHostViewManager
+09-07 23:30:54.151 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenFooterManager
+09-07 23:30:54.152 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ModalScreenViewManager
+09-07 23:30:54.153 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.safearea.SafeAreaViewManager
+09-07 23:30:54.154 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.ScreenStackViewManager
+09-07 23:30:54.155 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.stack.header.subview.StackHeaderSubviewViewManager
+09-07 23:30:54.156 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class org.reactnative.maskedview.RNCMaskedViewManager
+09-07 23:30:54.158 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.rnscreens.gamma.tabs.screen.TabsScreenViewManager
+09-07 23:30:54.243 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.gesturehandler.react.RNGestureHandlerButtonViewManager
+09-07 23:30:54.245 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.safeareaview.ReactSafeAreaViewManager
+09-07 23:30:54.246 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.modal.ReactModalHostManager
+09-07 23:30:54.248 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.progressbar.ReactProgressBarViewManager
+09-07 23:30:54.250 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollViewManager
+09-07 23:30:54.254 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.image.ReactImageManager
+09-07 23:30:54.256 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.ReactTextViewManager
+09-07 23:30:54.258 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollContainerViewManager
+09-07 23:30:54.259 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.unimplementedview.ReactUnimplementedViewManager
+09-07 23:30:54.262 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.scroll.ReactScrollViewManager
+09-07 23:30:54.264 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.view.ReactViewManager
+09-07 23:30:54.268 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.drawer.ReactDrawerLayoutManager
+09-07 23:30:54.271 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager
+09-07 23:30:54.426 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.swiperefresh.SwipeRefreshLayoutManager
+09-07 23:30:54.429 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputManager
+09-07 23:30:54.433 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.text.SelectableTextViewManager
+09-07 23:30:54.434 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.swmansion.gesturehandler.react.RNGestureHandlerRootViewManager
+09-07 23:30:54.436 19433 19453 W unknown:ViewManagerPropertyUpdater: Could not find generated setter for class com.facebook.react.views.virtual.view.ReactVirtualViewManager
+09-07 23:30:54.475 19433 19453 D nativeloader: Load /data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!/lib/x86_64/librnscreens.so using class loader ns clns-9 (caller=/data/app/~~7wi88BvkomMLx-tIxnaifA==/com.anonymous.hyperlocalmobile-8lTKtYT-xCRu87yZpiQ0ZA==/base.apk!classes4.dex): ok
+09-07 23:30:54.480 19433 19453 I ReactNativeJS: Running "main"
+09-07 23:30:54.543  1099  1854 E ActivityThread: Failed to find provider info for com.google.android.apps.wellbeing.api
+09-07 23:30:54.715 19433 19433 I ExpoModulesCore: ✅ JSI interop was installed
+09-07 23:30:54.731 19433 19453 V AsyncStorageExpoMigration: No scoped database found
+09-07 23:30:54.731 19433 19453 I ReactNativeJS: '[API_CONFIG]', { environment: 'production',
+09-07 23:30:54.731 19433 19453 I ReactNativeJS:   apiUrl: 'https://project-expo-md7o.onrender.com/api',
+09-07 23:30:54.731 19433 19453 I ReactNativeJS:   socketUrl: 'https://project-expo-md7o.onrender.com',
+09-07 23:30:54.731 19433 19453 I ReactNativeJS:   platform: 'android' }
+09-07 23:30:54.798   720  1701 D ConnectivityService: requestNetwork for uid/pid:10222/19433 activeRequest: null callbackRequest: 372 [NetworkRequest [ REQUEST id=373, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10222 RequestorUid: 10222 RequestorPkg: com.anonymous.hyperlocalmobile UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOSING|LOST|UNAVAIL|NC|LP
+09-07 23:30:54.800   720   882 D ConnectivityService: NetReassign [373 : null → 102] [c 0] [a 0] [i 1]
+09-07 23:30:54.800   720   876 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=373, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10222 RequestorUid: 10222 RequestorPkg: com.anonymous.hyperlocalmobile UnderlyingNetworks: Null] ]
+09-07 23:30:54.802   720   876 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=373, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10222 RequestorUid: 10222 RequestorPkg: com.anonymous.hyperlocalmobile UnderlyingNetworks: Null] ]
+09-07 23:30:54.802   720   876 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=373, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10222 RequestorUid: 10222 RequestorPkg: com.anonymous.hyperlocalmobile UnderlyingNetworks: Null] ]
+09-07 23:30:54.802   720   876 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=373, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10222 RequestorUid: 10222 RequestorPkg: com.anonymous.hyperlocalmobile UnderlyingNetworks: Null] ]
+09-07 23:30:54.940 19433 19455 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+09-07 23:30:54.940 19433 19455 W unknown:ReactNative: StatusBarModule: Ignored status bar change, current activity is edge-to-edge.
+09-07 23:30:54.941 19433 19453 W ExpoModulesCore: Introspectable data is missing for class expo.modules.location.records.LocationTaskOptions. Falling back to reflection-based conversion, which may have performance implications. To fix this, ensure that the Record class is properly annotated with expo.modules.kotlin.types.Introspectable and that the necessary metadata is available at runtime.
+09-07 23:30:54.955 19433 19453 I ReactNativeJS: '[NETWORK_STATE_CHANGE]', { linkUp: true,
+09-07 23:30:54.955 19433 19453 I ReactNativeJS:   isInternetReachable: true,
+09-07 23:30:54.955 19433 19453 I ReactNativeJS:   connectionType: 'cellular',
+09-07 23:30:54.955 19433 19453 I ReactNativeJS:   isChecking: false,
+09-07 23:30:54.955 19433 19453 I ReactNativeJS:   isDefinitelyOffline: false }
+09-07 23:30:54.956 19433 19453 I ReactNativeJS: '[NETWORK_STATE_CHANGE]', { linkUp: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isInternetReachable: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   connectionType: 'cellular',
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isChecking: false,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isDefinitelyOffline: false }
+09-07 23:30:54.956 19433 19453 I ReactNativeJS: '[NETWORK_STATE_CHANGE]', { linkUp: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isInternetReachable: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   connectionType: 'cellular',
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isChecking: false,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isDefinitelyOffline: false }
+09-07 23:30:54.956 19433 19453 I ReactNativeJS: '[NETWORK_STATE_CHANGE]', { linkUp: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isInternetReachable: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   connectionType: 'cellular',
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isChecking: false,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isDefinitelyOffline: false }
+09-07 23:30:54.956 19433 19453 I ReactNativeJS: '[NETWORK_STATE_CHANGE]', { linkUp: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isInternetReachable: true,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   connectionType: 'cellular',
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isChecking: false,
+09-07 23:30:54.956 19433 19453 I ReactNativeJS:   isDefinitelyOffline: false }
+09-07 23:30:54.981   720   826 D ActivityManager: freezing 1132 com.google.android.permissioncontroller
+09-07 23:30:55.031 19433 19476 I yperlocalmobile: AssetManager2(0x7884a2c2f938) locale list changing from [] to [en-US]
+09-07 23:30:55.031 19433 19476 I WebViewFactory: Loading com.google.android.webview version 152.0.7977.64 (code 797706408)
+09-07 23:30:55.034 19433 19476 I yperlocalmobile: AssetManager2(0x7884a2c31b98) locale list changing from [] to [en-US]
+09-07 23:30:55.035 19433 19476 I yperlocalmobile: AssetManager2(0x7884a2c2d098) locale list changing from [] to [en-US]
+09-07 23:30:55.038 19433 19476 I yperlocalmobile: AssetManager2(0x7884a2c30298) locale list changing from [] to [en-US]
+09-07 23:30:55.038 19433 19476 I yperlocalmobile: AssetManager2(0x7884a2c1cd38) locale list changing from [] to [en-US]
+09-07 23:30:55.038 19433 19476 V ResourcesManager: The following library key has been added: ResourcesKey{ mHash=6e42edbf mResDir=null mSplitDirs=[] mOverlayDirs=[] mLibDirs=[/data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk,/system/framework/android.test.base.jar] mDisplayId=0 mOverrideConfig=v36 mCompatInfo={420dpi always-compat} mLoaders=[]}
+09-07 23:30:55.041 19433 19476 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/android.test.base.jar
+09-07 23:30:55.041 19433 19476 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+09-07 23:30:55.082 19433 19476 D nativeloader: Configuring clns-10 for other apk /data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/lib/x86_64:/data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+09-07 23:30:55.162   720  4179 W ServiceManagerCppClient: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10222 pid=0
+09-07 23:30:55.162   720  4179 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10222 => denied (161 us)
+09-07 23:30:55.162   720  4179 W ServiceManagerCppClient: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10222 pid=0
+09-07 23:30:55.163   720  4179 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10222 => denied (93 us)
+09-07 23:30:55.163   720  4179 W ServiceManagerCppClient: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10222 pid=0
+09-07 23:30:55.163   720  4179 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10222 => denied (73 us)
+09-07 23:30:55.169 17017 17017 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=dM2@c38e832
+09-07 23:30:55.170   720  1701 D CoreBackPreview: Window{b95af1 u0 com.android.chrome/org.chromium.chrome.browser.ChromeTabbedActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@2de2b2b, mPriority=-1, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-07 23:30:55.192   720   753 I ActivityTaskManager: Displayed com.anonymous.hyperlocalmobile/.MainActivity for user 0: +4s435ms
+09-07 23:30:55.220   720  1683 D CompatChangeReporter: Compat change id reported: 358129114; UID 10222; state: ENABLED
+09-07 23:30:55.224   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_OVERRIDE
+09-07 23:30:55.225   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_FULLSCREEN_OVERRIDE
+09-07 23:30:55.225   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE
+09-07 23:30:55.226   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_ORIENTATION_OVERRIDE
+09-07 23:30:55.226   720  1683 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES
+09-07 23:30:55.230   542   599 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+09-07 23:30:55.235   720  1683 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS xflg=0x4 pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity (has extras)} with LAUNCH_MULTIPLE from uid 10222 (rr=251592026) (BAL_ALLOW_VISIBLE_WINDOW) result code=0
+09-07 23:30:55.240   966  1078 V WindowManagerShell: Transition requested (#109): android.os.BinderProxy@54e825 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=262 effectiveUid=10222 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.anonymous.hyperlocalmobile/.MainActivity } baseActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} numActivities=2 lastActiveTime=11520691 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@4804dfa} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{bbf8fab com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=true isActivityStackTransparent=false lastNonFullscreenBounds=Rect(284, 660 - 796, 1740) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1080, 2400) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 109 }
+09-07 23:30:55.241   966  1078 D ShellSplitScreen: logExit: no-op, mLoggerSessionId is null
+09-07 23:30:55.259   542   542 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+09-07 23:30:55.273   720   843 I ImeTracker: com.anonymous.hyperlocalmobile:15d7a6d8: onRequestHide at ORIGIN_SERVER reason HIDE_UNSPECIFIED_WINDOW fromUser false
+09-07 23:30:55.303 19433 19433 D InsetsController: hide(ime(), fromIme=false)
+09-07 23:30:55.304 19433 19433 I ImeTracker: com.anonymous.hyperlocalmobile:15d7a6d8: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+09-07 23:30:55.309   720   756 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:55.324   609   703 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:55.331  1390  1390 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2043 
+09-07 23:30:55.334   720  1683 I ImeTracker: system_server:7d2feced: onRequestHide at ORIGIN_SERVER reason IME_REQUESTED_CHANGED_LISTENER fromUser false
+09-07 23:30:55.335  1390  1390 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():100 repeatCheckTimes = 0, locked = false
+09-07 23:30:55.338   720   756 I ImeTracker: system_server:7d2feced: onCancelled at PHASE_SERVER_SHOULD_HIDE
+09-07 23:30:55.340  1390  1390 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1293 onStartInput(EditorInfo{EditorInfo{packageName=com.anonymous.hyperlocalmobile, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+09-07 23:30:55.347  1390  1390 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():100 repeatCheckTimes = 1, locked = false
+09-07 23:30:55.351   720  1701 W PackageConfigPersister: App-specific configuration not found for packageName: com.anonymous.hyperlocalmobile and userId: 0
+09-07 23:30:55.479 17017 17017 I ImeTracker: com.android.chrome:4458ee70: onRequestHide at ORIGIN_CLIENT reason HIDE_WINDOW_LOST_FOCUS fromUser false
+09-07 23:30:55.479 17017 17017 D InsetsController: hide(ime(), fromIme=false)
+09-07 23:30:55.479 17017 17017 I ImeTracker: com.android.chrome:4458ee70: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+09-07 23:30:55.562 17017 17058 I cr_BindingManager: onTrimMemory: level=20, size=0
+09-07 23:30:55.569   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:55.664 17017 17087 I cr_OPArchivePublisher: ADM threw while trying to remove a download. java.lang.IllegalArgumentException: input param 'ids' can't be null
+09-07 23:30:55.733   720   756 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{251592026 u0 com.anonymous.hyperlocalmobile/.MainActivity t262}
+09-07 23:30:55.733   720   756 W ActivityTaskManager: Activity pause timeout for ActivityRecord{251592026 u0 com.anonymous.hyperlocalmobile/.MainActivity t262}
+09-07 23:30:55.736   720   756 W OptProp : Cannot read opt property android.window.PROPERTY_COMPAT_ENABLE_FAKE_FOCUS
+09-07 23:30:55.736   720   756 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:55.740   720   756 D ActivityManager: quick sync unfreeze 1132 for 1
+09-07 23:30:55.781   720   756 D ActivityManager: sync unfroze 1132 com.google.android.permissioncontroller for 1
+09-07 23:30:55.783   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:55.787   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:55.789   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:55.789   720   928 D BackgroundInstallControlService: Package event received: 0
+09-07 23:30:55.909 19433 19453 W HWUI    : Image decoding logging dropped!
+09-07 23:30:55.912 19433 19453 W HWUI    : Image decoding logging dropped!
+09-07 23:30:55.925 19433 19433 W unknown:BridgelessReact: ReactHost{0}.onUserLeaveHint(activity)
+09-07 23:30:55.926 19433 19433 W unknown:BridgelessReact: ReactHost{0}.onHostPause(activity)
+09-07 23:30:55.926 19433 19433 W unknown:BridgelessReact: ReactHost{0}.ReactContext.onHostPause()
+09-07 23:30:55.987  1132  5330 I EGL_emulation: Opening libGLESv1_CM_emulation.so
+09-07 23:30:56.011  1132  5330 I EGL_emulation: Opening libGLESv2_emulation.so
+09-07 23:30:56.073   609   609 W IPCThreadState: Sending oneway calls to frozen process.
+09-07 23:30:56.087  1132  5330 W HWUI    : Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+09-07 23:30:56.088  1132  5330 W HWUI    : Failed to initialize 101010-2 format, error = EGL_SUCCESS
+09-07 23:30:56.112   966  1177 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda13@2ac27bc
+09-07 23:30:56.124   720  1683 W WindowManager: Failed looking up window session=Session{502a16 966:u0a10187} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6410 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:1002 android.view.IWindowSession$Stub.onTransact:1156 
+09-07 23:30:56.124   720  1683 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+09-07 23:30:56.392 19433 19476 I cr_WVCFactoryProvider: version=152.0.7977.64 (797706408) minSdkVersion=29 multiprocess=true packageId=2 splits=<none>
+09-07 23:30:56.404 19433 19476 D nativeloader: Load /data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk!/lib/x86_64/libwebviewchromium.so using class loader ns clns-10 (caller=/data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk): ok
+09-07 23:30:56.541 19433 19476 D nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using class loader ns clns-10 (caller=/data/app/~~wnjcQMY1CJADSVJwrHfWnw==/com.google.android.webview-_1x7uMKdgmEblHrlXmW83g==/base.apk): ok
+09-07 23:30:56.834 19433 19485 I chromium: [0907/233056.674904:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+09-07 23:30:56.834 19433 19485 I chromium: [0907/233056.834479:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.: No such file or directory (2)
+09-07 23:30:56.899   720  1735 D CoreBackPreview: Window{bcf3956 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@8c456c4, mPriority=-1, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-07 23:30:57.019   966 17387 V WindowManagerShell: onTransitionReady(transaction=3092376457222)
+09-07 23:30:57.020   966  1078 V WindowManagerShell: onTransitionReady (#109) android.os.BinderProxy@54e825: {id=109 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+09-07 23:30:57.020   966  1078 V WindowManagerShell:         {m=OPEN f=TRANSLUCENT|FILLS_TASK leash=Surface(name=ActivityRecord{114734685 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity)/@0xc66a252 sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ffeeedf4 component=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity opt={t=FROM_STYLE mUserId=0}}
+09-07 23:30:57.020   966  1078 V WindowManagerShell:     ]}
+09-07 23:30:57.020   966  1078 V WindowManagerShell: Playing animation for (#109) android.os.BinderProxy@54e825@0
+09-07 23:30:57.020   966  1078 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+09-07 23:30:57.020   966  1078 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=109 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=TRANSLUCENT|FILLS_TASK leash=Surface(name=ActivityRecord{114734685 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity)/@0xc66a252 sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ffeeedf4 component=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity opt={t=FROM_STYLE mUserId=0}}]}
+09-07 23:30:57.020   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=undefined independent=true modes=[CLOSE,TO_BACK] flags=IN_TASK_WITH_EMBEDDED_ACTIVITY mustBeTask=false order=ANY topActivity=null launchCookie=null taskFragmentToken=android.os.BinderProxy@cc8f358 windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@9c49cb1, appThread = android.app.IApplicationThread$Stub$Proxy@25ad596, debugName = overlayBackTransition }}
+09-07 23:30:57.020   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x0 checks=[{atype=dream independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{atype=home independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@5c4d517, appThread = android.app.IApplicationThread$Stub$Proxy@485ed04, debugName = LauncherToDream }}
+09-07 23:30:57.027   966  1078 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity} launchCookie=null windowingMode=undefined},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null launchCookie=null windowingMode=undefined},{NOT atype=undefined independent=true modes=[] flags=NONE mustBeTask=true order=ANY topActivity=null launchCookie=null customAnim=true windowingMode=undefined}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@5552ed, appThread = android.app.IApplicationThread$Stub$Proxy@3e6b522, debugName = QuickstepLaunchHome }}
+09-07 23:30:57.027   966  1078 V WindowManagerShell:  Delegate animation for (#109) to null
+09-07 23:30:57.027   966  1078 V WindowManagerShell: start default transition animation, info = {id=109 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{m=OPEN f=TRANSLUCENT|FILLS_TASK leash=Surface(name=ActivityRecord{114734685 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity)/@0xc66a252 sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ffeeedf4 component=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity opt={t=FROM_STYLE mUserId=0}}]}
+09-07 23:30:57.035   966  1078 V WindowManagerShell: loadAnimation: anim=null animAttr=0x4 type=OPEN isEntrance=true
+09-07 23:30:57.037   966  1078 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#109) android.os.BinderProxy@54e825@0
+09-07 23:30:57.054   966  1078 V WindowManagerShell: Track 0 became idle
+09-07 23:30:57.054   966  1078 V WindowManagerShell: All active transition animations finished
+09-07 23:30:57.054   966  1078 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@c5b7831
+09-07 23:30:57.054   966  1078 V WindowManagerShell: Track 0 became idle
+09-07 23:30:57.054   966  1078 V WindowManagerShell: All active transition animations finished
+09-07 23:30:57.087   720   753 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity for user 0: +1s797ms
+09-07 23:30:57.096   720   753 V WindowManager: Sent Transition (#109) createdAt=09-07 23:30:55.220 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=262 effectiveUid=10222 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.anonymous.hyperlocalmobile/.MainActivity } baseActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} topActivity=ComponentInfo{com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} origActivity=null realActivity=ComponentInfo{com.anonymous.hyperlocalmobile/com.anonymous.hyperlocalmobile.MainActivity} numActivities=2 lastActiveTime=11520691 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{e93f6c8 Task{15f7b8b #262 type=standard A=10222:com.anonymous.hyperlocalmobile}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 0 - 0, 0) topActivityInfo=ActivityInfo{935ba5c com.android.permissioncontroller.permission.ui.GrantPermissionsActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isTopActivityNoDisplay=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=true isActivityStackTransparent=false lastNonFullscreenBounds=Rect(284, 660 - 796, 1740) capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=-9 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false eligibleForLetterboxEducation= false isLetterboxEducationEnabled= true isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1080, 2400) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null cameraCompatTaskInfo=CameraCompatTaskInfo { freeformCameraCompatMode=inactive}} topActivityMainWindowFrame=null}, pipChange = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 109 }
+09-07 23:30:57.097   720   753 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] errorCallbackToken=null taskFragmentOrganizer=null }
+09-07 23:30:57.098   720   753 V WindowManager:     info={id=109 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[
+09-07 23:30:57.098   720   753 V WindowManager:         {m=OPEN f=TRANSLUCENT|FILLS_TASK leash=Surface(name=ActivityRecord{114734685 u0 com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity)/@0xa1e63a9 sb=Rect(0, 0 - 0, 0) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=-1->0 r=-1->0:-1 bc=ffeeedf4 component=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity opt={t=FROM_STYLE mUserId=0}}
+09-07 23:30:57.098   720   753 V WindowManager:     ]}
+09-07 23:30:57.098   720   753 V WindowManager: Finish Transition (#109): created at 09-07 23:30:55.220 collect-started=0.06ms request-sent=14.353ms started=33.212ms ready=527.753ms sent=1798.644ms commit=43.844ms finished=1829.623ms
+09-07 23:30:57.118  1390  1390 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2043 
+09-07 23:30:57.120  1390  1390 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():100 repeatCheckTimes = 0, locked = false
+09-07 23:30:57.126  1390  1390 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1293 onStartInput(EditorInfo{EditorInfo{packageName=com.google.android.permissioncontroller, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=0, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+09-07 23:30:57.127   720  1701 I ImeTracker: system_server:3c4f2652: onRequestHide at ORIGIN_SERVER reason IME_REQUESTED_CHANGED_LISTENER fromUser false
+09-07 23:30:57.128   720   756 I ImeTracker: system_server:3c4f2652: onCancelled at PHASE_SERVER_SHOULD_HIDE
+09-07 23:30:57.133  1390  1390 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():100 repeatCheckTimes = 1, locked = false
+09-07 23:30:57.143   720  1735 W PackageConfigPersister: App-specific configuration not found for packageName: com.google.android.permissioncontroller and userId: 0
+09-07 23:30:57.261  1132  1132 I ssioncontroller: AssetManager2(0x7884a2c28278) locale list changing from [] to [en-US]
+09-07 23:30:57.267 19433 19476 I cr_LibraryLoader: Successfully loaded native library
+09-07 23:30:57.309 19433 19476 I cr_CachingUmaRecorder: Flushed 37 samples from 19 histograms, 0 samples were dropped.
+09-07 23:30:57.630 19491 19491 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:30:58.208  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:30:58.210  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.215  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.224  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.228  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.233  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.249 19433 19494 D ProfileInstaller: Installing profile for com.anonymous.hyperlocalmobile
+09-07 23:30:58.271  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.287  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.389  1132  1132 I Choreographer: Skipped 53 frames!  The application may be doing too much work on its main thread.
+09-07 23:30:58.395  1132  1232 I HWUI    : Davey! duration=1022ms; Flags=1, FrameTimelineVsyncId=3928495, IntendedVsync=11522727004006, Vsync=11522727004006, InputEventId=0, HandleInputStart=11522731191500, AnimationStart=11522731214400, PerformTraversalsStart=11522731467300, DrawStart=11522799519400, FrameDeadline=11522743670672, FrameStartTime=11522731178300, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=11522871855200, SyncStart=11522946022400, IssueDrawCommandsStart=11522947722200, SwapBuffers=11523757389900, FrameCompleted=11523823350700, DequeueBufferDuration=52810200, QueueBufferDuration=262100, GpuCompleted=11523796152200, SwapBuffersCompleted=11523823350700, DisplayPresentTime=0, CommandSubmissionCompleted=11523757389900, 
+09-07 23:30:58.396  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.416  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:30:58.426  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:30:58.439  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:30:58.446  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:30:58.452  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:30:58.463  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:30:58.467  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:30:58.469  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:30:58.475  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:30:58.476  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:30:58.478  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:30:58.483  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:30:58.490  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:30:58.666  1333  1333 D BoundBrokerSvc: onRebind: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }
+09-07 23:30:58.705  1132  1232 I HWUI    : Davey! duration=948ms; Flags=0, FrameTimelineVsyncId=3928759, IntendedVsync=11522960337330, Vsync=11523843670628, InputEventId=0, HandleInputStart=11523849619500, AnimationStart=11523850016000, PerformTraversalsStart=11523850416200, DrawStart=11523852217200, FrameDeadline=11523943670624, FrameStartTime=11523848014700, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=11523854156900, SyncStart=11524089910700, IssueDrawCommandsStart=11524090028200, SwapBuffers=11524117826100, FrameCompleted=11524144990100, DequeueBufferDuration=107600, QueueBufferDuration=163100, GpuCompleted=11524144990100, SwapBuffersCompleted=11524135132300, DisplayPresentTime=132517889937696, CommandSubmissionCompleted=11524117826100, 
+09-07 23:30:58.710  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:30:58.714  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:30:58.720  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:30:58.730  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:30:58.734  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:30:58.759  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:30:58.804  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:30:58.847 19488 19488 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:30:58.849 19488 19488 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:30:58.851 19488 19488 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:30:58.954   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:30:58.958   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:30:59.713  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:00.613 19433 19433 I Choreographer: Skipped 57 frames!  The application may be doing too much work on its main thread.
+09-07 23:31:00.615   720   720 W Looper  : Slow delivery took 611ms main app=system_server main=true group=FOREGROUND h=com.android.server.alarm.AlarmManagerService$AlarmHandler c=com.android.server.alarm.AlarmManagerService$2$$ExternalSyntheticLambda0@a216a4b m=0
+09-07 23:31:00.615   720   720 W Looper  : Drained
+09-07 23:31:00.634   720   882 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-07 23:31:00.634   720   882 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-07 23:31:00.635   720   882 D InetDiagMessage: Destroyed live tcp sockets for uids={10150} in 2ms
+09-07 23:31:00.638   720   882 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-07 23:31:00.638   720   882 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-07 23:31:00.638   720   882 D InetDiagMessage: Destroyed live tcp sockets for uids={20150} in 4ms
+09-07 23:31:00.666   720   826 D ActivityManager: freezing 1644 com.google.android.gms
+09-07 23:31:00.734   966  1190 W Looper  : Slow dispatch took 1024ms SysUiBg app=com.android.systemui main=false group=FOREGROUND h=android.os.Handler c=android.telephony.TelephonyCallback$IPhoneStateListenerStub$$ExternalSyntheticLambda52@4492495 m=0
+09-07 23:31:00.870   720  1683 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:00.875   720  1683 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:00.942   720  1131 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:00.963   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:00.989  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:01.231  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:01.421 19433 19437 I yperlocalmobile: Background concurrent mark compact GC freed 19MB AllocSpace bytes, 82(4472KB) LOS objects, 49% free, 8402KB/16MB, paused 7.639ms,1.268ms total 150.265ms
+09-07 23:31:01.666   720  1739 D ActivityManager: sync unfroze 1644 com.google.android.gms for 6
+09-07 23:31:01.707   720  1701 W ProcessStats: Tracking association SourceState{5077170 com.google.android.gms.persistent/10147 ImpBg #13089} whose proc state 6 is better than process ProcessState{32cff07 com.google.android.gms/10147 pkg=com.google.android.gms} proc state 14 (18 skipped)
+09-07 23:31:01.720  1333 19410 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-07 23:31:01.739  1333 19090 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+09-07 23:31:01.852   720   744 I system_server: Background concurrent mark compact GC freed 27MB AllocSpace bytes, 52(1296KB) LOS objects, 42% free, 32MB/56MB, paused 5.369ms,1.865ms total 291.489ms
+09-07 23:31:01.862   720   746 W System  : A resource failed to call release. 
+09-07 23:31:03.708  1333  1333 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }
+09-07 23:31:05.530 19433 19433 I Choreographer: Skipped 48 frames!  The application may be doing too much work on its main thread.
+09-07 23:31:05.569 19433 19480 I HWUI    : Davey! duration=834ms; Flags=2, FrameTimelineVsyncId=3932887, IntendedVsync=11530177003708, Vsync=11530177003708, InputEventId=0, HandleInputStart=11530177003708, AnimationStart=11530177003708, PerformTraversalsStart=11530177003708, DrawStart=11530177003708, FrameDeadline=11530193670374, FrameStartTime=11530177003708, FrameInterval=16666666, WorkloadTarget=0, SyncQueued=11530179930400, SyncStart=11530179941200, IssueDrawCommandsStart=11530179976200, SwapBuffers=11530181210500, FrameCompleted=11531011063200, DequeueBufferDuration=826741500, QueueBufferDuration=261100, GpuCompleted=11531011063200, SwapBuffersCompleted=11531008992700, DisplayPresentTime=0, CommandSubmissionCompleted=11530181210500, 
+09-07 23:31:05.606 19520 19520 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:05.606 19520 19520 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:05.606 19520 19520 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:05.644   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:05.644   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:05.950   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:05.952   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:05.970   720  1735 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:05.979   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:05.987  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:06.040  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:06.451   720  1701 W AS.PlaybackActivityMon: No piid assigned for invalid/internal port id 15
+09-07 23:31:06.626   530   660 D AudioFlinger: mixer(0x7f00a8a8f770) throttle end: throttle time(33)
+09-07 23:31:07.368 19535 19535 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:07.847  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:07.848  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.850  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.851  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.854  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.856  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.858  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.859  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.861  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.863  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:07.863  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:07.864  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:07.866  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:07.866  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:07.867  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:07.868  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:07.869  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:07.872  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:07.873  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:07.874  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:07.876  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:07.877  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:07.879  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:07.880  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:07.882  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:07.883  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:07.884  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:07.886  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:07.889  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:09.215  2983  3026 I Finsky  : [40] Stats for Executor: LightweightExecutor xss@2b056fb[Running, pool size = 3, active threads = 0, queued tasks = 0, completed tasks = 1673]
+09-07 23:31:09.215  2983  3026 I Finsky  : [40] Stats for Executor: BlockingExecutor xss@b7b318[Running, pool size = 2, active threads = 0, queued tasks = 0, completed tasks = 509]
+09-07 23:31:09.215  2983  3026 I Finsky  : [40] Stats for Executor: bgExecutor xss@358c171[Running, pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 7213]
+09-07 23:31:09.216  3545  3595 I Finsky:background: [41] Stats for Executor: bgExecutor xss@3b869b7[Running, pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 372]
+09-07 23:31:09.216  3545  3595 I Finsky:background: [41] Stats for Executor: LightweightExecutor xss@44f524[Running, pool size = 3, active threads = 0, queued tasks = 0, completed tasks = 348]
+09-07 23:31:09.216  3545  3595 I Finsky:background: [41] Stats for Executor: BlockingExecutor xss@de5888d[Running, pool size = 2, active threads = 0, queued tasks = 0, completed tasks = 145]
+09-07 23:31:10.505   497  4740 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 30150656
+09-07 23:31:10.505   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: joining consumeThread
+09-07 23:31:10.511  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:10.527 19433 19480 I HWUI    : Davey! duration=1094ms; Flags=2, FrameTimelineVsyncId=3935606, IntendedVsync=11534877003520, Vsync=11534877003520, InputEventId=0, HandleInputStart=11534877003520, AnimationStart=11534877003520, PerformTraversalsStart=11534877003520, DrawStart=11534877003520, FrameDeadline=11534893670186, FrameStartTime=11534877003520, FrameInterval=16666666, WorkloadTarget=0, SyncQueued=11534883598900, SyncStart=11534883609500, IssueDrawCommandsStart=11534883644600, SwapBuffers=11534884294300, FrameCompleted=11535971089200, DequeueBufferDuration=1086020800, QueueBufferDuration=244300, GpuCompleted=11535961238200, SwapBuffersCompleted=11535971089200, DisplayPresentTime=0, CommandSubmissionCompleted=11534884294300, 
+09-07 23:31:10.582   497 19534 D android.hardware.audio@7.1-impl.ranchu: consumeThread: exiting
+09-07 23:31:10.582   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: stopping PCM stream
+09-07 23:31:10.682 19538 19538 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:10.683 19538 19538 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:10.683 19538 19538 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:10.752   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:10.752   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:11.052   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:11.052   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:11.055   720  1739 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:11.063   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:11.067  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:11.274   720  1683 W AS.PlaybackActivityMon: No piid assigned for invalid/internal port id 15
+09-07 23:31:11.276   530   660 D AudioFlinger: mixer(0x7f00a8a8f770) throttle end: throttle time(36)
+09-07 23:31:11.802   720   826 D ActivityManager: freezing 1644 com.google.android.gms
+09-07 23:31:12.077  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:14.327   497  4740 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 30299712
+09-07 23:31:14.327   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: joining consumeThread
+09-07 23:31:14.339   497 19551 D android.hardware.audio@7.1-impl.ranchu: consumeThread: exiting
+09-07 23:31:14.340   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: stopping PCM stream
+09-07 23:31:14.436 19552 19552 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:14.437 19552 19552 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:14.437 19552 19552 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:14.499   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:14.499   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:14.965   720  1683 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:14.965   720  1683 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:14.966   720  1735 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:14.976   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:14.978  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:15.030  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:15.030  1445  1913 D ExifInterface: java.io.IOException: Encountered corrupt PNG file.
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getPngAttributes(ExifInterface.java:3444)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2008)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:15.030  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:15.085  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:15.554 19433 19453 I ReactNativeJS: '[SERVER_HEALTH]', { reachable: false,
+09-07 23:31:15.554 19433 19453 I ReactNativeJS:   status: 0,
+09-07 23:31:15.554 19433 19453 I ReactNativeJS:   url: 'https://project-expo-md7o.onrender.com/api/v1/health',
+09-07 23:31:15.554 19433 19453 I ReactNativeJS:   error: 'Network Error' }
+09-07 23:31:16.355 19433 19453 I ReactNativeJS: '[SERVER_HEALTH]', { reachable: false,
+09-07 23:31:16.355 19433 19453 I ReactNativeJS:   status: 0,
+09-07 23:31:16.355 19433 19453 I ReactNativeJS:   url: 'https://project-expo-md7o.onrender.com/api/v1/health',
+09-07 23:31:16.355 19433 19453 I ReactNativeJS:   error: 'Network Error' }
+09-07 23:31:17.380 19565 19565 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:18.029  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:18.032  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.034  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.036  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.044  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.046  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.047  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.049  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.051  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.054  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:18.054  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:18.055  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:18.058  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:18.059  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:18.059  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:18.060  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:18.062  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:18.063  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:18.066  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:18.067  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:18.069  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:18.070  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:18.072  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:18.073  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:18.077  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:18.078  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:18.079  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:18.080  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:18.082  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:18.450 19568 19568 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:18.450 19568 19568 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:18.450 19568 19568 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:18.497   542   598 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:18.497   542   598 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:19.314 19433 19444 I HWUI    : Davey! duration=731ms; Flags=2, FrameTimelineVsyncId=3941060, IntendedVsync=11544010336488, Vsync=11544010336488, InputEventId=0, HandleInputStart=11544010336488, AnimationStart=11544010336488, PerformTraversalsStart=11544010336488, DrawStart=11544010336488, FrameDeadline=11544027003154, FrameStartTime=11544010336488, FrameInterval=16666666, WorkloadTarget=0, SyncQueued=11544023754100, SyncStart=11544023769100, IssueDrawCommandsStart=11544023965500, SwapBuffers=11544027884900, FrameCompleted=11544741943600, DequeueBufferDuration=706344800, QueueBufferDuration=259500, GpuCompleted=11544740752100, SwapBuffersCompleted=11544741943600, DisplayPresentTime=0, CommandSubmissionCompleted=11544027884900, 
+09-07 23:31:19.704  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:19.759   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:19.760   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:19.762   720  1683 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:19.774   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:19.775  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:19.777  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:19.777  1445  1913 D ExifInterface: java.io.IOException: Encountered corrupt PNG file.
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getPngAttributes(ExifInterface.java:3444)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2008)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:19.777  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:20.388 19433 19433 I Choreographer: Skipped 34 frames!  The application may be doing too much work on its main thread.
+09-07 23:31:20.404  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:21.343   720  1735 D ActivityManager: sync unfroze 1644 com.google.android.gms for 6
+09-07 23:31:21.347   720  1701 W ProcessStats: Tracking association SourceState{5077170 com.google.android.gms.persistent/10147 ImpBg #13114} whose proc state 6 is better than process ProcessState{32cff07 com.google.android.gms/10147 pkg=com.google.android.gms} proc state 14 (0 skipped)
+09-07 23:31:21.358  1333 19090 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-07 23:31:21.371  1333 19581 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+09-07 23:31:24.578  1099  1854 E ActivityThread: Failed to find provider info for com.google.android.apps.wellbeing.api
+09-07 23:31:25.352 19588 19588 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:25.353 19588 19588 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:25.353 19588 19588 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:25.414   542   598 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:25.414   542   598 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:26.334   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:26.335   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:26.341   720  1683 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:26.348   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:26.350  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:26.353  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:26.353  1445  1913 D ExifInterface: java.io.IOException: Encountered corrupt PNG file.
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getPngAttributes(ExifInterface.java:3444)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2008)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:26.353  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:26.907  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:27.379 19601 19601 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:27.952  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:27.955  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.957  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.959  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.961  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.962  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.963  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.965  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.967  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.970  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:27.971  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:27.972  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:27.975  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:27.975  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:27.976  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:27.977  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:27.984  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:27.986  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:27.987  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:27.988  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:27.990  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:27.991  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:27.994  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:27.995  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:27.996  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:27.998  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:27.999  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:28.000  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:28.002  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:29.506  1475  1625 I bbax    : (REDACTED) getHotwordActive::active query: %s, watch: %s, devices connected: %s
+09-07 23:31:29.707  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:31.418   720   826 D ActivityManager: freezing 1644 com.google.android.gms
+09-07 23:31:32.768 19604 19604 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:32.768 19604 19604 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:32.769 19604 19604 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:32.827   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:32.827   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:34.083   720  1735 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:34.084   720  1735 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:34.085   720  1683 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:34.092   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:34.094  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:34.096  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:34.096  1445  1913 D ExifInterface: java.io.IOException: Encountered corrupt PNG file.
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getPngAttributes(ExifInterface.java:3444)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2008)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:34.096  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:34.105  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:37.388 19612 19612 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:37.655  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:37.656  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.658  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.660  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.662  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.664  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.666  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.668  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.670  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.672  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:37.672  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:37.674  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:37.679  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:37.679  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:37.680  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:37.682  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:37.686  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:37.687  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:37.689  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:37.691  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:37.694  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:37.696  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:37.700  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:37.707  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:37.708  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:37.711  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:37.711  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:37.714  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:37.716  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:37.740 19615 19615 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:37.740 19615 19615 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:37.740 19615 19615 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:37.828   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:37.828   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:38.091   720  1735 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:38.093   720  1735 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:38.094   720  1701 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:38.102   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:38.105  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:38.117  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:38.976   720  1739 W AS.PlaybackActivityMon: No piid assigned for invalid/internal port id 15
+09-07 23:31:38.983   530   660 D AudioFlinger: mixer(0x7f00a8a8f770) throttle end: throttle time(37)
+09-07 23:31:39.706  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:41.340   720  1739 D ActivityManager: sync unfroze 1644 com.google.android.gms for 6
+09-07 23:31:41.346   720  1739 W ProcessStats: Tracking association SourceState{5077170 com.google.android.gms.persistent/10147 ImpBg #13134} whose proc state 6 is better than process ProcessState{32cff07 com.google.android.gms/10147 pkg=com.google.android.gms} proc state 14 (1 skipped)
+09-07 23:31:41.362  1333 19581 I NetworkScheduler.Stats: (REDACTED) Task %s/%s started execution. cause:%s exec_start_elapsed_seconds: %s
+09-07 23:31:41.377  1333 19090 I NetworkScheduler.Stats: (REDACTED) Task %s/%s finished executing. cause:%s result: %s elapsed_millis: %s uptime_millis: %s exec_start_elapsed_seconds: %s
+09-07 23:31:41.418  1644  1644 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS xflg=0x4 pkg=com.google.android.gms }
+09-07 23:31:41.434  1644 19630 I GmscoreIpa: Starting mediastore instant index [CONTEXT service_id=255 ]
+09-07 23:31:42.033   497  4740 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 30448768
+09-07 23:31:42.033   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: joining consumeThread
+09-07 23:31:42.042   497 19629 D android.hardware.audio@7.1-impl.ranchu: consumeThread: exiting
+09-07 23:31:42.043   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: stopping PCM stream
+09-07 23:31:42.157 19433 19433 I Choreographer: Skipped 34 frames!  The application may be doing too much work on its main thread.
+09-07 23:31:42.258 19633 19633 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:42.259 19633 19633 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:42.259 19633 19633 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:42.319   542   599 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:42.319   542   599 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:42.727   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:42.727   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:42.729   720  1683 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:42.736   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:42.738  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:42.740  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:42.740  1445  1913 D ExifInterface: java.io.IOException: Encountered corrupt PNG file.
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getPngAttributes(ExifInterface.java:3444)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2008)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:42.740  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:42.941  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:42.970   720  1701 W AS.PlaybackActivityMon: No piid assigned for invalid/internal port id 15
+09-07 23:31:42.992   530   660 D AudioFlinger: mixer(0x7f00a8a8f770) throttle end: throttle time(36)
+09-07 23:31:44.018   530   660 W AudioFlinger: write blocked for 374 msecs, 4 delayed writes, thread 13
+09-07 23:31:46.032   497  4740 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 30582592
+09-07 23:31:46.032   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: joining consumeThread
+09-07 23:31:46.049   497 19646 D android.hardware.audio@7.1-impl.ranchu: consumeThread: exiting
+09-07 23:31:46.050   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: stopping PCM stream
+09-07 23:31:47.366 19652 19652 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:47.726  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:47.728  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.730  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.731  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.734  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.736  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.738  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.740  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.742  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.744  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:47.745  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:47.747  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:47.748  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:47.748  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:47.749  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:47.752  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:47.753  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:47.755  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:47.757  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:47.758  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:47.760  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:47.762  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:47.763  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:47.764  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:47.766  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:47.767  2312  9344 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:47.768  2312  9344 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:47.770  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:47.771  2312  9344 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:49.709  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:31:49.755 19655 19655 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:49.755 19655 19655 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:49.756 19655 19655 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:49.799   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:49.799   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:50.419   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:50.420   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:50.423   720  1739 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:50.434   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:50.435  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:50.439  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:50.439  1445  1913 D ExifInterface: java.io.EOFException
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface$ByteOrderedDataInputStream.readShort(ExifInterface.java:5045)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.readByteOrder(ExifInterface.java:3996)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.parseTiffHeaders(ExifInterface.java:4016)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getRawAttributes(ExifInterface.java:2975)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2023)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:50.439  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:50.443  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:50.678   720  1735 W AS.PlaybackActivityMon: No piid assigned for invalid/internal port id 15
+09-07 23:31:50.684   530   660 D AudioFlinger: mixer(0x7f00a8a8f770) throttle end: throttle time(33)
+09-07 23:31:53.736   497  4740 D android.hardware.audio@7.1-impl.ranchu: threadLoop: entering standby, frames: 30731648
+09-07 23:31:53.736   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: joining consumeThread
+09-07 23:31:53.748   497 19668 D android.hardware.audio@7.1-impl.ranchu: consumeThread: exiting
+09-07 23:31:53.749   497  4740 D android.hardware.audio@7.1-impl.ranchu: ~TinyalsaSink: stopping PCM stream
+09-07 23:31:54.350 19669 19669 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:31:54.350 19669 19669 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:31:54.351 19669 19669 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:31:54.463   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:31:54.463   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:31:54.764   720  1683 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:31:54.765   720  1683 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:31:54.767   720  1701 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:31:54.774   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:31:54.776  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:54.779  1445  1913 D ExifInterface: Invalid image: ExifInterface got an unsupported or corrupted image file
+09-07 23:31:54.779  1445  1913 D ExifInterface: java.io.EOFException
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface$ByteOrderedDataInputStream.readShort(ExifInterface.java:5045)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.readByteOrder(ExifInterface.java:3996)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.parseTiffHeaders(ExifInterface.java:4016)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.getRawAttributes(ExifInterface.java:2975)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.loadAttributes(ExifInterface.java:2023)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1640)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.media.ExifInterface.<init>(ExifInterface.java:1591)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItemImage(ModernMediaScanner.java:1713)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanItem(ModernMediaScanner.java:1306)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.-$$Nest$mscanItem(ModernMediaScanner.java:0)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:1020)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.visitFile(ModernMediaScanner.java:501)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2670)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.nio.file.Files.walkFileTree(Files.java:2742)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.walkFileTree(ModernMediaScanner.java:624)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.runInternal(ModernMediaScanner.java:583)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner$Scan.run(ModernMediaScanner.java:572)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.scan.ModernMediaScanner.scanFile(ModernMediaScanner.java:420)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaProvider.scanFile(MediaProvider.java:2396)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onScanFile(MediaService.java:237)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at com.android.providers.media.MediaService.onHandleWork(MediaService.java:85)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:397)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at androidx.core.app.JobIntentService$CommandProcessor.doInBackground(JobIntentService.java:388)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at android.os.AsyncTask$3.call(AsyncTask.java:394)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.util.concurrent.FutureTask.run(FutureTask.java:317)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-07 23:31:54.779  1445  1913 D ExifInterface: 	at java.lang.Thread.run(Thread.java:1119)
+09-07 23:31:54.779  1445  1913 D HWUI    : --- Failed to create image decoder with message 'unimplemented'
+09-07 23:31:54.779  1445  1913 D HWUI    : --- Failed to create image decoder with message 'unimplemented'
+09-07 23:31:54.783  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:31:55.306  3545  3545 I Finsky:background: [2] Memory trim requested to level 40
+09-07 23:31:55.307  2983  2983 I Finsky  : [2] Memory trim requested to level 40
+09-07 23:31:55.307  2983  2983 I Finsky  : [2] Flushing in-memory image cache
+09-07 23:31:55.974 17017 17058 I cr_BindingManager: onTrimMemory: level=40, size=0
+09-07 23:31:56.026  1333  1333 D BoundBrokerSvc: onRebind: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }
+09-07 23:31:57.376 19682 19682 W dumpsys : Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: package
+09-07 23:31:57.890   720   744 I system_server: Background concurrent mark compact GC freed 23MB AllocSpace bytes, 15(300KB) LOS objects, 42% free, 32MB/56MB, paused 2.739ms,2.098ms total 421.368ms
+09-07 23:31:58.107  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/base.odex) is kOatUpToDate with filter 'speed-profile' executable 'false'
+09-07 23:31:58.116  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_AdsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.120  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_CronetDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.122  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteLoader_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.123  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesA_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.125  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_DynamiteModulesC_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.127  2312  9344 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_GoogleCertificates_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.129  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MapsDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.132  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_MeasurementDynamite_installtime.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.134  2312  2406 I artd    : GetBestInfo: odex next to the dex file (/data/app/~~muRcWleP92xrVxcjVIWcGw==/com.google.android.gms-fAPMt3_KSAgwMCeFSMkU5w==/oat/x86_64/split_all_locale_splits.odex) is kOatUpToDate with filter 'speed' executable 'false'
+09-07 23:31:58.134  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000001/CronetDynamite.apk has no usable artifacts
+09-07 23:31:58.137  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000014/dl-VisionOcr.optional_263131100000.apk has no usable artifacts
+09-07 23:31:58.139  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000018/dl-IdentityCredentialsPlatform.optional_263131100800.apk has no usable artifacts
+09-07 23:31:58.140  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/DynamiteLoader.apk has no usable artifacts
+09-07 23:31:58.142  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000005/GoogleCertificates.apk has no usable artifacts
+09-07 23:31:58.143  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000019/dl-TfliteDynamiteDynamite.integ_262730502100800.apk has no usable artifacts
+09-07 23:31:58.146  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000b/dl-TfliteDynamiteDynamite.integ_260580502100800.apk has no usable artifacts
+09-07 23:31:58.147  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000013/dl-PlayCloudSearch.optional_263131100000.apk has no usable artifacts
+09-07 23:31:58.148  2312  9344 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000d/dl-VisionOcr.optional_250834100000.apk has no usable artifacts
+09-07 23:31:58.149  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000015/dl-Appsearch.optional_263131100800.apk has no usable artifacts
+09-07 23:31:58.151  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000008/dl-Appsearch.optional_250834100800.apk has no usable artifacts
+09-07 23:31:58.153  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000011/dl-MlkitOcrCommon.optional_263131100800.apk has no usable artifacts
+09-07 23:31:58.154  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000e/dl-MlkitOcrCommon.optional_250834100800.apk has no usable artifacts
+09-07 23:31:58.156  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/0000000a/dl-MlkitBarcodeUi.optional_250834100800.apk has no usable artifacts
+09-07 23:31:58.158  2312  2406 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/D76594F451C00E79F4C61E3B54BC3D01968BC47C/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:58.160  2312  2406 I artd    : GetBestInfo: vdex next to the dex file (/data/user/0/com.google.android.gms/app_dg_cache/EC7C859F3FC767BB82D82EE06B046D25E8EB9283/oat/x86_64/the.vdex) is kOatUpToDate with filter 'verify' executable 'false'
+09-07 23:31:58.160  2312  2406 W artd    : Could not get dex checksums for location /data/app/~~PPFUspJjT6ABRmSszWzPsg==/com.android.vending-jkfOEAa9S8c8QwUyom8mAA==/base.apk, fd=-1
+09-07 23:31:58.162  2312  2406 I artd    : GetBestInfo: /data/user_de/0/com.google.android.gms/app_chimera/m/00000012/dl-MlkitBarcodeUi.optional_263131100800.apk has no usable artifacts
+09-07 23:31:58.163  2312  2406 I artd    : GetBestInfo: /data/user/0/com.google.android.gms/app_dg_cache/90356F09B5269D8AF0E8BAEAA661BE4AFD715065/the.apk has no usable artifacts
+09-07 23:31:58.513   720   826 D ActivityManager: freezing 1644 com.google.android.gms
+09-07 23:31:59.704  1085  1297 D SatelliteController: iisInCarrierRoamingNbIotNtn: satellite is disabled
+09-07 23:32:00.272 19685 19685 W screencap: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: SurfaceFlingerAIDL
+09-07 23:32:00.272 19685 19685 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+09-07 23:32:00.273 19685 19685 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+09-07 23:32:00.310   542   692 E HwcComposer: getLuts failed Status(-8, EX_SERVICE_SPECIFIC): '8: '
+09-07 23:32:00.310   542   692 E HWComposer: getLuts: getLuts failed for display 4619827259835644672: UNSUPPORTED (8)
+09-07 23:32:00.906   720  1701 I ActivityManager: Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
+09-07 23:32:00.907   720  1701 I ActivityManager: Enqueued broadcast Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }: 0
+09-07 23:32:00.908   720  1735 W JobInfo : Job 'com.google.android.providers.media.module/com.android.providers.media.MediaService#-300' has a deadline with no functional constraints. The deadline won't improve job execution latency. Consider removing the deadline.
+09-07 23:32:00.919   720   753 I ActivityManager: Broadcast completed: result=0
+09-07 23:32:00.924  1445  1913 I MediaProvider: Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:32:00.940  1445  1913 I MediaProvider: End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x1400010 cmp=com.google.android.providers.media.module/com.android.providers.media.MediaService }
+09-07 23:32:01.063  1333  1333 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action:/... xflg=0x4 cmp=com.google.android.gms/.chimera.PersistentApiService }

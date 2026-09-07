@@ -69,10 +69,10 @@ export default function LoginScreen() {
   };
 
   const handleQuickLogin = (role: 'CUSTOMER' | 'WORKER') => {
-    let qEmail = 'customer1@test.com';
+    let qEmail = 'customer@test.com';
     let qPass = 'Customer@123';
     if (role === 'WORKER') {
-      qEmail = 'worker1@test.com';
+      qEmail = 'worker@test.com';
       qPass = 'Worker@123';
     }
     setEmail(qEmail);
