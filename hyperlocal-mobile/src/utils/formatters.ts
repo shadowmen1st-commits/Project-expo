@@ -40,6 +40,47 @@ export function formatBookingDateIST(value: any): string {
     }
 }
 
+export function formatBookingTimeIST(value: any, timeFallback?: string): string {
+    if (timeFallback && typeof timeFallback === 'string' && timeFallback.trim()) {
+        const trimmed = timeFallback.trim();
+        if (/\b(AM|PM)\b/i.test(trimmed)) {
+            return trimmed;
+        }
+        const match24 = /^(\d{1,2}):(\d{2})/.exec(trimmed);
+        if (match24) {
+            let h = parseInt(match24[1], 10);
+            const m = match24[2];
+            const meridiem = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${String(h).padStart(2, '0')}:${m} ${meridiem}`;
+        }
+    }
+
+    if (value) {
+        const dateObj = value instanceof Date ? value : new Date(value);
+        if (!isNaN(dateObj.getTime())) {
+            try {
+                return new Intl.DateTimeFormat('en-US', {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                }).format(dateObj);
+            } catch {
+                const istMs = dateObj.getTime() + 5.5 * 60 * 60 * 1000;
+                const istDate = new Date(istMs);
+                let h = istDate.getUTCHours();
+                const m = String(istDate.getUTCMinutes()).padStart(2, '0');
+                const meridiem = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                return `${String(h).padStart(2, '0')}:${m} ${meridiem}`;
+            }
+        }
+    }
+
+    return '10:00 AM';
+}
+
 export function formatBookingAmount(b: any): string {
     if (b === null || b === undefined) return '0';
 
@@ -116,27 +157,6 @@ export function resolveBookingId(b: any): string {
 export function formatBookingDateTimeIST(value: any, timeFallback?: string): string {
     if (!value && !timeFallback) return 'Schedule unavailable';
     const datePart = formatBookingDateIST(value);
-    
-    if (timeFallback) {
-        return `${datePart} • ${timeFallback}`;
-    }
-
-    if (value) {
-        const dateObj = value instanceof Date ? value : new Date(value);
-        if (!isNaN(dateObj.getTime())) {
-            try {
-                const timePart = new Intl.DateTimeFormat('en-US', {
-                    timeZone: 'Asia/Kolkata',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                }).format(dateObj);
-                return `${datePart} • ${timePart}`;
-            } catch {
-                return datePart;
-            }
-        }
-    }
-
-    return datePart;
+    const timePart = formatBookingTimeIST(value, timeFallback);
+    return `${datePart} • ${timePart}`;
 }

@@ -19,6 +19,7 @@ import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCanonicalWorkerId } from '../../utils/workerUtils';
+import { formatBookingDateTimeIST } from '../../utils/formatters';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -395,7 +396,7 @@ export default function CustomerDashboard() {
                     {recentBookings[0].category?.name || recentBookings[0].serviceCategoryName || recentBookings[0].categoryName || 'Home Service Request'}
                   </Text>
                   <Text style={styles.recentBookingSub}>
-                    {new Date(recentBookings[0].scheduledStart || recentBookings[0].bookingDate || Date.now()).toLocaleDateString()}
+                    {formatBookingDateTimeIST(recentBookings[0].scheduledStart || recentBookings[0].bookingDate, recentBookings[0].bookingTime)}
                   </Text>
                 </View>
                 <View style={styles.statusPill}>

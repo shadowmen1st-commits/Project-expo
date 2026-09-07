@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MobileHeader } from '../../components/MobileHeader';
 import { EmptyState } from '../../components/EmptyState';
 import { LoadingState } from '../../components/LoadingState';
@@ -16,6 +16,12 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
+import {
+  formatBookingAmount,
+  formatBookingDateIST,
+  formatBookingTimeIST,
+  normalizeBookingStatus,
+} from '../../utils/formatters';
 
 export default function CustomerBookingsScreen() {
   const router = useRouter();
@@ -57,17 +63,14 @@ export default function CustomerBookingsScreen() {
     }
   }, [user?._id]);
 
-  // CRITICAL: Do NOT fetch bookings until auth has finished loading AND user is set.
-  // Without this guard, the request fires before the accessToken is in storage.
-  useEffect(() => {
-    if (authLoading) return;       // Auth restoration in progress — wait
-    if (!user) {
-      // Not authenticated — redirect to login
-      router.replace('/(auth)/login');
-      return;
-    }
-    fetchBookings();
-  }, [authLoading, user?._id]);
+  // Automatically refresh whenever screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!authLoading && user) {
+        fetchBookings();
+      }
+    }, [authLoading, user?._id, fetchBookings])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -166,10 +169,10 @@ export default function CustomerBookingsScreen() {
             const categoryName = item.category?.name || item.serviceCategoryId?.name || item.serviceCategoryName || item.categoryName || 'Service Booking';
             const workerName = item.worker?.name || item.workerId?.name || (typeof item.worker === 'string' ? item.worker : '') || item.workerName || 'Assigned Professional';
             const scheduledDate = item.scheduledStart || item.bookingDate;
-            const dateStr = scheduledDate ? new Date(scheduledDate).toLocaleDateString() : 'Scheduled Date';
-            const timeStr = item.bookingTime || item.startTime || (scheduledDate ? new Date(scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM');
+            const dateStr = formatBookingDateIST(scheduledDate);
+            const timeStr = formatBookingTimeIST(item.scheduledStart, item.bookingTime || item.startTime);
             const durationStr = item.durationMinutes ? `${Math.round(item.durationMinutes / 60)} hrs` : `${item.durationHours || 2} hrs`;
-            const priceVal = item.totalAmount || item.estimatedPrice || item.baseAmount || 500;
+            const priceVal = formatBookingAmount(item);
 
             return (
               <TouchableOpacity

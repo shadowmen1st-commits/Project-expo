@@ -21,6 +21,12 @@ import { useAuth } from '../../context/AuthContext';
 import { storage } from '../../utils/storage';
 import { WorkerLocationService } from '../../utils/WorkerLocationService';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
+import {
+  formatBookingAmount,
+  formatBookingDateIST,
+  formatBookingTimeIST,
+  normalizeBookingStatus,
+} from '../../utils/formatters';
 import { io, Socket } from 'socket.io-client';
 
 export default function WorkerBookingsScreen() {
@@ -208,10 +214,10 @@ export default function WorkerBookingsScreen() {
             const customerPhone = item.customer?.phone || null;
             const address = item.serviceAddress || item.addressSnapshot?.addressLine || item.address || 'Customer Service Location';
             const bookingNum = item.bookingNumber || `BK-${bookingId.substring(0, 8).toUpperCase()}`;
-            const dateDisplay = item.bookingDate || (item.scheduledStart ? new Date(item.scheduledStart).toLocaleDateString() : 'Scheduled');
-            const timeDisplay = item.bookingTime || '';
+            const dateDisplay = formatBookingDateIST(item.scheduledStart || item.bookingDate);
+            const timeDisplay = formatBookingTimeIST(item.scheduledStart, item.bookingTime);
             const durationDisplay = item.durationMinutes ? `(${Math.round(item.durationMinutes / 60)} hrs)` : '';
-            const earningVal = item.workerEarning || item.totalAmount || 0;
+            const earningVal = formatBookingAmount(item.workerEarning || item.totalAmount || 0);
 
             const isPaidPendingAccept = status === 'PAID';
             const isConfirmedOrAccepted = status === 'CONFIRMED' || status === 'ACCEPTED';

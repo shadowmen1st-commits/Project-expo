@@ -19,6 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../../../config/api';
 import { useAuth } from '../../../../context/AuthContext';
 import { colors, spacing, typography, radius, shadows } from '../../../../theme';
+import {
+  formatBookingAmount,
+  formatBookingDateIST,
+  formatBookingTimeIST,
+  formatBookingDateTimeIST,
+  normalizeBookingStatus,
+} from '../../../../utils/formatters';
 
 export default function BookingDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -130,24 +137,8 @@ export default function BookingDetailsScreen() {
   const canCancel = ['PENDING', 'PAYMENT_PENDING', 'ASSIGNED', 'CONFIRMED'].includes(currentStatus);
 
   const scheduledDate = booking.scheduledStart || booking.bookingDate;
-  const formattedDate = scheduledDate
-    ? new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Kolkata',
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(new Date(scheduledDate))
-    : 'Scheduled Date';
-
-  const formattedTime = scheduledDate
-    ? new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }).format(new Date(scheduledDate))
-    : booking.startTime || '10:00 AM';
+  const formattedDate = formatBookingDateIST(scheduledDate);
+  const formattedTime = formatBookingTimeIST(booking.scheduledStart, booking.bookingTime || booking.startTime);
 
   const displayAddress =
     booking.serviceAddress ||
@@ -245,14 +236,14 @@ export default function BookingDetailsScreen() {
           {booking.baseAmount != null && (
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Base Service Fee</Text>
-              <Text style={styles.priceVal}>₹{booking.baseAmount}</Text>
+              <Text style={styles.priceVal}>₹{formatBookingAmount(booking.baseAmount)}</Text>
             </View>
           )}
 
           {booking.platformFee != null && (
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Platform Fee</Text>
-              <Text style={styles.priceVal}>₹{booking.platformFee}</Text>
+              <Text style={styles.priceVal}>₹{formatBookingAmount(booking.platformFee)}</Text>
             </View>
           )}
 
@@ -275,7 +266,7 @@ export default function BookingDetailsScreen() {
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Amount</Text>
             <Text style={styles.totalVal}>
-              ₹{booking.totalAmount || booking.estimatedPrice || 500}
+              ₹{formatBookingAmount(booking)}
             </Text>
           </View>
         </View>
@@ -283,7 +274,7 @@ export default function BookingDetailsScreen() {
         {/* If payment is pending: allow customer to complete payment directly */}
         {!isPaid && currentStatus !== 'CANCELLED' && currentStatus !== 'REJECTED' && (
           <AppButton
-            title={`Pay Now • ₹${booking.totalAmount || booking.estimatedPrice || 500}`}
+            title={`Pay Now • ₹${formatBookingAmount(booking)}`}
             variant="primary"
             icon="card-outline"
             loading={paying}

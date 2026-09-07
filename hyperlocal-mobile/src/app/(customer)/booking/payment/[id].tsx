@@ -279,6 +279,28 @@ export default function BookingPaymentScreen() {
       }
 
       if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+        // Smart check: Check if booking was marked PAID in the background
+        try {
+          const checkRes = await api.get(`/bookings/${bId}`);
+          const bCheck = checkRes.data?.booking || checkRes.data;
+          const status = normalizeBookingStatus(bCheck?.bookingStatus || bCheck?.status);
+          const pStatus = normalizeBookingStatus(bCheck?.paymentStatus);
+          if (pStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS'].includes(status)) {
+            setBooking(bCheck);
+            setFlowState('SUCCESS');
+            setVerifiedTxnDetails({
+              paymentId: bCheck.paymentTransactionId || bCheck.paymentId || 'PAY_CAPTURED',
+              transactionNumber: bCheck.transactionNumber || `TXN-${bCheck.bookingNumber || bId.substring(0, 8)}`,
+            });
+            setTimeout(() => {
+              router.replace({ pathname: '/(customer)/booking/details/[id]', params: { id: bId } } as any);
+            }, 2200);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+
         console.log('[PAYMENT_FAILED] Customer dismissed checkout window');
         setFlowState('FAILED');
         setErrorMessage('Payment was not completed. You can try again.');
@@ -346,9 +368,9 @@ export default function BookingPaymentScreen() {
           console.warn('Post-payment silent refresh:', fetchErr);
         }
 
-        // 7. Auto-navigate to Customer Booking Details screen after showing receipt
+        // 7. Auto-navigate directly to Booking Details screen after showing receipt
         setTimeout(() => {
-          router.replace(`/(customer)/booking/details/${targetBookingId}` as any);
+          router.replace({ pathname: '/(customer)/booking/details/[id]', params: { id: targetBookingId } } as any);
         }, 2200);
       } else {
         console.log('[PAYMENT_FAILED]', verifyRes.data?.message);
@@ -496,20 +518,28 @@ export default function BookingPaymentScreen() {
               title="📄 View Booking Details"
               variant="primary"
               icon="document-text-outline"
-              onPress={() => router.replace(`/(customer)/booking/details/${bId}` as any)}
+              onPress={() => router.replace({ pathname: '/(customer)/booking/details/[id]', params: { id: bId } } as any)}
               style={{ marginTop: spacing.lg, width: '100%' }}
             />
 
             <AppButton
-              title="🧭 View Live Tracking"
+              title="📋 My Bookings"
               variant="secondary"
+              icon="calendar-outline"
+              onPress={() => router.replace('/(customer)/bookings' as any)}
+              style={{ marginTop: spacing.sm, width: '100%' }}
+            />
+
+            <AppButton
+              title="🧭 View Live Tracking"
+              variant="outline"
               icon="navigate-outline"
-              onPress={() => router.replace(`/(customer)/booking/tracking/${bId}` as any)}
+              onPress={() => router.push(`/(customer)/booking/tracking/${bId}` as any)}
               style={{ marginTop: spacing.sm, width: '100%' }}
             />
 
             <Text style={[styles.successNote, { marginTop: spacing.md, color: colors.textMuted, fontStyle: 'italic' }]}>
-              Redirecting to your booking details in a moment...
+              Redirecting directly to booking details in a moment...
             </Text>
           </View>
         ) : (
