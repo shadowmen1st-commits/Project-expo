@@ -97,6 +97,12 @@ export default function AdminLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="tracking/[id]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
