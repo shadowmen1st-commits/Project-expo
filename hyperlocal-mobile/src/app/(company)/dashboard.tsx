@@ -110,10 +110,10 @@ export default function CompanyDashboard() {
             </View>
             <TouchableOpacity
               style={styles.verifBtn}
-              onPress={() => router.push('/(company)/profile')}
+              onPress={() => router.push('/(company)/verification')}
             >
               <Text style={styles.verifBtnText}>
-                {verifStatus === 'APPROVED' ? 'Verified' : 'View KYC'}
+                {verifStatus === 'VERIFIED' || verifStatus === 'APPROVED' ? 'Verified' : 'Upload / View KYC'}
               </Text>
             </TouchableOpacity>
           </View>

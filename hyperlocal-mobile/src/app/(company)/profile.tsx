@@ -12,12 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MobileHeader } from '../../components/MobileHeader';
 import Badge from '../../components/Badge';
 import { AppButton } from '../../components/AppButton';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 
 export default function CompanyProfileScreen() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,6 +62,37 @@ export default function CompanyProfileScreen() {
                   </View>
                 </View>
               </View>
+            </View>
+
+            {/* KYC Verification Card */}
+            <View style={[styles.card, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="shield-checkmark" size={20} color="#16A34A" />
+                  <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: 6, color: '#166534' }]}>
+                    KYC Verification Status
+                  </Text>
+                </View>
+                <Badge status={verifStatus} />
+              </View>
+              <Text style={{ fontSize: 13, color: '#334155', marginBottom: 12 }}>
+                {verifStatus === 'VERIFIED'
+                  ? 'Your company documents have been verified by the admin team. You have full access to post jobs and hire workers.'
+                  : verifStatus === 'UNDER_REVIEW'
+                  ? 'Your documents have been submitted and are currently awaiting review by our compliance team.'
+                  : verifStatus === 'REJECTED'
+                  ? 'Verification was rejected. Please review feedback and re-upload required documents.'
+                  : 'Please upload business registration, address proof, PAN card, and authorized ID to get verified.'}
+              </Text>
+              <TouchableOpacity
+                style={styles.kycActionBtn}
+                onPress={() => router.push('/(company)/verification')}
+              >
+                <Ionicons name="cloud-upload-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.kycActionBtnText}>
+                  {verifStatus === 'VERIFIED' ? 'View Uploaded Documents' : 'Manage KYC Documents'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.card}>
@@ -172,5 +205,20 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     maxWidth: '60%',
     textAlign: 'right',
+  },
+  kycActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#16A34A',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 6,
+    gap: 8,
+  },
+  kycActionBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

@@ -68,6 +68,13 @@ export default function CompanyLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="verification"
+        options={{
+          href: null,
+          title: 'KYC Verification',
+        }}
+      />
     </Tabs>
   );
 }
