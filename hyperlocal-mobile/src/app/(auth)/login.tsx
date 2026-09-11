@@ -69,12 +69,18 @@ export default function LoginScreen() {
     }
   };
 
-  const handleQuickLogin = (role: 'CUSTOMER' | 'WORKER') => {
+  const handleQuickLogin = (role: 'ADMIN' | 'CUSTOMER' | 'WORKER' | 'COMPANY') => {
     let qEmail = 'customer@test.com';
     let qPass = 'Customer@123';
     if (role === 'WORKER') {
       qEmail = 'worker@test.com';
       qPass = 'Worker@123';
+    } else if (role === 'COMPANY') {
+      qEmail = 'company@test.com';
+      qPass = 'Company@12345';
+    } else if (role === 'ADMIN') {
+      qEmail = 'admin@test.com';
+      qPass = 'Admin@123';
     }
     setEmail(qEmail);
     setPassword(qPass);
@@ -156,10 +162,20 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Quick Demo Sign-In (Customer & Worker ONLY) */}
+          {/* Quick Demo Sign-In (All 4 Roles) */}
           <View style={styles.demoSection}>
-            <Text style={styles.demoSectionTitle}>Demo / Quick Sign-In</Text>
-            <View style={styles.demoButtonsRow}>
+            <Text style={styles.demoSectionTitle}>Developer Quick Login (Demo)</Text>
+            <View style={styles.demoGrid}>
+              <TouchableOpacity
+                style={[styles.demoChip, { backgroundColor: '#F3E8FF', opacity: loading ? 0.5 : 1 }]}
+                onPress={() => handleQuickLogin('ADMIN')}
+                activeOpacity={0.7}
+                disabled={loading}
+              >
+                <Ionicons name="shield-checkmark-outline" size={14} color="#7E22CE" />
+                <Text style={[styles.demoChipText, { color: '#7E22CE' }]}>Admin</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
                 onPress={() => handleQuickLogin('CUSTOMER')}
@@ -178,6 +194,16 @@ export default function LoginScreen() {
               >
                 <Ionicons name="construct-outline" size={14} color={colors.primaryDark} />
                 <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.demoChip, { backgroundColor: '#DCFCE7', opacity: loading ? 0.5 : 1 }]}
+                onPress={() => handleQuickLogin('COMPANY')}
+                activeOpacity={0.7}
+                disabled={loading}
+              >
+                <Ionicons name="business-outline" size={14} color="#15803D" />
+                <Text style={[styles.demoChipText, { color: "#15803D" }]}>Company</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -281,21 +307,23 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  demoButtonsRow: {
+  demoGrid: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    flexWrap: 'wrap',
+    gap: spacing.xs,
     width: '100%',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   demoChip: {
-    flex: 1,
+    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
     gap: 6,
+    marginBottom: spacing.xs,
   },
   demoChipText: {
     fontSize: typography.sizes.sm,
