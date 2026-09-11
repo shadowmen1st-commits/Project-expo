@@ -210,8 +210,25 @@ export const searchWorkers = async (req, res, next) => {
             query.serviceCategoryIds = categoryId;
         }
 
-        if (skill) {
-            query.skills = { $in: [new RegExp(String(skill), 'i')] };
+        const searchTerm = req.query.query || req.query.skill || req.query.search;
+        if (searchTerm && String(searchTerm).trim()) {
+            const regex = new RegExp(String(searchTerm).trim(), 'i');
+            const matchingUsers = await User.find({ name: regex }).select('_id');
+            const matchingUserIds = matchingUsers.map((u) => u._id);
+
+            const searchConditions = [
+                { skills: { $in: [regex] } },
+                { bio: regex },
+            ];
+            if (matchingUserIds.length > 0) {
+                searchConditions.push({ userId: { $in: matchingUserIds } });
+            }
+
+            if (query.$and) {
+                query.$and.push({ $or: searchConditions });
+            } else {
+                query.$or = searchConditions;
+            }
         }
 
         if (maxPrice) {

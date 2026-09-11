@@ -18,6 +18,24 @@ const getFrontendBase = () => {
     return 'https://www.shadowmen.in';
 };
 
+const buildRedirectUrl = (frontendBase, targetPath, params = {}) => {
+    let urlStr;
+    if (targetPath && (targetPath.startsWith('http://') || targetPath.startsWith('https://') || targetPath.includes('://'))) {
+        urlStr = targetPath;
+    } else {
+        const base = (frontendBase || '').replace(/\/+$/, '');
+        const path = (targetPath || '/auth/oauth/callback').startsWith('/') ? targetPath : `/${targetPath}`;
+        urlStr = `${base}${path}`;
+    }
+    const hasQuery = urlStr.includes('?');
+    const queryParts = Object.entries(params)
+        .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join('&');
+    if (!queryParts) return urlStr;
+    return `${urlStr}${hasQuery ? '&' : '?'}${queryParts}`;
+};
+
 export const startOAuth = async (req, res, next) => {
     try {
         const providerName = req.params.provider;
@@ -59,14 +77,14 @@ export const oauthCallback = async (req, res, next) => {
         
         if (!state || !code) {
             // Usually this means user cancelled or an error occurred. Redirect to frontend with safe error.
-            return res.redirect(`${frontendBase}/auth/oauth/callback?oauth=failed&errorCode=OAUTH_CALLBACK_FAILED`);
+            return res.redirect(buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: 'OAUTH_CALLBACK_FAILED' }));
         }
 
         let attempt;
         try {
             attempt = await oauthService.validateStateAndConsumeAttempt(state, providerName.toUpperCase());
         } catch (e) {
-            return res.redirect(`${frontendBase}/auth/oauth/callback?oauth=failed&errorCode=${e.message}`);
+            return res.redirect(buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: e.message }));
         }
 
         try {
@@ -93,7 +111,7 @@ export const oauthCallback = async (req, res, next) => {
             const { user: appUser } = await oauthService.findOrLinkIdentity(providerName.toUpperCase(), identityParams, attempt, req);
 
             if (appUser.status !== 'ACTIVE') {
-                return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=access_denied&errorCode=OAUTH_ACCOUNT_DISABLED`);
+                return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'access_denied', errorCode: 'OAUTH_ACCOUNT_DISABLED' }));
             }
 
             // Create session
@@ -103,11 +121,11 @@ export const oauthCallback = async (req, res, next) => {
             attempt.status = 'COMPLETED';
             await attempt.save();
 
-            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=success&token=${encodeURIComponent(session.accessToken)}`);
+            return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'success', token: session.accessToken }));
         } catch (e) {
             console.error('OAuth Callback Error:', e);
             const errCode = e.message.startsWith('OAUTH_') ? e.message : 'OAUTH_CALLBACK_FAILED';
-            return res.redirect(`${frontendBase}${attempt.frontendRedirectPath}?oauth=failed&errorCode=${errCode}`);
+            return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'failed', errorCode: errCode }));
         }
     } catch (error) {
         next(error);

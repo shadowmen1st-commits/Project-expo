@@ -1,8 +1,13 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import api from '../config/api';
 import { storage } from '../utils/storage';
+
+// Complete auth session if redirected on web or deep linking
+WebBrowser.maybeCompleteAuthSession();
 
 export interface UserType {
   _id: string;
@@ -24,6 +29,8 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, pass: string) => Promise<UserType>;
   registerUser: (data: any) => Promise<UserType>;
+  googleLogin: (mode?: 'LOGIN' | 'SIGNUP', role?: 'CUSTOMER' | 'WORKER') => Promise<UserType>;
+  loginWithToken: (accessToken: string, refreshToken?: string) => Promise<UserType>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   updateUser: (data: Partial<UserType>) => void;
@@ -153,6 +160,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithToken = async (accessToken: string, refreshToken?: string): Promise<UserType> => {
+    setLoading(true);
+    try {
+      if (accessToken) {
+        await storage.setItem('accessToken', accessToken);
+        if (__DEV__) console.log('AUTH: token stored successfully');
+      }
+      if (refreshToken) {
+        await storage.setItem('refreshToken', refreshToken);
+      }
+      const response = await api.get('/auth/me');
+      const userData = response.data?.user;
+      if (!userData) {
+        throw new Error('Failed to retrieve user profile after authentication.');
+      }
+      setUser(userData);
+      return userData;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleLogin = async (mode: 'LOGIN' | 'SIGNUP' = 'LOGIN', role: 'CUSTOMER' | 'WORKER' = 'CUSTOMER'): Promise<UserType> => {
+    setLoading(true);
+    try {
+      const returnUrl = Linking.createURL('oauth-callback');
+      console.log('[GOOGLE_AUTH_START]', { mode, role, returnUrl });
+
+      const startRes = await api.get('/auth/oauth/google/start', {
+        params: {
+          mode,
+          role,
+          redirect: returnUrl,
+        },
+      });
+
+      if (!startRes.data?.success || !startRes.data?.url) {
+        throw new Error(startRes.data?.message || 'Google authentication is currently not configured or disabled.');
+      }
+
+      const authUrl = startRes.data.url;
+      console.log('[GOOGLE_AUTH_OPEN]', { authUrl, returnUrl });
+
+      const authResult = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
+      console.log('[GOOGLE_AUTH_RESULT]', authResult);
+
+      if (authResult.type === 'success' && authResult.url) {
+        const parsedUrl = Linking.parse(authResult.url);
+        const token = (parsedUrl.queryParams?.token as string) || (parsedUrl.queryParams?.accessToken as string);
+        const oauthStatus = parsedUrl.queryParams?.oauth;
+        const errorCode = parsedUrl.queryParams?.errorCode;
+
+        if (oauthStatus === 'failed' || errorCode) {
+          throw new Error((parsedUrl.queryParams?.message as string) || `Google login failed (${errorCode || 'UNKNOWN'})`);
+        }
+
+        if (token) {
+          const userObj = await loginWithToken(token);
+          return userObj;
+        } else {
+          throw new Error('No authentication token received from Google callback.');
+        }
+      } else if (authResult.type === 'cancel' || authResult.type === 'dismiss') {
+        throw new Error('Google sign-in was cancelled.');
+      } else {
+        throw new Error('Google sign-in could not be completed.');
+      }
+    } catch (err: any) {
+      console.error('[GOOGLE_AUTH_ERROR]', err?.response?.data || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       const refreshToken = await storage.getItem('refreshToken');
@@ -192,6 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         login,
         registerUser,
+        googleLogin,
+        loginWithToken,
         logout,
         restoreSession,
         updateUser,

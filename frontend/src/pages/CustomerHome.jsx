@@ -40,7 +40,8 @@ export const CustomerHome = () => {
     const [workers, setWorkers] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchSkill, setSearchSkill] = useState('');
-    const [maxDistance, setMaxDistance] = useState(15);
+    const [enableDistanceFilter, setEnableDistanceFilter] = useState(false);
+    const [maxDistance, setMaxDistance] = useState(50);
     const [maxPrice, setMaxPrice] = useState('');
 
     const sliderRef = useRef(null);
@@ -131,7 +132,7 @@ export const CustomerHome = () => {
 
     useEffect(() => {
         searchWorkersList();
-    }, [selectedCategory, maxDistance, maxPrice]);
+    }, [selectedCategory, enableDistanceFilter, maxDistance, maxPrice]);
 
     // Quote expiration timer countdown effect
     useEffect(() => {
@@ -189,13 +190,14 @@ export const CustomerHome = () => {
     const searchWorkersList = async () => {
         setLoading(true);
         try {
-            const params = {
-                latitude: lat,
-                longitude: lng,
-                maxDistanceKm: maxDistance,
-            };
+            const params = {};
+            if (enableDistanceFilter && lat && lng) {
+                params.latitude = lat;
+                params.longitude = lng;
+                params.maxDistanceKm = maxDistance;
+            }
             if (selectedCategory) params.categoryId = selectedCategory;
-            if (searchSkill) params.skill = searchSkill;
+            if (searchSkill && searchSkill.trim()) params.query = searchSkill.trim();
             if (maxPrice) params.maxPrice = Number(maxPrice) * 100;
 
             const res = await api.get('/workers/search', { params });
@@ -655,24 +657,55 @@ export const CustomerHome = () => {
                     {/* Filter Bar */}
                     <div className="bg-white border border-[#FEF3C7] rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-md shadow-orange-50/50">
                         <div>
-                            <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-2">Distance Radius</label>
-                            <div className="flex items-center gap-2">
-                                <input type="range" min={1} max={50} value={maxDistance} onChange={(e) => setMaxDistance(Number(e.target.value))} className="w-full h-1.5 bg-[#FFFBEB] rounded-lg appearance-none cursor-pointer accent-[#F97316]"/>
-                                <span className="text-xs font-bold text-[#F97316] flex-shrink-0">{maxDistance} km</span>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-[10px] font-semibold text-[#374151] uppercase tracking-wider">Distance Radius</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setEnableDistanceFilter(!enableDistanceFilter)}
+                                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition-all cursor-pointer ${enableDistanceFilter ? 'bg-[#EA580C] text-white' : 'bg-[#FEF3C7] text-[#92400E] hover:bg-[#FDE68A]'}`}
+                                >
+                                    {enableDistanceFilter ? 'Radius Active' : 'All Locations'}
+                                </button>
+                            </div>
+                            <div className={`flex items-center gap-2 transition-opacity ${enableDistanceFilter ? 'opacity-100' : 'opacity-40'}`}>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={100}
+                                    value={maxDistance}
+                                    disabled={!enableDistanceFilter}
+                                    onChange={(e) => setMaxDistance(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-[#FFFBEB] rounded-lg appearance-none cursor-pointer accent-[#F97316]"
+                                />
+                                <span className="text-xs font-bold text-[#F97316] flex-shrink-0">{enableDistanceFilter ? `${maxDistance} km` : 'Nationwide'}</span>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-2">Search Skill</label>
+                            <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-2">Search Skill or Worker Name</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A8A29E]"/>
-                                <input type="text" placeholder="e.g. Laundry" value={searchSkill} onChange={(e) => setSearchSkill(e.target.value)} onBlur={searchWorkersList} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 text-[#111827] transition-all py-2 pl-9 pr-3 text-xs outline-none"/>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Ayush, Plumbing, Cleaning"
+                                    value={searchSkill}
+                                    onChange={(e) => setSearchSkill(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && searchWorkersList()}
+                                    onBlur={searchWorkersList}
+                                    className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 text-[#111827] transition-all py-2 pl-9 pr-3 text-xs outline-none rounded-lg"
+                                />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-[10px] font-semibold text-[#374151] uppercase tracking-wider mb-2">Max Rate (₹/hr)</label>
-                            <input type="number" placeholder="500" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 text-[#111827] transition-all py-2 px-3 text-xs outline-none"/>
+                            <input
+                                type="number"
+                                placeholder="e.g. 500"
+                                value={maxPrice}
+                                onChange={(e) => setMaxPrice(e.target.value)}
+                                className="w-full bg-[#FFFDF5] border border-[#FEF3C7] focus:border-[#F97316] focus:ring-2 focus:ring-[#FACC15]/35 text-[#111827] transition-all py-2 px-3 text-xs outline-none rounded-lg"
+                            />
                         </div>
                     </div>
 
@@ -694,7 +727,7 @@ export const CustomerHome = () => {
                                 {workers.map((worker) => (
                                     <div key={worker.workerId} className="bg-white border border-[#FEF3C7] hover:border-[#F97316]/50 rounded-2xl p-5 flex flex-col justify-between transition-all shadow-md hover:shadow-orange-100/40 hover:-translate-y-0.5 duration-300">
                                         <div>
-                                            <div className="flex items-start justify-between mb-3">
+                                             <div className="flex items-start justify-between mb-3">
                                                 <div
                                                     className="flex items-center gap-3 cursor-pointer group"
                                                     onClick={() => setViewingProfileWorker(worker)}
@@ -709,7 +742,7 @@ export const CustomerHome = () => {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <span className="text-[10px] text-[#4B5563]">Exp: {worker.experienceYears} Yrs</span>
+                                                        <span className="text-[10px] text-[#4B5563]">Exp: {worker.experienceYears || 1} Yrs</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 text-[#EA580C] text-xs font-bold bg-[#FEF9C3] px-2 py-0.5 rounded-full border border-[#FCD34D] shadow-sm">
@@ -723,7 +756,7 @@ export const CustomerHome = () => {
                                         <div className="pt-3 border-t border-[#FEF3C7] flex items-center justify-between mt-auto">
                                             <div>
                                                 <span className="block text-[9px] text-[#9CA3AF] font-semibold uppercase">Hourly Rate</span>
-                                                <span className="text-sm font-extrabold text-[#F97316]">₹{((worker.hourlyRate || 0) / 100).toFixed(0)} <span className="text-[10px] font-normal text-[#4B5563]">/hr</span></span>
+                                                <span className="text-sm font-extrabold text-[#F97316]">₹{worker.hourlyRate > 1000 ? Math.round(worker.hourlyRate / 100) : (worker.hourlyRate || 350)} <span className="text-[10px] font-normal text-[#4B5563]">/hr</span></span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button

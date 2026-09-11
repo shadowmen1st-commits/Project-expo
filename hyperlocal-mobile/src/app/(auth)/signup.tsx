@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { AppInput } from '../../components/AppInput';
 import { AppButton } from '../../components/AppButton';
+import { GoogleSignInButton } from '../../components/GoogleSignInButton';
 import { MobileHeader } from '../../components/MobileHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius } from '../../theme';
@@ -194,6 +195,21 @@ export default function SignupScreen() {
               size="lg"
               style={styles.submitBtn}
             />
+
+            {/* Social Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR SIGN UP WITH</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Google Sign Up Button */}
+            <GoogleSignInButton
+              mode="SIGNUP"
+              role={role === 'WORKER' ? 'WORKER' : 'CUSTOMER'}
+              label={role === 'WORKER' ? 'Sign up as Pro with Google' : 'Sign up with Google'}
+              onError={(err) => setErrorMessage(err)}
+            />
           </View>
 
           <View style={styles.footerContainer}>
@@ -311,5 +327,22 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.accent,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.xs,
+    gap: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.borderLight || '#E2E8F0',
+  },
+  dividerText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textMuted || '#94A3B8',
+    letterSpacing: 0.5,
   },
 });
