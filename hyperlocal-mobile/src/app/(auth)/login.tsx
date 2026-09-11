@@ -80,7 +80,7 @@ export default function LoginScreen() {
       qPass = 'Company@12345';
     } else if (role === 'ADMIN') {
       qEmail = 'admin@test.com';
-      qPass = 'Admin@123';
+      qPass = 'Admin@12345';
     }
     setEmail(qEmail);
     setPassword(qPass);
