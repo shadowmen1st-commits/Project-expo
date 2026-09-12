@@ -232,12 +232,12 @@ export const LandingPage = () => {
                             <Search className="w-4 h-4 text-[#9CA3AF] flex-shrink-0"/>
                             <input 
                                 readOnly 
-                                onClick={() => navigate('/login')} 
+                                onClick={() => navigate('/dashboard')} 
                                 placeholder="What service do you need?" 
                                 className="bg-transparent text-[#111827] text-sm flex-1 outline-none placeholder-[#9CA3AF] cursor-pointer"
                             />
                         </div>
-                        <button onClick={() => navigate('/login')} className="btn-primary-gradient font-bold px-8 py-3 rounded-2xl cursor-pointer">
+                        <button onClick={() => navigate('/dashboard')} className="btn-primary-gradient font-bold px-8 py-3 rounded-2xl cursor-pointer">
                             Book Now
                         </button>
                     </div>

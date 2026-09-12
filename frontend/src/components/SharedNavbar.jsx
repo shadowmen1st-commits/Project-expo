@@ -86,7 +86,7 @@ export const SharedNavbar = () => {
                         <button onClick={() => navigate('/login')} className="text-[#4B5563] hover:text-[#111827] text-sm font-medium transition-colors px-3 py-1.5 cursor-pointer outline-none">
                             Sign In
                         </button>
-                        <button onClick={() => navigate('/register')} className="btn-primary-gradient text-sm font-semibold px-5 py-2.5 rounded-xl outline-none cursor-pointer">
+                        <button onClick={() => navigate('/dashboard')} className="btn-primary-gradient text-sm font-semibold px-5 py-2.5 rounded-xl outline-none cursor-pointer">
                             Get Started
                         </button>
                     </div>
@@ -129,7 +129,7 @@ export const SharedNavbar = () => {
                         <button onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} className="text-[#111827] hover:text-[#F97316] text-lg font-semibold py-3 border border-[#FEF3C7] rounded-2xl bg-white cursor-pointer outline-none">
                             Sign In
                         </button>
-                        <button onClick={() => { setMobileMenuOpen(false); navigate('/register'); }} className="btn-primary-gradient text-lg font-bold py-3.5 rounded-2xl cursor-pointer outline-none">
+                        <button onClick={() => { setMobileMenuOpen(false); navigate('/dashboard'); }} className="btn-primary-gradient text-lg font-bold py-3.5 rounded-2xl cursor-pointer outline-none">
                             Get Started
                         </button>
                     </div>

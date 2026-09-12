@@ -91,7 +91,7 @@ export const HomeBannerCarousel = ({ onActionClick }) => {
         if (onActionClick) {
             onActionClick(categoryName);
         } else {
-            navigate('/login');
+            navigate('/dashboard');
         }
     };
 

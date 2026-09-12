@@ -113,7 +113,7 @@ export const ForWorkersPage = () => {
 
             {/* Banner Slider */}
             <section className="max-w-6xl mx-auto px-6 mb-16">
-                <HomeBannerCarousel onActionClick={() => navigate('/login')} />
+                <HomeBannerCarousel onActionClick={() => navigate('/dashboard')} />
             </section>
 
             {/* Interactive Earning Calculator */}

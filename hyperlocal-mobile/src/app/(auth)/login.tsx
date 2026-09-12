@@ -154,6 +154,17 @@ export default function LoginScreen() {
               <Text style={styles.demoAccountBtnText}>Explore Demo Account</Text>
             </TouchableOpacity>
 
+            {/* Browse as Guest Link */}
+            <TouchableOpacity
+              style={{ alignItems: 'center', paddingVertical: 6 }}
+              onPress={() => router.replace('/(customer)/dashboard')}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary }}>
+                ← Browse Marketplace as Guest
+              </Text>
+            </TouchableOpacity>
+
             {/* Social Divider */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />

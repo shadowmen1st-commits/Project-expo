@@ -164,7 +164,7 @@ export const PricingPage = () => {
 
             {/* Banner Slider */}
             <section className="max-w-6xl mx-auto px-6 mb-16">
-                <HomeBannerCarousel onActionClick={() => navigate('/login')} />
+                <HomeBannerCarousel onActionClick={() => navigate('/dashboard')} />
             </section>
 
             {/* Pricing Cards */}
@@ -195,7 +195,7 @@ export const PricingPage = () => {
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-[#78716C] text-lg">₹</span>
                                         <span className="text-5xl font-black text-[#1C1917]">
-                                            {yearly ? plan.yearlyPrice : plan.monthlyPrice}
+                                             {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                                         </span>
                                         <span className="text-[#78716C] text-sm">/mo</span>
                                     </div>
@@ -226,7 +226,7 @@ export const PricingPage = () => {
                                 ))}
                             </ul>
 
-                            <button onClick={() => navigate('/login')} className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all cursor-pointer ${plan.highlight ? 'btn-primary-gradient' : 'bg-[#FAF6F0] border border-[#E7E0D8] text-[#1C1917] hover:border-[#EAB308]'}`}>
+                            <button onClick={() => navigate('/dashboard')} className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all cursor-pointer ${plan.highlight ? 'btn-primary-gradient' : 'bg-[#FAF6F0] border border-[#E7E0D8] text-[#1C1917] hover:border-[#EAB308]'}`}>
                                 {plan.cta} →
                             </button>
                         </div>
