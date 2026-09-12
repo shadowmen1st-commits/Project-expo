@@ -4,7 +4,8 @@ import api from '../utils/api';
 import { 
     Upload, FileText, ArrowRight, ArrowLeft, Check, Loader2, 
     ShieldCheck, Calendar, MapPin, User, Briefcase, Languages, 
-    AlertCircle, FileCheck, Info, X, Clock, HelpCircle, CheckCircle2
+    AlertCircle, FileCheck, Info, X, Clock, HelpCircle, CheckCircle2,
+    Camera, Trash2, Image as ImageIcon, UploadCloud
 } from 'lucide-react';
 import { getProfileImageUrl } from '../utils/imageUtils';
 
@@ -38,6 +39,10 @@ export const WorkerOnboarding = () => {
     const [country, setCountry] = useState('India');
     const [profilePhoto, setProfilePhoto] = useState(null); // File object
     const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
+    const [profilePhotoPreview, setProfilePhotoPreview] = useState('');
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
+    const profileFileInputRef = useRef(null);
 
     // Form fields - Step 2 & 3: Professional Details & Services
     const [bio, setBio] = useState('');
@@ -204,7 +209,7 @@ export const WorkerOnboarding = () => {
     };
 
     const handleProfilePhotoChange = async (e) => {
-        const file = e.target.files[0];
+        const file = e.target?.files?.[0] || e.dataTransfer?.files?.[0];
         if (!file) return;
 
         if (file.size > 5 * 1024 * 1024) {
@@ -213,13 +218,16 @@ export const WorkerOnboarding = () => {
         }
 
         const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowedMimes.includes(file.type.toLowerCase())) {
+        if (file.type && !allowedMimes.includes(file.type.toLowerCase())) {
             setError('Only JPEG, JPG, PNG and WEBP image formats are permitted for profile photos.');
             return;
         }
 
         setError('');
-        setLoading(true);
+        setIsUploadingPhoto(true);
+        const localPreview = URL.createObjectURL(file);
+        setProfilePhotoPreview(localPreview);
+
         try {
             const formData = new FormData();
             formData.append('file', file);
@@ -234,8 +242,25 @@ export const WorkerOnboarding = () => {
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to upload profile photo.');
+            setProfilePhotoPreview('');
         } finally {
-            setLoading(false);
+            setIsUploadingPhoto(false);
+            if (e.target) e.target.value = '';
+        }
+    };
+
+    const handleRemoveProfilePhoto = async () => {
+        setError('');
+        setIsUploadingPhoto(true);
+        try {
+            await api.delete('/v1/worker/verification/profile-photo');
+            setProfilePhotoUrl('');
+            setProfilePhotoPreview('');
+            setSuccess('Profile photo removed.');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to remove profile photo.');
+        } finally {
+            setIsUploadingPhoto(false);
         }
     };
 
@@ -597,24 +622,91 @@ export const WorkerOnboarding = () => {
                                     <span className="text-[10px] text-[#DC2626] font-semibold">* Required</span>
                                 </div>
                                 
-                                <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#FAF6F0] p-4 border border-[#E7E0D8] rounded-2xl">
-                                    <div className="w-20 h-20 rounded-full border-2 border-[#E7E0D8] bg-white overflow-hidden flex items-center justify-center shrink-0">
-                                        {profilePhotoUrl ? (
-                                            <img src={getProfileImageUrl(profilePhotoUrl)} alt="Profile Preview" className="w-full h-full object-cover"/>
+                                <div 
+                                    onDragOver={(e) => { e.preventDefault(); setIsDraggingPhoto(true); }}
+                                    onDragLeave={(e) => { e.preventDefault(); setIsDraggingPhoto(false); }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        setIsDraggingPhoto(false);
+                                        handleProfilePhotoChange(e);
+                                    }}
+                                    className={`flex flex-col sm:flex-row items-center gap-5 p-5 border-2 rounded-2xl transition-all ${
+                                        isDraggingPhoto 
+                                            ? 'border-[#EAB308] bg-[#FEFCE8] scale-[1.01]' 
+                                            : 'border-[#E7E0D8] bg-[#FAF6F0] hover:border-[#DCD4C8]'
+                                    }`}
+                                >
+                                    {/* Hidden Real File Input with full image/* support */}
+                                    <input 
+                                        ref={profileFileInputRef}
+                                        type="file" 
+                                        accept="image/*,image/jpeg,image/png,image/jpg,image/webp"
+                                        onChange={handleProfilePhotoChange}
+                                        className="hidden"
+                                        disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
+                                    />
+
+                                    {/* Interactive Circular Preview */}
+                                    <div 
+                                        onClick={() => {
+                                            if (verificationStatus !== 'PENDING_APPROVAL' && !isUploadingPhoto) {
+                                                profileFileInputRef.current?.click();
+                                            }
+                                        }}
+                                        className="relative w-24 h-24 rounded-full border-2 border-[#E7E0D8] bg-white overflow-hidden flex items-center justify-center shrink-0 cursor-pointer group shadow-sm hover:border-[#EAB308] transition-all"
+                                        title="Click to choose profile photo"
+                                    >
+                                        {(profilePhotoPreview || profilePhotoUrl) ? (
+                                            <img 
+                                                src={profilePhotoPreview || getProfileImageUrl(profilePhotoUrl)} 
+                                                alt="Profile Preview" 
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
-                                            <User className="w-8 h-8 text-[#A8A29E]"/>
+                                            <User className="w-10 h-10 text-[#A8A29E] group-hover:text-[#EAB308] transition-colors"/>
+                                        )}
+
+                                        {/* Camera badge overlay */}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity">
+                                            <Camera className="w-6 h-6 mb-1"/>
+                                            <span className="text-[9px] font-bold">Change</span>
+                                        </div>
+
+                                        {isUploadingPhoto && (
+                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">
+                                                <Loader2 className="w-6 h-6 animate-spin"/>
+                                            </div>
                                         )}
                                     </div>
                                     
-                                    <div className="flex-grow space-y-2 w-full">
-                                        <input 
-                                            type="file" 
-                                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                                            onChange={handleProfilePhotoChange}
-                                            className="w-full text-xs text-[#57534E] file:mr-4 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FEFCE8] file:text-[#EAB308] file:hover:bg-[#FEF9C3] cursor-pointer"
-                                            disabled={verificationStatus === 'PENDING_APPROVAL'}
-                                        />
-                                        <p className="text-[10px] text-[#78716C]">Upload a formal headshot. Max 5MB (JPEG, JPG, PNG or WEBP only).</p>
+                                    {/* Photo Actions & Text */}
+                                    <div className="flex-grow space-y-2.5 w-full text-center sm:text-left">
+                                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => profileFileInputRef.current?.click()}
+                                                disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-bold text-xs rounded-xl shadow-sm cursor-pointer disabled:opacity-50 transition-all"
+                                            >
+                                                <Camera className="w-4 h-4"/>
+                                                {(profilePhotoPreview || profilePhotoUrl) ? 'Change Photo / Open Gallery' : 'Choose Photo / Open Gallery'}
+                                            </button>
+
+                                            {(profilePhotoPreview || profilePhotoUrl) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveProfilePhoto}
+                                                    disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 font-semibold text-xs rounded-xl cursor-pointer disabled:opacity-50 transition-all"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5"/>
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-[#78716C]">
+                                            Upload a clear formal headshot. Supports JPEG, JPG, PNG & WEBP (Max 5MB). Click avatar or button above to select from your device gallery.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
