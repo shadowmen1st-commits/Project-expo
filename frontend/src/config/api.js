@@ -25,19 +25,25 @@ api.interceptors.request.use(config => {
 let refreshPromise = null;
 api.interceptors.response.use(response => response, async error => {
     const request = error.config;
-    console.log(`API ERROR: url=${request?.url} method=${request?.method} status=${error.response?.status} data=${JSON.stringify(error.response?.data)} message=${error.message}`);
-    const isAuthRequest = ['/auth/login','/auth/register','/auth/refresh'].some(path => request?.url?.includes(path));
-    if (error.response?.status === 401 && request && !request._retry && !isAuthRequest) {
+    const isAuthRequest = ['/auth/login','/auth/register','/auth/refresh','/auth/me'].some(path => request?.url?.includes(path));
+    if (error.response?.status !== 401 || !isAuthRequest) {
+        if (error.response?.status !== 401) {
+            console.log(`API ERROR: url=${request?.url} method=${request?.method} status=${error.response?.status} data=${JSON.stringify(error.response?.data)} message=${error.message}`);
+        }
+    }
+    const hadToken = !!localStorage.getItem('accessToken');
+    if (error.response?.status === 401 && request && !request._retry && !isAuthRequest && hadToken) {
         request._retry = true;
         try {
             refreshPromise ||= api.post('/auth/refresh').finally(() => { refreshPromise = null; });
             const response = await refreshPromise;
-            if (response.data.accessToken) {
+            if (response.data?.accessToken) {
                 localStorage.setItem('accessToken', response.data.accessToken);
                 request.headers.Authorization = `Bearer ${response.data.accessToken}`;
+                return api(request);
             }
-            return api(request);
         } catch {
+            localStorage.removeItem('accessToken');
             window.dispatchEvent(new Event('auth:expired'));
         }
     }

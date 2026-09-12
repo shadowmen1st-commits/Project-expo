@@ -350,22 +350,32 @@ export const CustomerHome = () => {
                 // Guest / Fallback Price Preview Quote
                 const pricePreview = availRes.data.pricePreview;
                 const hourlyRate = selectedWorker.hourlyRate || (selectedWorker.hourlyRatePaise ? selectedWorker.hourlyRatePaise / 100 : 350);
-                const estimatedTotal = pricePreview?.pricingSnapshot?.finalPriceRupees || (hourlyRate * bookingDuration + 49);
+                const baseRupees = pricePreview?.pricingSnapshot?.basePriceRupees || (hourlyRate * bookingDuration);
+                const platformFeeRupees = pricePreview?.pricingSnapshot?.platformFeeRupees || 49;
+                const taxRupees = pricePreview?.pricingSnapshot?.taxesRupees || 0;
+                const estimatedTotal = pricePreview?.pricingSnapshot?.finalPriceRupees || (baseRupees + platformFeeRupees + taxRupees);
                 const previewQuote = {
                     quoteId: `GUEST_QUOTE_${Date.now()}`,
                     expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
                     currency: 'INR',
                     pricingType,
                     durationMinutes: bookingDuration * 60,
+                    breakdown: {
+                        baseAmountRupees: baseRupees,
+                        platformFeeRupees: platformFeeRupees,
+                        taxAmountRupees: taxRupees,
+                        discountAmountRupees: 0,
+                        totalAmountRupees: estimatedTotal
+                    },
                     pricingSnapshot: pricePreview?.pricingSnapshot || {
                         currency: 'INR',
                         pricingType,
                         finalPriceRupees: estimatedTotal,
-                        basePriceRupees: hourlyRate * bookingDuration,
-                        platformFeeRupees: 49,
+                        basePriceRupees: baseRupees,
+                        platformFeeRupees: platformFeeRupees,
                         surgeFeeRupees: 0,
                         discountRupees: 0,
-                        taxesRupees: 0,
+                        taxesRupees: taxRupees,
                     }
                 };
                 setActiveQuote(previewQuote);
@@ -1224,34 +1234,42 @@ export const CustomerHome = () => {
                                             </div>
                                         </div>
 
-                                        {activeQuote && (
-                                            <div className="bg-[#16A34A]/10 border border-[#16A34A]/30 p-3 rounded-xl text-xs space-y-1.5">
-                                                <div className="flex items-center justify-between font-bold text-[#16A34A]">
-                                                    <span>Guaranteed Price Quote</span>
-                                                    <span className="text-[10px] text-[#F97316]">Expires in {Math.floor(quoteTimeLeft / 60)}m {quoteTimeLeft % 60}s</span>
-                                                </div>
-                                                <div className="text-[11px] text-[#44403C] space-y-1 pt-1 border-t border-[#16A34A]/20">
-                                                    <div className="flex justify-between">
-                                                        <span>Base Amount:</span>
-                                                        <span>₹{activeQuote.breakdown.baseAmountRupees.toFixed(2)}</span>
+                                        {activeQuote && (() => {
+                                            const hourlyRate = selectedWorker?.hourlyRate || (selectedWorker?.hourlyRatePaise ? selectedWorker.hourlyRatePaise / 100 : 350);
+                                            const baseVal = Number(activeQuote.breakdown?.baseAmountRupees ?? activeQuote.pricingSnapshot?.basePriceRupees ?? (hourlyRate * bookingDuration));
+                                            const feeVal = Number(activeQuote.breakdown?.platformFeeRupees ?? activeQuote.pricingSnapshot?.platformFeeRupees ?? 49);
+                                            const taxVal = Number(activeQuote.breakdown?.taxAmountRupees ?? activeQuote.pricingSnapshot?.taxesRupees ?? 0);
+                                            const totalVal = Number(activeQuote.breakdown?.totalAmountRupees ?? activeQuote.pricingSnapshot?.finalPriceRupees ?? (baseVal + feeVal + taxVal));
+
+                                            return (
+                                                <div className="bg-[#16A34A]/10 border border-[#16A34A]/30 p-3 rounded-xl text-xs space-y-1.5">
+                                                    <div className="flex items-center justify-between font-bold text-[#16A34A]">
+                                                        <span>Guaranteed Price Quote</span>
+                                                        <span className="text-[10px] text-[#F97316]">Expires in {Math.floor(quoteTimeLeft / 60)}m {quoteTimeLeft % 60}s</span>
                                                     </div>
-                                                    <div className="flex justify-between">
-                                                        <span>Platform Fee:</span>
-                                                        <span>₹{activeQuote.breakdown.platformFeeRupees.toFixed(2)}</span>
-                                                    </div>
-                                                    {activeQuote.breakdown.taxAmountRupees > 0 && (
+                                                    <div className="text-[11px] text-[#44403C] space-y-1 pt-1 border-t border-[#16A34A]/20">
                                                         <div className="flex justify-between">
-                                                            <span>GST (18%):</span>
-                                                            <span>₹{activeQuote.breakdown.taxAmountRupees.toFixed(2)}</span>
+                                                            <span>Base Amount:</span>
+                                                            <span>₹{baseVal.toFixed(2)}</span>
                                                         </div>
-                                                    )}
-                                                    <div className="flex justify-between font-extrabold text-[#F97316] text-xs pt-1 border-t border-[#FEF3C7]">
-                                                        <span>Total Payable:</span>
-                                                        <span>₹{activeQuote.breakdown.totalAmountRupees.toFixed(2)}</span>
+                                                        <div className="flex justify-between">
+                                                            <span>Platform Fee:</span>
+                                                            <span>₹{feeVal.toFixed(2)}</span>
+                                                        </div>
+                                                        {taxVal > 0 && (
+                                                            <div className="flex justify-between">
+                                                                <span>GST (18%):</span>
+                                                                <span>₹{taxVal.toFixed(2)}</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex justify-between font-extrabold text-[#F97316] text-xs pt-1 border-t border-[#FEF3C7]">
+                                                            <span>Total Payable:</span>
+                                                            <span>₹{totalVal.toFixed(2)}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            );
+                                        })()}
                                     </div>
 
                                     {createdBooking ? (
