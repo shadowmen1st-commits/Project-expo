@@ -208,6 +208,17 @@ export const WorkerOnboarding = () => {
         setDocFiles(prev => ({ ...prev, [type]: file }));
     };
 
+    const openProfilePhotoPicker = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto) return;
+        if (profileFileInputRef.current) {
+            profileFileInputRef.current.click();
+        }
+    };
+
     const handleProfilePhotoChange = async (e) => {
         const file = e.target?.files?.[0] || e.dataTransfer?.files?.[0];
         if (!file) return;
@@ -249,7 +260,11 @@ export const WorkerOnboarding = () => {
         }
     };
 
-    const handleRemoveProfilePhoto = async () => {
+    const handleRemoveProfilePhoto = async (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         setError('');
         setIsUploadingPhoto(true);
         try {
@@ -636,24 +651,33 @@ export const WorkerOnboarding = () => {
                                             : 'border-[#E7E0D8] bg-[#FAF6F0] hover:border-[#DCD4C8]'
                                     }`}
                                 >
-                                    {/* Hidden Real File Input with full image/* support */}
+                                    {/* Real Mounted File Input (Hidden via standard a11y styling so dialog reliably fires) */}
                                     <input 
+                                        id="worker-profile-photo-input"
                                         ref={profileFileInputRef}
                                         type="file" 
-                                        accept="image/*,image/jpeg,image/png,image/jpg,image/webp"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
                                         onChange={handleProfilePhotoChange}
-                                        className="hidden"
+                                        style={{
+                                            position: 'absolute',
+                                            width: '1px',
+                                            height: '1px',
+                                            padding: 0,
+                                            margin: '-1px',
+                                            overflow: 'hidden',
+                                            clip: 'rect(0, 0, 0, 0)',
+                                            whiteSpace: 'nowrap',
+                                            border: 0,
+                                            opacity: 0
+                                        }}
                                         disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
                                     />
 
                                     {/* Interactive Circular Preview */}
-                                    <div 
-                                        onClick={() => {
-                                            if (verificationStatus !== 'PENDING_APPROVAL' && !isUploadingPhoto) {
-                                                profileFileInputRef.current?.click();
-                                            }
-                                        }}
-                                        className="relative w-24 h-24 rounded-full border-2 border-[#E7E0D8] bg-white overflow-hidden flex items-center justify-center shrink-0 cursor-pointer group shadow-sm hover:border-[#EAB308] transition-all"
+                                    <label 
+                                        htmlFor="worker-profile-photo-input"
+                                        onClick={openProfilePhotoPicker}
+                                        className="relative w-24 h-24 rounded-full border-2 border-[#E7E0D8] bg-white overflow-hidden flex items-center justify-center shrink-0 cursor-pointer group shadow-sm hover:border-[#EAB308] transition-all select-none"
                                         title="Click to choose profile photo"
                                     >
                                         {(profilePhotoPreview || profilePhotoUrl) ? (
@@ -677,20 +701,19 @@ export const WorkerOnboarding = () => {
                                                 <Loader2 className="w-6 h-6 animate-spin"/>
                                             </div>
                                         )}
-                                    </div>
+                                    </label>
                                     
                                     {/* Photo Actions & Text */}
                                     <div className="flex-grow space-y-2.5 w-full text-center sm:text-left">
                                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => profileFileInputRef.current?.click()}
-                                                disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-bold text-xs rounded-xl shadow-sm cursor-pointer disabled:opacity-50 transition-all"
+                                            <label
+                                                htmlFor="worker-profile-photo-input"
+                                                onClick={openProfilePhotoPicker}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#EAB308] hover:bg-[#CA8A04] text-black font-bold text-xs rounded-xl shadow-sm cursor-pointer transition-all select-none"
                                             >
                                                 <Camera className="w-4 h-4"/>
                                                 {(profilePhotoPreview || profilePhotoUrl) ? 'Change Photo / Open Gallery' : 'Choose Photo / Open Gallery'}
-                                            </button>
+                                            </label>
 
                                             {(profilePhotoPreview || profilePhotoUrl) && (
                                                 <button
