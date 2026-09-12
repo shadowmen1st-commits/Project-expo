@@ -12,7 +12,7 @@ const passwordRules = [
 ];
 
 export const Register = () => {
-    const { registerUser } = useAuth();
+    const { registerUser, login } = useAuth();
     const navigate = useNavigate();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -61,8 +61,26 @@ export const Register = () => {
         setLoading(true);
         try {
             await registerUser({ name, email, phone, password, role });
-            setSuccess('Account created successfully! Redirecting to login...');
-            setTimeout(() => navigate('/login'), 2000);
+            // Auto-login after registration to restore guest flow immediately
+            try {
+                await login(email, password);
+                const hasPending = sessionStorage.getItem('jobnest_guest_pending_booking') || localStorage.getItem('jobnest_guest_pending_booking');
+                if (hasPending) {
+                    navigate('/dashboard?redirect=booking');
+                    return;
+                }
+                if (role === 'WORKER') {
+                    navigate('/worker/dashboard');
+                } else if (role === 'COMPANY') {
+                    navigate('/company/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
+                return;
+            } catch {
+                setSuccess('Account created successfully! Redirecting to login...');
+                setTimeout(() => navigate('/login'), 1500);
+            }
         } catch (err) {
             const field = err.response?.data?.field;
             setConflictField(field || '');

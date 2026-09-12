@@ -28,7 +28,7 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { registerUser } = useAuth();
+  const { registerUser, login } = useAuth();
   const router = useRouter();
 
   const validateForm = (): boolean => {
@@ -64,7 +64,7 @@ export default function SignupScreen() {
     setLoading(true);
 
     try {
-      const user = await registerUser({
+      await registerUser({
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
@@ -72,7 +72,9 @@ export default function SignupScreen() {
         role,
       });
 
-      if (user.role === 'WORKER') {
+      const loggedUser = await login(email.trim(), password);
+
+      if (loggedUser.role === 'WORKER') {
         router.replace('/(worker)/dashboard');
       } else {
         // Check if there is a pending guest booking to resume
