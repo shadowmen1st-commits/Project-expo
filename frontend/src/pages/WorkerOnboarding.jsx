@@ -209,6 +209,10 @@ export const WorkerOnboarding = () => {
     };
 
     const openProfilePhotoPicker = () => {
+        if (['PENDING_APPROVAL', 'UNDER_REVIEW'].includes(verificationStatus)) {
+            setError('Your profile is currently under review by Admin and locked for modifications.');
+            return;
+        }
         if (profileFileInputRef.current) {
             profileFileInputRef.current.click();
         }
@@ -218,14 +222,22 @@ export const WorkerOnboarding = () => {
         const file = e.target?.files?.[0] || e.dataTransfer?.files?.[0];
         if (!file) return;
 
+        if (['PENDING_APPROVAL', 'UNDER_REVIEW'].includes(verificationStatus)) {
+            setError('Your profile is currently under review by Admin and locked for modifications.');
+            if (e.target) e.target.value = '';
+            return;
+        }
+
         if (file.size > 5 * 1024 * 1024) {
             setError('Profile photo size must not exceed 5 MB.');
+            if (e.target) e.target.value = '';
             return;
         }
 
         const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (file.type && !allowedMimes.includes(file.type.toLowerCase())) {
             setError('Only JPEG, JPG, PNG and WEBP image formats are permitted for profile photos.');
+            if (e.target) e.target.value = '';
             return;
         }
 
@@ -247,7 +259,10 @@ export const WorkerOnboarding = () => {
                 setSuccess('Profile photo uploaded successfully.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to upload profile photo.');
+            const msg = err.response?.data?.errorCode === 'VERIFICATION_ALREADY_SUBMITTED'
+                ? 'Your profile is currently under review and locked. Photo cannot be modified until reviewed.'
+                : (err.response?.data?.message || 'Failed to upload profile photo.');
+            setError(msg);
             setProfilePhotoPreview('');
         } finally {
             setIsUploadingPhoto(false);
@@ -259,6 +274,10 @@ export const WorkerOnboarding = () => {
         if (e && e.preventDefault) {
             e.preventDefault();
             e.stopPropagation();
+        }
+        if (['PENDING_APPROVAL', 'UNDER_REVIEW'].includes(verificationStatus)) {
+            setError('Your profile is currently under review by Admin and locked for modifications.');
+            return;
         }
         setError('');
         setIsUploadingPhoto(true);
