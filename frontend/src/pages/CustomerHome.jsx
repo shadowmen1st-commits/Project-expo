@@ -573,13 +573,13 @@ export const CustomerHome = () => {
                                 bookingId: bId,
                                 paymentStatus: 'PAID'
                             });
-                            setSuccess('Payment verified successfully! Booking confirmed. Redirecting to Live Tracking...');
+                            setSuccess('Payment verified successfully! Booking confirmed. Redirecting to Booking Details...');
                             setCreatedBooking(null);
                             setSelectedWorker(null);
                             await fetchBookings();
                             await fetchWallet();
                             setTimeout(() => {
-                                navigate(`/booking/${bId}/tracking`);
+                                navigate(`/booking/${bId}`);
                             }, 1000);
                         } else {
                             console.error('[PAYMENT:VERIFY_FAILED]', {

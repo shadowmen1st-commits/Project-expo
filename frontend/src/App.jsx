@@ -22,6 +22,7 @@ import CompanyRegister from './pages/CompanyRegister';
 import CompanyVerification from './pages/CompanyVerification';
 import AdminCompanyVerification from './pages/AdminCompanyVerification';
 import LiveTrackingPage from './pages/LiveTrackingPage';
+import BookingDetailsPage from './pages/BookingDetailsPage';
 import { XCircle } from 'lucide-react';
 
 /* ─── Route guard ─── */
@@ -129,10 +130,13 @@ function AppRoutes() {
       <Route path="/register/company" element={<CompanyRegister />}/>
       <Route path="/auth/oauth/callback" element={<OAuthCallback />}/>
 
-      {/* ── Customer Dashboard & Tracking ── */}
+      {/* ── Customer Dashboard, Booking Details & Tracking ── */}
       <Route path="/dashboard" element={<CustomerRouteGuard>
             <CustomerHome />
           </CustomerRouteGuard>}/>
+      <Route path="/booking/:id" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COMPANY', 'ADMIN', 'SUPER_ADMIN']}>
+            <BookingDetailsPage />
+          </ProtectedRoute>}/>
       <Route path="/booking/:id/tracking" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COMPANY', 'ADMIN', 'SUPER_ADMIN']}>
             <LiveTrackingPage />
           </ProtectedRoute>}/>

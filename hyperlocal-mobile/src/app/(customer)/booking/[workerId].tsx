@@ -275,8 +275,9 @@ export default function CreateBookingScreen() {
             if (pending.selectedCategoryName) setSelectedCategoryName(pending.selectedCategoryName);
             if (pending.selectedLat) setSelectedLat(pending.selectedLat);
             if (pending.selectedLng) setSelectedLng(pending.selectedLng);
-            if (pending.locationSource) setLocationSource(pending.locationSource);
-            await storage.removeItem('JOBNEST_GUEST_PENDING_BOOKING');
+            if (user) {
+              await storage.removeItem('JOBNEST_GUEST_PENDING_BOOKING');
+            }
           }
         }
       } catch (err) {
