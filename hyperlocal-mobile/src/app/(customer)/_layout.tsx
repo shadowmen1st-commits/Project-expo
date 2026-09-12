@@ -15,17 +15,17 @@ export default function CustomerLayout() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      routerRef.current.replace('/(auth)/login');
-    } else if (user.role === 'ADMIN') {
+    if (user?.role === 'ADMIN') {
       routerRef.current.replace('/(admin)/dashboard');
-    } else if (user.role === 'WORKER') {
+    } else if (user?.role === 'WORKER') {
       routerRef.current.replace('/(worker)/dashboard');
+    } else if (user?.role === 'COMPANY') {
+      routerRef.current.replace('/(company)/dashboard');
     }
   }, [user?.role, loading]);
 
-  if (loading || !user) {
-    return <LoadingState message="Verifying session..." />;
+  if (loading) {
+    return <LoadingState message="Loading Jobnest..." />;
   }
 
   return (

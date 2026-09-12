@@ -14,7 +14,7 @@ export default function IndexScreen() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      routerRef.current.replace('/(auth)/login');
+      routerRef.current.replace('/(customer)/dashboard');
     } else if (user.role === 'COMPANY') {
       routerRef.current.replace('/(company)/dashboard');
     } else if (user.role === 'WORKER') {

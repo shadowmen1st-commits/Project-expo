@@ -35,6 +35,11 @@ export default function CustomerBookingsScreen() {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const fetchBookings = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     setErrorState(null);
     setErrorMessage('');
     try {
@@ -61,15 +66,16 @@ export default function CustomerBookingsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?._id]);
+  }, [user]);
 
-  // Automatically refresh whenever screen gains focus
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!authLoading && user) {
-        fetchBookings();
-      }
-    }, [authLoading, user?._id, fetchBookings])
+      fetchBookings();
+    }, [fetchBookings])
   );
 
   const onRefresh = () => {
@@ -105,6 +111,21 @@ export default function CustomerBookingsScreen() {
   // Show loading while auth is still initializing
   if (authLoading) {
     return <LoadingState message="Verifying authentication..." />;
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <MobileHeader title="My Bookings" showBack={false} />
+        <EmptyState
+          icon="calendar-outline"
+          title="Sign In to View Bookings"
+          description="Track your scheduled services, live professional locations, and payment receipts in one place."
+          actionTitle="Sign In / Register"
+          onAction={() => router.push('/(auth)/login')}
+        />
+      </View>
+    );
   }
 
   return (

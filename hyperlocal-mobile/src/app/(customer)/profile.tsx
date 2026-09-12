@@ -21,13 +21,14 @@ import api from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
 export default function CustomerProfileScreen() {
-  const { user, logout, updateUser } = useAuth();
+  const { user, login, logout, updateUser } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   React.useEffect(() => {
     if (user) {
@@ -71,7 +72,7 @@ export default function CustomerProfileScreen() {
   const handlePickFromGallery = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Permission Required', 'Permission to access photo library is required.');
+      Alert.alert('Permission Required', 'Permission to access photos is required.');
       return;
     }
 
@@ -87,26 +88,25 @@ export default function CustomerProfileScreen() {
     }
   };
 
-  const uploadProfilePhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+  const uploadProfilePhoto = async (asset: any) => {
     setUploading(true);
     try {
       const formData = new FormData();
-      const filename = asset.uri.split('/').pop() || 'photo.jpg';
+      const filename = asset.uri.split('/').pop() || 'profile.jpg';
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-      // @ts-ignore: React Native FormData file object
-      formData.append('file', {
-        uri: asset.uri,
+      formData.append('photo', {
+        uri: Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', ''),
         name: filename,
-        type,
-      });
+        type: type,
+      } as any);
 
-      const res = await api.post('/auth/profile-image', formData, {
+      const res = await api.post('/auth/profile/photo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const newPhotoUrl = res.data?.profileImage || res.data?.photoUrl;
+      const newPhotoUrl = res.data?.profileImage || res.data?.photoUrl || res.data?.user?.profileImage;
       if (newPhotoUrl) {
         updateUser({ profileImage: newPhotoUrl });
         Alert.alert('Success', 'Profile photo updated successfully!');
@@ -147,6 +147,64 @@ export default function CustomerProfileScreen() {
       console.error('Logout error:', e);
     }
   };
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <MobileHeader title="My Profile" showBack={false} />
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.profileHeroCard}>
+            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm }}>
+              <Ionicons name="person-outline" size={40} color={colors.accent} />
+            </View>
+            <Text style={styles.userName}>Guest Explorer</Text>
+            <Text style={styles.userEmail}>Explore services & verified professionals</Text>
+            
+            <View style={styles.roleBadge}>
+              <Ionicons name="sparkles-outline" size={14} color={colors.accent} />
+              <Text style={styles.roleBadgeText}>GUEST MODE</Text>
+            </View>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Join Jobnest</Text>
+            <Text style={{ fontSize: typography.sizes.sm, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 20 }}>
+              Sign in or test with the dedicated Demo Account to book verified home professionals, track real-time GPS locations, and manage safe escrow payments.
+            </Text>
+
+            <AppButton
+              title="Explore Demo Account"
+              onPress={async () => {
+                setDemoLoading(true);
+                try {
+                  await login('demo@jobnest.com', 'Demo@123');
+                } catch (e: any) {
+                  Alert.alert('Demo Login Failed', e.response?.data?.message || 'Unable to sign into demo account.');
+                } finally {
+                  setDemoLoading(false);
+                }
+              }}
+              loading={demoLoading}
+              disabled={demoLoading}
+              variant="primary"
+            />
+            <View style={{ height: spacing.sm }} />
+            <AppButton
+              title="Sign In to Existing Account"
+              onPress={() => router.push('/(auth)/login')}
+              variant="outline"
+            />
+            <View style={{ height: spacing.sm }} />
+            <AppButton
+              title="Create New Account"
+              onPress={() => router.push('/(auth)/signup')}
+              variant="secondary"
+            />
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

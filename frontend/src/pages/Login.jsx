@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, ShieldCheck, Clock, Award } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Clock, Award, Sparkles } from 'lucide-react';
 import SocialAuthButtons from '../components/SocialAuthButtons';
 
 export const Login = () => {
@@ -41,10 +41,19 @@ export const Login = () => {
         }
     };
 
-    const quickLogin = (e, p) => {
-        setEmail(e);
-        setPassword(p);
+    const handleExploreDemo = async () => {
         setError('');
+        setLoading(true);
+        try {
+            const u = await login('demo@jobnest.com', 'Demo@123');
+            if (u) {
+                navigate('/dashboard');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to authenticate demo account. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -105,7 +114,7 @@ export const Login = () => {
 
             {/* Right Form Panel */}
             <div className="lg:w-1/2 bg-[#FFFBEB] p-8 lg:p-16 flex items-center justify-center overflow-y-auto">
-                <div className="w-full max-w-md space-y-8 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
+                <div className="w-full max-w-md space-y-6 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
                     <div>
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-[#111827] tracking-tight">Welcome back</h2>
                         <p className="text-sm text-[#4B5563] mt-2">Sign in to manage your account and bookings.</p>
@@ -117,7 +126,7 @@ export const Login = () => {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-xs font-semibold uppercase tracking-wider text-[#374151] mb-2">
                                 Email Address
@@ -168,48 +177,19 @@ export const Login = () => {
                         </button>
                     </form>
 
+                    <button
+                        type="button"
+                        onClick={handleExploreDemo}
+                        disabled={loading}
+                        className="w-full bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#D97706] hover:text-[#B45309] border border-[#FDE68A] hover:border-[#F59E0B] font-bold py-3 rounded-xl text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <Sparkles className="w-4 h-4 text-[#F59E0B]" />
+                        <span>Explore Demo Account</span>
+                    </button>
+
                     <SocialAuthButtons mode="login" onError={setError}/>
 
-                    {/* Developer Quick Login Panel */}
-                    {(import.meta.env.DEV || true) && (
-                        <div className="pt-4 border-t border-[#FEF3C7] space-y-3">
-                            <div className="text-[10px] font-semibold uppercase tracking-wider text-[#4B5563] text-center">
-                                Developer Quick Login (TEMPORARY FOR VERIFICATION)
-                            </div>
-                            <div className="grid grid-cols-4 gap-2">
-                                <button 
-                                    type="button" 
-                                    onClick={() => quickLogin('admin@test.com', 'Admin@12345')}
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
-                                >
-                                    Admin
-                                </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => quickLogin('customer@test.com', 'Customer@12345')}
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
-                                >
-                                    Customer
-                                </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => quickLogin('worker@test.com', 'Worker@12345')}
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
-                                >
-                                    Worker
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => quickLogin('company@test.com', 'Company@12345')}
-                                    className="bg-[#FFFDF5] border border-[#FEF3C7] hover:border-[#F97316] text-[#111827] hover:text-[#F97316] text-[10px] py-2 px-1 rounded-lg cursor-pointer text-center font-medium transition-all"
-                                >
-                                    Company
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="text-center text-xs text-[#4B5563]">
+                    <div className="text-center text-xs text-[#4B5563] pt-1">
                         Don't have an account yet?{' '}
                         <Link to="/register" className="text-[#F97316] font-semibold hover:underline">
                             Create Account

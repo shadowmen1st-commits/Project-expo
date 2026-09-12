@@ -69,24 +69,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleQuickLogin = (role: 'ADMIN' | 'CUSTOMER' | 'WORKER' | 'COMPANY') => {
-    let qEmail = 'customer@test.com';
-    let qPass = 'Customer@123';
-    if (role === 'WORKER') {
-      qEmail = 'worker@test.com';
-      qPass = 'Worker@123';
-    } else if (role === 'COMPANY') {
-      qEmail = 'company@test.com';
-      qPass = 'Company@12345';
-    } else if (role === 'ADMIN') {
-      qEmail = 'admin@test.com';
-      qPass = 'Admin@12345';
-    }
-    setEmail(qEmail);
-    setPassword(qPass);
-    handleLogin(qEmail, qPass);
-  };
-
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
@@ -146,6 +128,17 @@ export default function LoginScreen() {
               style={styles.submitBtn}
             />
 
+            {/* Explore Demo Customer Account Button */}
+            <TouchableOpacity
+              style={styles.demoAccountBtn}
+              onPress={() => handleLogin('demo@jobnest.com', 'Demo@123')}
+              activeOpacity={0.8}
+              disabled={loading}
+            >
+              <Ionicons name="sparkles" size={16} color={colors.accent} />
+              <Text style={styles.demoAccountBtnText}>Explore Demo Account</Text>
+            </TouchableOpacity>
+
             {/* Social Divider */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
@@ -160,52 +153,6 @@ export default function LoginScreen() {
               label="Continue with Google"
               onError={(err) => setError(err)}
             />
-          </View>
-
-          {/* Quick Demo Sign-In (All 4 Roles) */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoSectionTitle}>Developer Quick Login (Demo)</Text>
-            <View style={styles.demoGrid}>
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: '#F3E8FF', opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('ADMIN')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Ionicons name="shield-checkmark-outline" size={14} color="#7E22CE" />
-                <Text style={[styles.demoChipText, { color: '#7E22CE' }]}>Admin</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.accentLight, opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('CUSTOMER')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Ionicons name="person-outline" size={14} color={colors.accent} />
-                <Text style={[styles.demoChipText, { color: colors.accent }]}>Customer</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: colors.primaryLight, opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('WORKER')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Ionicons name="construct-outline" size={14} color={colors.primaryDark} />
-                <Text style={[styles.demoChipText, { color: colors.primaryDark }]}>Worker</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.demoChip, { backgroundColor: '#DCFCE7', opacity: loading ? 0.5 : 1 }]}
-                onPress={() => handleQuickLogin('COMPANY')}
-                activeOpacity={0.7}
-                disabled={loading}
-              >
-                <Ionicons name="business-outline" size={14} color="#15803D" />
-                <Text style={[styles.demoChipText, { color: "#15803D" }]}>Company</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           <View style={styles.footerContainer}>
@@ -289,43 +236,20 @@ const styles = StyleSheet.create({
   submitBtn: {
     marginTop: spacing.sm,
   },
-  demoSection: {
-    marginTop: spacing.xl,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  demoSectionTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  demoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    width: '100%',
-    justifyContent: 'space-between',
-  },
-  demoChip: {
-    width: '48%',
+  demoAccountBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: spacing.sm,
+    gap: 8,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1.5,
+    borderColor: '#FED7AA',
+    paddingVertical: 14,
     borderRadius: radius.md,
-    gap: 6,
-    marginBottom: spacing.xs,
+    marginTop: spacing.xs,
   },
-  demoChipText: {
+  demoAccountBtnText: {
+    color: colors.accent,
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
   },
