@@ -208,12 +208,7 @@ export const WorkerOnboarding = () => {
         setDocFiles(prev => ({ ...prev, [type]: file }));
     };
 
-    const openProfilePhotoPicker = (e) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        if (verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto) return;
+    const openProfilePhotoPicker = () => {
         if (profileFileInputRef.current) {
             profileFileInputRef.current.click();
         }
@@ -651,12 +646,12 @@ export const WorkerOnboarding = () => {
                                             : 'border-[#E7E0D8] bg-[#FAF6F0] hover:border-[#DCD4C8]'
                                     }`}
                                 >
-                                    {/* Real Mounted File Input (Hidden via standard a11y styling so dialog reliably fires) */}
+                                    {/* Real Mounted File Input (Never disabled to allow native label triggering) */}
                                     <input 
                                         id="worker-profile-photo-input"
                                         ref={profileFileInputRef}
                                         type="file" 
-                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        accept="image/*,image/jpeg,image/jpg,image/png,image/webp"
                                         onChange={handleProfilePhotoChange}
                                         style={{
                                             position: 'absolute',
@@ -670,7 +665,6 @@ export const WorkerOnboarding = () => {
                                             border: 0,
                                             opacity: 0
                                         }}
-                                        disabled={verificationStatus === 'PENDING_APPROVAL' || isUploadingPhoto}
                                     />
 
                                     {/* Interactive Circular Preview */}
