@@ -150,9 +150,10 @@ class OAuthService {
         if (role === 'WORKER' || role === 'COMPANY') {
             await WorkerProfile.create({
                 userId: user._id,
-                verificationStatus: 'PENDING_APPROVAL',
+                verificationStatus: 'NOT_SUBMITTED',
                 isPubliclyVisible: false,
-                isOnline: false
+                isOnline: false,
+                verificationBadge: false
             });
         }
 

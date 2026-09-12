@@ -118,6 +118,12 @@ export const getVerificationStatus = async (req, res, next) => {
 
         const submissions = await VerificationSubmission.find({ workerId }).sort({ version: -1 });
 
+        // Auto-heal orphaned pending status if no actual verification submission was ever filed
+        if (['PENDING_APPROVAL', 'SUBMITTED', 'UNDER_REVIEW'].includes(profile.verificationStatus) && submissions.length === 0) {
+            profile.verificationStatus = 'NOT_SUBMITTED';
+            await profile.save();
+        }
+
         // Safe DTO summary of documents
         const safeDocs = docs.map(d => ({
             id: d._id,

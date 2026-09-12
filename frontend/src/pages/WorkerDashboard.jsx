@@ -200,7 +200,7 @@ export const WorkerDashboard = () => {
                                     <div className="text-[#78716C] text-xs mt-1">
                                         {profile.verificationStatus === 'APPROVED' && 'Your profile is approved and active in local customer search listings.'}
                                         {profile.verificationStatus === 'PENDING_APPROVAL' && 'Your documents have been submitted and are pending admin review.'}
-                                        {profile.verificationStatus === 'INCOMPLETE_PROFILE' && 'Please fill in your personal, professional, and required document details.'}
+                                        {(profile.verificationStatus === 'NOT_SUBMITTED' || profile.verificationStatus === 'INCOMPLETE_PROFILE') && 'Please complete your worker profile and upload required KYC documents to submit for verification.'}
                                         {profile.verificationStatus === 'DRAFT' && 'Your onboarding progress is saved as draft. Click Complete Verification to submit.'}
                                         {profile.verificationStatus === 'CHANGES_REQUIRED' && `Action Required: Admin has requested corrections: ${profile.rejectionReason || 'Please audit uploaded documents.'}`}
                                         {profile.verificationStatus === 'REJECTED' && `Verification Rejected: ${profile.rejectionReason || 'Contact support for details.'}`}
@@ -214,7 +214,7 @@ export const WorkerDashboard = () => {
                                 </div>
 
                                 <button data-testid="worker-verification-action" onClick={() => navigate('/worker/verification')} className="btn-primary-gradient text-xs font-bold py-2 px-4 rounded-xl cursor-pointer w-full md:w-auto text-center">
-                                    {{INCOMPLETE_PROFILE:'Complete Verification',DRAFT:'Continue Verification',PENDING_APPROVAL:'View Submitted Verification',CHANGES_REQUIRED:'Update Documents & Resubmit',APPROVED:'View Verification',REJECTED:'View Rejection Details',SUSPENDED:'View Suspension Details'}[profile.verificationStatus] || 'View Verification'}
+                                    {{NOT_SUBMITTED:'Complete Verification',INCOMPLETE_PROFILE:'Complete Verification',DRAFT:'Continue Verification',PENDING_APPROVAL:'View Submitted Verification',CHANGES_REQUIRED:'Update Documents & Resubmit',APPROVED:'View Verification',REJECTED:'View Rejection Details',SUSPENDED:'View Suspension Details'}[profile.verificationStatus] || 'Complete Verification'}
                                 </button>
                             </div>
 
