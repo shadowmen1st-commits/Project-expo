@@ -6,7 +6,7 @@ const oauthAttemptSchema = new Schema({
     nonceHash: { type: String, required: true },
     codeVerifierEncrypted: { type: String }, // optional, for PKCE
     codeChallenge: { type: String }, // optional, for PKCE
-    mode: { type: String, required: true, enum: ['LOGIN', 'SIGNUP', 'LINK_ACCOUNT'] },
+    mode: { type: String, required: true, enum: ['LOGIN', 'SIGNUP', 'REGISTER', 'LINK_ACCOUNT'] },
     requestedRole: { type: String, enum: ['CUSTOMER', 'WORKER'] },
     frontendRedirectPath: { type: String, required: true },
     linkingUserId: { type: Schema.Types.ObjectId, ref: 'User' },

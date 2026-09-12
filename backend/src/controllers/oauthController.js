@@ -45,7 +45,8 @@ export const startOAuth = async (req, res, next) => {
             return res.status(400).json({ statusCode: 400, errorCode: 'OAUTH_PROVIDER_NOT_CONFIGURED', message: 'Provider disabled.' });
         }
 
-        const mode = req.query.mode || 'LOGIN';
+        const rawMode = req.query.mode ? req.query.mode.toUpperCase() : 'LOGIN';
+        const mode = (rawMode === 'REGISTER' ? 'SIGNUP' : rawMode);
         const requestedRole = req.query.role;
         const frontendRedirectPath = req.query.redirect || '/auth/oauth/callback';
 

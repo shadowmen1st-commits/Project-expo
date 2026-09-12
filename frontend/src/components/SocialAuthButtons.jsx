@@ -59,7 +59,9 @@ export default function SocialAuthButtons({ mode = 'login', role = 'CUSTOMER', o
         setIsRedirecting(provider);
         setTooltip(null);
         try {
-            const startUrl = `${apiUrl}/auth/oauth/${provider}/start?mode=${mode.toUpperCase()}&role=${role.toUpperCase()}&redirect=/auth/oauth/callback`;
+            const rawMode = (mode || 'login').toUpperCase();
+            const normalizedMode = (rawMode === 'REGISTER' ? 'SIGNUP' : rawMode);
+            const startUrl = `${apiUrl}/auth/oauth/${provider}/start?mode=${normalizedMode}&role=${role.toUpperCase()}&redirect=/auth/oauth/callback`;
             const res = await fetch(startUrl);
             const data = await res.json();
             if (data.success && data.url) {
