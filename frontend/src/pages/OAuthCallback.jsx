@@ -31,13 +31,17 @@ export default function OAuthCallback() {
                     if (user?.role === 'CUSTOMER') {
                         navigate('/dashboard', { replace: true });
                     } else if (user?.role === 'WORKER') {
-                        if (user?.status === 'ACTIVE') {
+                        if (user?.verificationStatus === 'APPROVED' || user?.isKycVerified === true) {
                             navigate('/worker', { replace: true });
                         } else {
-                            navigate('/onboarding', { replace: true });
+                            navigate('/worker/verification', { replace: true });
                         }
                     } else if (user?.role === 'COMPANY') {
-                        navigate('/company', { replace: true });
+                        if (user?.verificationStatus === 'APPROVED') {
+                            navigate('/company', { replace: true });
+                        } else {
+                            navigate('/company/verification', { replace: true });
+                        }
                     } else if (['ADMIN', 'SUPER_ADMIN'].includes(user?.role)) {
                         navigate('/admin', { replace: true });
                     } else {

@@ -32,9 +32,17 @@ export const Login = () => {
                 if (u.role === 'ADMIN' || u.role === 'SUPER_ADMIN') {
                     navigate('/admin');
                 } else if (u.role === 'WORKER') {
-                    navigate('/worker');
+                    if (u.verificationStatus === 'APPROVED' || u.isKycVerified === true) {
+                        navigate('/worker');
+                    } else {
+                        navigate('/worker/verification');
+                    }
                 } else if (u.role === 'COMPANY') {
-                    navigate('/company');
+                    if (u.verificationStatus === 'APPROVED') {
+                        navigate('/company');
+                    } else {
+                        navigate('/company/verification');
+                    }
                 } else {
                     navigate('/dashboard');
                 }

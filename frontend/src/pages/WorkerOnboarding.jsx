@@ -19,6 +19,7 @@ export const WorkerOnboarding = () => {
 
     // Status state
     const [verificationStatus, setVerificationStatus] = useState('INCOMPLETE_PROFILE');
+    const [forceShowForm, setForceShowForm] = useState(false);
     const [onboardingPercent, setOnboardingPercent] = useState(0);
     const [rejectionReason, setRejectionReason] = useState('');
     const [requiredDocTypes, setRequiredDocTypes] = useState(['AADHAAR', 'PAN', 'ADDRESS_PROOF']);
@@ -374,8 +375,8 @@ export const WorkerOnboarding = () => {
         );
     }
 
-    // Render Read-Only screen when PENDING_APPROVAL
-    if (verificationStatus === 'PENDING_APPROVAL') {
+    // Render Read-Only screen when PENDING_APPROVAL unless user requests full form
+    if (verificationStatus === 'PENDING_APPROVAL' && !forceShowForm) {
         return (
             <div className="min-h-screen bg-[#FAF6F0] text-[#1C1917] p-8 lg:p-16 flex items-center justify-center font-sans">
                 <div className="max-w-xl w-full bg-white border border-[#E7E0D8] rounded-3xl p-8 shadow-sm space-y-6 text-center">
@@ -395,10 +396,10 @@ export const WorkerOnboarding = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                             <span className="text-[#57534E]">Full Legal Name:</span>
-                            <span className="font-semibold text-right">{fullName}</span>
+                            <span className="font-semibold text-right">{fullName || 'Provided'}</span>
                             <span className="text-[#57534E]">Category:</span>
                             <span className="font-semibold text-right">
-                                {categories.find(c => c._id === primaryServiceCategoryId)?.name || 'Default'}
+                                {categories.find(c => c._id === primaryServiceCategoryId)?.name || 'General Professional'}
                             </span>
                             <span className="text-[#57534E]">Uploaded Docs:</span>
                             <span className="font-semibold text-right">{uploadedDocs.length} Documents</span>
@@ -406,12 +407,23 @@ export const WorkerOnboarding = () => {
                     </div>
 
                     <p className="text-[10px] text-[#A8A29E]">
-                        Expected review status updates will appear here. No lockouts on your existing bookings.
+                        Expected review status updates will appear here. You can inspect or update your documents at any time.
                     </p>
 
-                    <button onClick={() => navigate('/worker')} className="w-full bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FEFCE8] text-[#44403C] font-semibold py-3 rounded-xl transition-colors cursor-pointer">
-                        Back to Dashboard
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button 
+                            onClick={() => setForceShowForm(true)} 
+                            className="flex-1 btn-primary-gradient font-bold py-3 rounded-xl text-xs cursor-pointer shadow-sm"
+                        >
+                            Open Full KYC Panel & Documents
+                        </button>
+                        <button 
+                            onClick={() => navigate('/worker')} 
+                            className="flex-1 bg-[#FAF6F0] border border-[#E7E0D8] hover:bg-[#FEFCE8] text-[#44403C] font-semibold py-3 rounded-xl text-xs transition-colors cursor-pointer"
+                        >
+                            Worker Dashboard
+                        </button>
+                    </div>
                 </div>
             </div>
         );
