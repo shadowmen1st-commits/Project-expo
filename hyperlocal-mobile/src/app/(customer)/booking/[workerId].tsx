@@ -253,6 +253,40 @@ export default function CreateBookingScreen() {
     initData();
   }, [canonicalParamId]);
 
+  // Restore guest pending booking if returning after login / signup / Explore Demo
+  useEffect(() => {
+    const restorePendingBooking = async () => {
+      try {
+        const rawPending = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
+        if (rawPending) {
+          const pending = JSON.parse(rawPending);
+          if (pending && (!pending.workerId || pending.workerId === canonicalParamId)) {
+            if (pending.date) setDate(pending.date);
+            if (pending.startTime) setStartTime(pending.startTime);
+            if (pending.duration) setDuration(pending.duration);
+            if (pending.houseNo) setHouseNo(pending.houseNo);
+            if (pending.street) setStreet(pending.street);
+            if (pending.landmark) setLandmark(pending.landmark);
+            if (pending.city) setCity(pending.city);
+            if (pending.pincode) setPincode(pending.pincode);
+            if (pending.instructions) setInstructions(pending.instructions);
+            if (pending.addressType) setAddressType(pending.addressType);
+            if (pending.selectedCategoryId) setSelectedCategoryId(pending.selectedCategoryId);
+            if (pending.selectedCategoryName) setSelectedCategoryName(pending.selectedCategoryName);
+            if (pending.selectedLat) setSelectedLat(pending.selectedLat);
+            if (pending.selectedLng) setSelectedLng(pending.selectedLng);
+            if (pending.locationSource) setLocationSource(pending.locationSource);
+            await storage.removeItem('JOBNEST_GUEST_PENDING_BOOKING');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to restore pending booking:', err);
+      }
+    };
+
+    restorePendingBooking();
+  }, [canonicalParamId, user]);
+
   // 2. Fetch Dynamic Slot Availability from Backend
   const checkSlotAvailability = useCallback(
     async (targetDate: string, targetDuration: number) => {
@@ -483,6 +517,37 @@ export default function CreateBookingScreen() {
       detectedState ? detectedState.trim() : '',
       effectivePincode ? `PIN: ${effectivePincode}` : '',
     ].filter(Boolean).join(', ');
+
+    // Check if user is logged in before proceeding to backend booking & payment
+    if (!user) {
+      const pending = {
+        workerId: String(effectiveWorkerId),
+        selectedCategoryId: String(effectiveCatId),
+        selectedCategoryName,
+        date,
+        startTime,
+        duration,
+        houseNo: effectiveHouseNo,
+        street: effectiveStreet,
+        landmark,
+        city: effectiveCity,
+        pincode: effectivePincode,
+        instructions,
+        addressType,
+        selectedLat,
+        selectedLng,
+        locationSource,
+      };
+      await storage.setItem('JOBNEST_GUEST_PENDING_BOOKING', JSON.stringify(pending));
+      router.push({
+        pathname: '/(auth)/login',
+        params: {
+          redirect: 'booking',
+          workerId: String(effectiveWorkerId),
+        },
+      });
+      return;
+    }
 
     setErrorMsg('');
     setSubmitting(true);

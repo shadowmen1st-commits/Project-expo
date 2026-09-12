@@ -51,6 +51,27 @@ const ProtectedRoute = ({ children, allowedRoles, }) => {
     return <>{children}</>;
 };
 
+const CustomerRouteGuard = ({ children }) => {
+    const { user, loading } = useAuth();
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#FFFCF5] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+    if (!user) {
+        return <>{children}</>;
+    }
+    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+        return <Navigate to="/admin" replace/>;
+    if (user.role === 'WORKER')
+        return <Navigate to="/worker" replace/>;
+    if (user.role === 'COMPANY')
+        return <Navigate to="/company" replace/>;
+    return <>{children}</>;
+};
+
 const CompanyRouteGuard = ({ children, isVerificationPage = false }) => {
     const { user, loading } = useAuth();
     if (loading) {
@@ -109,9 +130,9 @@ function AppRoutes() {
       <Route path="/auth/oauth/callback" element={<OAuthCallback />}/>
 
       {/* ── Customer Dashboard & Tracking ── */}
-      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['CUSTOMER']}>
+      <Route path="/dashboard" element={<CustomerRouteGuard>
             <CustomerHome />
-          </ProtectedRoute>}/>
+          </CustomerRouteGuard>}/>
       <Route path="/booking/:id/tracking" element={<ProtectedRoute allowedRoles={['CUSTOMER', 'WORKER', 'COMPANY', 'ADMIN', 'SUPER_ADMIN']}>
             <LiveTrackingPage />
           </ProtectedRoute>}/>

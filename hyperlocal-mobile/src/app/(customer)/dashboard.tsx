@@ -34,7 +34,6 @@ export default function CustomerDashboard() {
     longitude,
   } = useLocationContext();
 
-  const [categories, setCategories] = useState<any[]>([]);
   const [workers, setWorkers] = useState<any[]>([]);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,20 +42,12 @@ export default function CustomerDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const searchParams = latitude && longitude ? { lat: latitude, lng: longitude } : {};
-      const [catRes, workerRes, bookingRes] = await Promise.allSettled([
-        api.get('/categories'),
+      const [workerRes, bookingRes] = await Promise.allSettled([
         api.get('/workers/search', { params: searchParams }),
         api.get('/bookings/customer')
           .catch(() => api.get('/bookings'))
           .catch(() => api.get('/bookings/customer/my-bookings')),
       ]);
-
-      if (catRes.status === 'fulfilled' && catRes.value.data) {
-        const cats = Array.isArray(catRes.value.data)
-          ? catRes.value.data
-          : catRes.value.data.categories || catRes.value.data.data || [];
-        setCategories(cats);
-      }
 
       if (workerRes.status === 'fulfilled' && workerRes.value.data) {
         const wList = Array.isArray(workerRes.value.data)
@@ -89,17 +80,6 @@ export default function CustomerDashboard() {
     fetchData();
   };
 
-  const getCategoryIcon = (name: string): keyof typeof Ionicons.glyphMap => {
-    const n = name?.toLowerCase() || '';
-    if (n.includes('clean')) return 'sparkles-outline';
-    if (n.includes('electric')) return 'flash-outline';
-    if (n.includes('plumb')) return 'water-outline';
-    if (n.includes('paint')) return 'color-palette-outline';
-    if (n.includes('care') || n.includes('nurse')) return 'medical-outline';
-    if (n.includes('driver')) return 'car-outline';
-    return 'construct-outline';
-  };
-
   const handleSelectWorker = (worker: any) => {
     const canonicalId = getCanonicalWorkerId(worker);
     if (canonicalId) {
@@ -108,10 +88,6 @@ export default function CustomerDashboard() {
   };
 
   const handleBookWorker = (worker: any) => {
-    if (!user) {
-      router.push('/(auth)/login');
-      return;
-    }
     const canonicalId = getCanonicalWorkerId(worker);
     if (canonicalId) {
       router.push(`/(customer)/booking/${canonicalId}`);
@@ -229,67 +205,6 @@ export default function CustomerDashboard() {
               <Ionicons name="people-outline" size={40} color={colors.textMuted} />
               <Text style={styles.emptyText}>No available verified workers found right now.</Text>
             </View>
-          )}
-        </View>
-
-        {/* 4. CATEGORIES SECTION (Horizontal Carousel Directly Below Carousel) */}
-        <View style={styles.categoriesSection}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>Explore Categories</Text>
-              <Text style={styles.sectionSubtitle}>Browse by specialization</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push('/(customer)/services')}
-              style={styles.viewAllButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.seeAllText}>Explore All</Text>
-              <Ionicons name="chevron-forward" size={14} color={colors.accent} />
-            </TouchableOpacity>
-          </View>
-
-          {loading && categories.length === 0 ? (
-            <View style={styles.loadingPlaceholderRow}>
-              <ActivityIndicator color={colors.primaryDark} />
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              decelerationRate="fast"
-              snapToAlignment="start"
-              contentContainerStyle={styles.categoryScrollContent}
-            >
-              {(categories.length > 0
-                ? categories
-                : [
-                    { _id: '1', name: 'Cleaning' },
-                    { _id: '2', name: 'Electrician' },
-                    { _id: '3', name: 'Plumber' },
-                    { _id: '4', name: 'Carpenter' },
-                    { _id: '5', name: 'Painter' },
-                  ]
-              ).map((cat) => {
-                const iconName = getCategoryIcon(cat.name);
-                return (
-                  <TouchableOpacity
-                    key={cat._id || cat.id}
-                    style={styles.categoryPillCard}
-                    onPress={() => router.push(`/(customer)/workers?category=${cat._id || cat.id}`)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={styles.categoryIconCircle}>
-                      <Ionicons name={iconName} size={22} color={colors.primaryDark} />
-                    </View>
-                    <Text numberOfLines={1} style={styles.categoryPillName}>
-                      {cat.name}
-                    </Text>
-                    <Text style={styles.categoryCountBadge}>Explore</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
           )}
         </View>
 
@@ -443,57 +358,7 @@ const styles = StyleSheet.create({
     color: colors.success,
     letterSpacing: 0.3,
   },
-  categoriesSection: {
-    marginBottom: spacing.lg,
-  },
-  categoryScrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  categoryPillCard: {
-    width: 106,
-    height: 110,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    ...shadows.sm,
-  },
-  categoryIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  categoryPillName: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  categoryCountBadge: {
-    fontSize: 9,
-    fontWeight: typography.weights.semibold,
-    color: colors.accent,
-    marginTop: 2,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  loadingPlaceholderRow: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   promoBanner: {
     marginHorizontal: spacing.lg,
     backgroundColor: '#FEF3C7',

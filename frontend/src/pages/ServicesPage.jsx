@@ -158,7 +158,7 @@ export const ServicesPage = () => {
 
             {/* Banner Slider Section */}
             <section className="max-w-6xl mx-auto px-6 mb-12">
-                <HomeBannerCarousel onActionClick={() => navigate('/login')} />
+                <HomeBannerCarousel onActionClick={() => navigate('/dashboard')} />
             </section>
 
             {/* Main Grid content */}
@@ -188,7 +188,7 @@ export const ServicesPage = () => {
                                     {category.items.map((item) => (
                                         <div 
                                             key={item.name} 
-                                            onClick={() => navigate('/login')} 
+                                            onClick={() => navigate(`/dashboard?query=${encodeURIComponent(item.name)}`)} 
                                             className="group relative bg-white border border-[#E7E0D8] hover:border-[#EAB308]/50 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden shadow-sm"
                                         >
                                             <div className="flex items-start justify-between mb-4">

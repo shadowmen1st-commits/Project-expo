@@ -16,6 +16,7 @@ import { GoogleSignInButton } from '../../components/GoogleSignInButton';
 import { MobileHeader } from '../../components/MobileHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius } from '../../theme';
+import { storage } from '../../utils/storage';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -74,7 +75,20 @@ export default function SignupScreen() {
       if (user.role === 'WORKER') {
         router.replace('/(worker)/dashboard');
       } else {
-        router.replace('/(customer)/dashboard');
+        // Check if there is a pending guest booking to resume
+        const pendingRaw = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
+        let targetWorkerId = '';
+        if (pendingRaw) {
+          try {
+            const p = JSON.parse(pendingRaw);
+            if (p?.workerId) targetWorkerId = p.workerId;
+          } catch {}
+        }
+        if (targetWorkerId) {
+          router.replace(`/(customer)/booking/${targetWorkerId}` as any);
+        } else {
+          router.replace('/(customer)/dashboard');
+        }
       }
     } catch (err: any) {
       const msg =

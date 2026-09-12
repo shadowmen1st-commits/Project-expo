@@ -8,7 +8,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { AppButton } from '../../components/AppButton';
 import { AppInput } from '../../components/AppInput';
@@ -16,6 +16,7 @@ import { GoogleSignInButton } from '../../components/GoogleSignInButton';
 import { Ionicons } from '@expo/vector-icons';
 import { checkServerHealth } from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
+import { storage } from '../../utils/storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -25,6 +26,7 @@ export default function LoginScreen() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   useEffect(() => {
     // Perform server health check diagnostic on login screen load
@@ -54,7 +56,20 @@ export default function LoginScreen() {
       } else if (loggedInUser?.role === 'WORKER') {
         router.replace('/(worker)/dashboard');
       } else {
-        router.replace('/(customer)/dashboard');
+        // Check if there is a pending guest booking to resume
+        const pendingRaw = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
+        let targetWorkerId = params.workerId ? String(params.workerId) : '';
+        if (pendingRaw) {
+          try {
+            const p = JSON.parse(pendingRaw);
+            if (p?.workerId) targetWorkerId = p.workerId;
+          } catch {}
+        }
+        if (params.redirect === 'booking' || targetWorkerId) {
+          router.replace(`/(customer)/booking/${targetWorkerId}` as any);
+        } else {
+          router.replace('/(customer)/dashboard');
+        }
       }
     } catch (err: any) {
       if (err.userMessage) {

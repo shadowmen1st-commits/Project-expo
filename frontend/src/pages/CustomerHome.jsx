@@ -126,9 +126,45 @@ export const CustomerHome = () => {
 
     useEffect(() => {
         fetchCategories();
-        fetchBookings();
-        fetchWallet();
-    }, []);
+        if (user) {
+            fetchBookings();
+            fetchWallet();
+        }
+    }, [user]);
+
+    // Restore guest pending booking if user returns after login / signup / Explore Demo
+    useEffect(() => {
+        if (!user) return;
+        const saved = sessionStorage.getItem('jobnest_guest_pending_booking') || localStorage.getItem('jobnest_guest_pending_booking');
+        if (saved) {
+            try {
+                const p = JSON.parse(saved);
+                if (p && p.selectedWorker) {
+                    setSelectedWorker(p.selectedWorker);
+                    if (p.selectedBookingCategory) setSelectedBookingCategory(p.selectedBookingCategory);
+                    if (p.bookingDate) setBookingDate(p.bookingDate);
+                    if (p.bookingTime) setBookingTime(p.bookingTime);
+                    if (p.bookingDuration) setBookingDuration(p.bookingDuration);
+                    if (p.houseNumber) setHouseNumber(p.houseNumber);
+                    if (p.street) setStreet(p.street);
+                    if (p.locality) setLocality(p.locality);
+                    if (p.city) setCity(p.city);
+                    if (p.stateName) setStateName(p.stateName);
+                    if (p.pincode) setPincode(p.pincode);
+                    if (p.addressType) setAddressType(p.addressType);
+                    if (p.addressInstructions) setAddressInstructions(p.addressInstructions);
+                    if (p.notes) setNotes(p.notes);
+                    if (p.pricingType) setPricingType(p.pricingType);
+                    if (p.activeQuote) setActiveQuote(p.activeQuote);
+                    setBookingStep(2);
+                    sessionStorage.removeItem('jobnest_guest_pending_booking');
+                    localStorage.removeItem('jobnest_guest_pending_booking');
+                }
+            } catch (e) {
+                console.error('Failed to restore guest pending booking:', e);
+            }
+        }
+    }, [user]);
 
     useEffect(() => {
         searchWorkersList();
@@ -288,21 +324,53 @@ export const CustomerHome = () => {
             if (availRes.data.success && availRes.data.available) {
                 setSlotAvailable(true);
 
-                // 2. Fetch Authoritative Server-Side Price Quote
-                const quoteRes = await api.post('/v1/pricing/quote', {
-                    workerId: selectedWorker.workerId,
-                    serviceCategoryId: selectedBookingCategory,
-                    scheduledStart: start.toISOString(),
-                    scheduledEnd: end.toISOString(),
-                    pricingType,
-                });
+                if (user) {
+                    try {
+                        // 2. Fetch Authoritative Server-Side Price Quote for logged-in customer
+                        const quoteRes = await api.post('/v1/pricing/quote', {
+                            workerId: selectedWorker.workerId,
+                            serviceCategoryId: selectedBookingCategory,
+                            scheduledStart: start.toISOString(),
+                            scheduledEnd: end.toISOString(),
+                            pricingType,
+                        });
 
-                if (quoteRes.data.success) {
-                    setActiveQuote(quoteRes.data);
-                    const diff = Math.max(0, Math.floor((new Date(quoteRes.data.expiresAt).getTime() - Date.now()) / 1000));
-                    setQuoteTimeLeft(diff);
-                    setBookingStep(2); // Advance to Booking Review Step
+                        if (quoteRes.data.success) {
+                            setActiveQuote(quoteRes.data);
+                            const diff = Math.max(0, Math.floor((new Date(quoteRes.data.expiresAt).getTime() - Date.now()) / 1000));
+                            setQuoteTimeLeft(diff);
+                            setBookingStep(2); // Advance to Booking Review Step
+                            return;
+                        }
+                    } catch (qErr) {
+                        console.warn('Quote fetch fallback to preview:', qErr);
+                    }
                 }
+
+                // Guest / Fallback Price Preview Quote
+                const pricePreview = availRes.data.pricePreview;
+                const hourlyRate = selectedWorker.hourlyRate || (selectedWorker.hourlyRatePaise ? selectedWorker.hourlyRatePaise / 100 : 350);
+                const estimatedTotal = pricePreview?.pricingSnapshot?.finalPriceRupees || (hourlyRate * bookingDuration + 49);
+                const previewQuote = {
+                    quoteId: `GUEST_QUOTE_${Date.now()}`,
+                    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                    currency: 'INR',
+                    pricingType,
+                    durationMinutes: bookingDuration * 60,
+                    pricingSnapshot: pricePreview?.pricingSnapshot || {
+                        currency: 'INR',
+                        pricingType,
+                        finalPriceRupees: estimatedTotal,
+                        basePriceRupees: hourlyRate * bookingDuration,
+                        platformFeeRupees: 49,
+                        surgeFeeRupees: 0,
+                        discountRupees: 0,
+                        taxesRupees: 0,
+                    }
+                };
+                setActiveQuote(previewQuote);
+                setQuoteTimeLeft(15 * 60);
+                setBookingStep(2); // Advance to Booking Review Step
             }
         } catch (err) {
             setSlotAvailable(false);
@@ -323,14 +391,55 @@ export const CustomerHome = () => {
             return;
         }
 
+        // GUEST AUTH CHECK: Save state and redirect to login if not authenticated
+        if (!user) {
+            const guestPendingBooking = {
+                selectedWorker,
+                selectedBookingCategory,
+                bookingDate,
+                bookingTime,
+                bookingDuration,
+                houseNumber,
+                street,
+                locality,
+                city,
+                stateName,
+                pincode,
+                addressType,
+                addressInstructions,
+                notes,
+                pricingType,
+                activeQuote,
+            };
+            sessionStorage.setItem('jobnest_guest_pending_booking', JSON.stringify(guestPendingBooking));
+            localStorage.setItem('jobnest_guest_pending_booking', JSON.stringify(guestPendingBooking));
+            navigate('/login?redirect=booking');
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
             const start = new Date(`${bookingDate}T${bookingTime}:00`);
             const end = new Date(start.getTime() + bookingDuration * 60 * 60 * 1000);
 
-            const res = await api.post('/v1/bookings', {
-                quoteId: activeQuote.quoteId,
+            let effectiveQuoteId = activeQuote.quoteId;
+            if (effectiveQuoteId && effectiveQuoteId.startsWith('GUEST_QUOTE_')) {
+                try {
+                    const qRes = await api.post('/v1/pricing/quote', {
+                        workerId: selectedWorker.workerId,
+                        serviceCategoryId: selectedBookingCategory,
+                        scheduledStart: start.toISOString(),
+                        scheduledEnd: end.toISOString(),
+                        pricingType,
+                    });
+                    if (qRes.data?.success && qRes.data?.quoteId) {
+                        effectiveQuoteId = qRes.data.quoteId;
+                    }
+                } catch {}
+            }
+
+            const payload = {
                 workerId: selectedWorker.workerId,
                 serviceCategoryId: selectedBookingCategory,
                 addressSnapshot: {
@@ -348,7 +457,12 @@ export const CustomerHome = () => {
                 scheduledEnd: end.toISOString(),
                 pricingType,
                 customerNotes: notes,
-            });
+            };
+            if (effectiveQuoteId && !effectiveQuoteId.startsWith('GUEST_QUOTE_')) {
+                payload.quoteId = effectiveQuoteId;
+            }
+
+            const res = await api.post('/v1/bookings', payload);
 
             if (res.data.success) {
                 const b = res.data.booking;
@@ -358,8 +472,10 @@ export const CustomerHome = () => {
                     status: b?.bookingStatus,
                 });
                 setCreatedBooking(b);
-                setSuccess(res.data.message || 'Booking created successfully. Payment setup pending.');
+                setSuccess(res.data.message || 'Booking created successfully. Launching payment...');
                 fetchBookings();
+                // Directly launch Razorpay Checkout
+                handleInitiatePayment(b);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create booking.');
@@ -561,27 +677,47 @@ export const CustomerHome = () => {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-[#FEF3C7] sm:border-0 pt-2.5 sm:pt-0">
-                    <div className="text-left sm:text-right">
-                        <div className="text-[10px] text-[#4B5563] font-semibold uppercase">Wallet Balance</div>
-                        <div className="text-sm font-extrabold text-[#F97316]">₹{(walletBalance / 100).toFixed(2)}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <ProfileAvatar user={user} size="sm" />
-                        <span className="text-xs sm:text-sm font-semibold text-[#111827] max-w-[80px] sm:max-w-[150px] truncate">{user?.name}</span>
-                        <button
-                            onClick={() => setIsProfileModalOpen(true)}
-                            className="bg-[#FFFDF5] hover:bg-[#FFEDD5] text-[#F97316] border border-[#FED7AA] px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-                        >
-                            <User className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Profile & Settings</span>
-                        </button>
-                        <button
-                            onClick={logout}
-                            className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
+                    {user && (
+                        <div className="text-left sm:text-right">
+                            <div className="text-[10px] text-[#4B5563] font-semibold uppercase">Wallet Balance</div>
+                            <div className="text-sm font-extrabold text-[#F97316]">₹{(walletBalance / 100).toFixed(2)}</div>
+                        </div>
+                    )}
+                    {user ? (
+                        <div className="flex items-center gap-2">
+                            <ProfileAvatar user={user} size="sm" />
+                            <span className="text-xs sm:text-sm font-semibold text-[#111827] max-w-[80px] sm:max-w-[150px] truncate">{user?.name}</span>
+                            <button
+                                onClick={() => setIsProfileModalOpen(true)}
+                                className="bg-[#FFFDF5] hover:bg-[#FFEDD5] text-[#F97316] border border-[#FED7AA] px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                            >
+                                <User className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Profile & Settings</span>
+                            </button>
+                            <button
+                                onClick={logout}
+                                className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => login('demo@jobnest.com', 'Demo@123')}
+                                className="bg-[#FFF7ED] hover:bg-[#FFEDD5] text-[#F97316] border border-[#FED7AA] px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-[#F97316]" />
+                                <span>Explore Demo</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('/login')}
+                                className="btn-primary-gradient text-xs font-bold px-4 py-1.5 rounded-xl cursor-pointer shadow-sm"
+                            >
+                                Sign In
+                            </button>
+                        </div>
+                    )}
                 </div>
             </nav>
 
