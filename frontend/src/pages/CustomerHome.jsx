@@ -132,7 +132,7 @@ export const CustomerHome = () => {
         }
     }, [user]);
 
-    // Restore guest pending booking if user returns after login / signup / Explore Demo
+    // Restore guest pending booking if user returns after login / signup
     useEffect(() => {
         if (!user) return;
         const saved = sessionStorage.getItem('jobnest_guest_pending_booking') || localStorage.getItem('jobnest_guest_pending_booking');
@@ -704,17 +704,16 @@ export const CustomerHome = () => {
                     ) : (
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => login('demo@jobnest.com', 'Demo@123')}
-                                className="bg-[#FFF7ED] hover:bg-[#FFEDD5] text-[#F97316] border border-[#FED7AA] px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-                            >
-                                <Sparkles className="w-3.5 h-3.5 text-[#F97316]" />
-                                <span>Explore Demo</span>
-                            </button>
-                            <button
                                 onClick={() => navigate('/login')}
-                                className="btn-primary-gradient text-xs font-bold px-4 py-1.5 rounded-xl cursor-pointer shadow-sm"
+                                className="bg-white hover:bg-[#FEF9C3] text-[#374151] border border-[#FEF3C7] px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shadow-sm whitespace-nowrap"
                             >
                                 Sign In
+                            </button>
+                            <button
+                                onClick={() => navigate('/register')}
+                                className="btn-primary-gradient text-xs font-bold px-4 py-1.5 rounded-xl cursor-pointer shadow-sm whitespace-nowrap"
+                            >
+                                Sign Up
                             </button>
                         </div>
                     )}

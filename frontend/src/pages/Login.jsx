@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, ShieldCheck, Clock, Award, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Clock, Award } from 'lucide-react';
 import SocialAuthButtons from '../components/SocialAuthButtons';
 
 export const Login = () => {
@@ -24,6 +24,11 @@ export const Login = () => {
         try {
             const u = await login(email, password);
             if (u) {
+                const hasPending = sessionStorage.getItem('jobnest_guest_pending_booking') || localStorage.getItem('jobnest_guest_pending_booking');
+                if (hasPending) {
+                    navigate('/dashboard?redirect=booking');
+                    return;
+                }
                 if (u.role === 'ADMIN' || u.role === 'SUPER_ADMIN') {
                     navigate('/admin');
                 } else if (u.role === 'WORKER') {
@@ -36,21 +41,6 @@ export const Login = () => {
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleExploreDemo = async () => {
-        setError('');
-        setLoading(true);
-        try {
-            const u = await login('demo@jobnest.com', 'Demo@123');
-            if (u) {
-                navigate('/dashboard');
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to authenticate demo account. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -176,16 +166,6 @@ export const Login = () => {
                             {loading ? 'Signing in...' : 'Sign In'}
                         </button>
                     </form>
-
-                    <button
-                        type="button"
-                        onClick={handleExploreDemo}
-                        disabled={loading}
-                        className="w-full bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#D97706] hover:text-[#B45309] border border-[#FDE68A] hover:border-[#F59E0B] font-bold py-3 rounded-xl text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                    >
-                        <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                        <span>Explore Demo Account</span>
-                    </button>
 
                     <SocialAuthButtons mode="login" onError={setError}/>
 

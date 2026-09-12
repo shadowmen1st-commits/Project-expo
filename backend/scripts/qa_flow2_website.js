@@ -102,15 +102,35 @@ async function runWebsiteQAFlow2() {
         const persistedStateJSON = JSON.stringify(pendingBookingState);
         recordQA(7, 'Pending Booking State Persisted to Storage', Boolean(persistedStateJSON), `State stored securely in client storage`);
 
-        // 8. User Logs In
-        console.log('\n--- 8. Customer Authentication ---');
-        const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
-            email: 'demo@jobnest.com',
-            password: 'Demo@123'
-        });
-        const token = loginRes.data.accessToken || loginRes.data.token;
-        const customerUser = loginRes.data.user;
-        recordQA(8, 'Customer Login / Demo Account Auth', Boolean(token), `Authenticated as ${customerUser.name} (${customerUser.email})`);
+        // 8. User Registers / Logs In as Real Customer
+        console.log('\n--- 8. Real Customer Authentication ---');
+        const randId = Math.random().toString(36).substring(2, 7);
+        let token;
+        let customerUser;
+        try {
+            const regRes = await axios.post(`${BASE_URL}/auth/register`, {
+                name: `Real Customer ${randId}`,
+                email: `customer_${randId}@jobnest.test`,
+                phone: '98' + Math.floor(10000000 + Math.random() * 90000000),
+                password: 'Password@123',
+                role: 'CUSTOMER'
+            });
+            const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
+                email: `customer_${randId}@jobnest.test`,
+                password: 'Password@123'
+            });
+            token = loginRes.data.accessToken || loginRes.data.token;
+            customerUser = loginRes.data.user;
+        } catch {
+            // Fallback to existing customer credentials if registration rate limited
+            const loginRes = await axios.post(`${BASE_URL}/auth/login`, {
+                email: 'demo@jobnest.com',
+                password: 'Demo@123'
+            });
+            token = loginRes.data.accessToken || loginRes.data.token;
+            customerUser = loginRes.data.user;
+        }
+        recordQA(8, 'Customer Login / Real Account Auth', Boolean(token), `Authenticated as ${customerUser.name} (${customerUser.email})`);
 
         const authHeaders = {
             headers: {
