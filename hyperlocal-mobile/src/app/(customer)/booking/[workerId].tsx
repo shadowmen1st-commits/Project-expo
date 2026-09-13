@@ -609,107 +609,39 @@ export default function CreateBookingScreen() {
         bookingNumber: createdBooking?.bookingNumber,
         status: createdBooking?.bookingStatus || createdBooking?.status,
       });
-      console.log('[BOOKING_ID]', bookingId);
 
-      // 2. Immediately create Razorpay Payment Order
-      console.log('[PAYMENT] Creating Razorpay order for booking:', bookingId);
-      const randKey = `idemp-pay-${bookingId}-${Date.now()}`;
-      const orderRes = await api.post(
-        '/payments/orders',
-        { bookingId },
-        { headers: { 'Idempotency-Key': randKey } }
-      );
-
-      const orderData = orderRes.data?.data || orderRes.data;
-      const internalPaymentOrderId = orderData.internalPaymentOrderId || orderData.orderId;
-      const razorpayOrderId = orderData.razorpayOrderId;
-
-      console.log('[PAYMENT] Razorpay order created:', {
-        internalPaymentOrderId,
-        razorpayOrderId,
-      });
-
-      // 3. Persist pending payment context
-      await storage.setItem(
-        'JOBNEST_PENDING_PAYMENT',
-        JSON.stringify({
-          bookingId,
-          internalPaymentOrderId,
-          razorpayOrderId,
-        })
-      );
-
-      // 4. Directly launch official Razorpay native checkout
-      console.log('[PAYMENT] Opening Razorpay Native Checkout for order:', razorpayOrderId);
-
+      // 2. Generate Payment Order ahead of time (non-blocking)
       try {
-        const options = {
-          description: 'Payment for JobNest Booking',
-          image: 'https://jobnest.com/logo.png',
-          currency: 'INR',
-          key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh',
-          amount: estimatedTotal * 100, // amount in paise
-          name: 'JobNest',
-          order_id: razorpayOrderId,
-          theme: { color: '#2563EB' },
-          prefill: {
-            email: user?.email || 'customer@example.com',
-            contact: user?.phone || '9999999999',
-            name: user?.name || 'Customer'
-          }
-        };
+        const randKey = `idemp-pay-${bookingId}-${Date.now()}`;
+        const orderRes = await api.post(
+          '/payments/orders',
+          { bookingId },
+          { headers: { 'Idempotency-Key': randKey } }
+        ).catch(() => null);
 
-        const rzpData = await RazorpayCheckout.open(options);
-        
-        console.log('[PAYMENT] Razorpay Native Checkout Success:', rzpData);
-
-        const rzpOrderId = rzpData.razorpay_order_id;
-        const rzpPaymentId = rzpData.razorpay_payment_id;
-        const rzpSig = rzpData.razorpay_signature;
-
-        if (rzpOrderId && rzpPaymentId && rzpSig) {
-          console.log('[PAYMENT] Verifying signature via backend...');
-          const verifyRes = await api.post('/payments/verify', {
-            internalPaymentOrderId,
-            razorpay_order_id: rzpOrderId,
-            razorpay_payment_id: rzpPaymentId,
-            razorpay_signature: rzpSig,
-          });
-
-          if (verifyRes.data?.success) {
-            await storage.removeItem('JOBNEST_PENDING_PAYMENT');
-            const targetBookingId = verifyRes.data?.data?.bookingId || bookingId;
-            router.replace({
-              pathname: '/(customer)/booking/details/[id]',
-              params: { id: targetBookingId },
-            } as any);
-            return;
-          }
+        if (orderRes?.data) {
+          const orderData = orderRes.data?.data || orderRes.data;
+          await storage.setItem(
+            'JOBNEST_PENDING_PAYMENT',
+            JSON.stringify({
+              bookingId,
+              internalPaymentOrderId: orderData.internalPaymentOrderId || orderData.orderId,
+              razorpayOrderId: orderData.razorpayOrderId,
+            })
+          );
         }
-      } catch (error: any) {
-        console.log('[PAYMENT] Razorpay Checkout Error/Cancelled:', error);
+      } catch (orderErr) {
+        console.warn('[BOOKING_SUBMIT] Non-fatal payment order pre-generation error:', orderErr);
       }
 
-      // Check if booking was marked PAID in background
-      try {
-        const checkRes = await api.get(`/bookings/${bookingId}`);
-        const bCheck = checkRes.data?.booking || checkRes.data;
-        const status = normalizeBookingStatus(bCheck?.bookingStatus || bCheck?.status);
-        const pStatus = normalizeBookingStatus(bCheck?.paymentStatus);
-        if (pStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS'].includes(status)) {
-          await storage.removeItem('JOBNEST_PENDING_PAYMENT');
-          router.replace({
-            pathname: '/(customer)/booking/details/[id]',
-            params: { id: bookingId },
-          } as any);
-          return;
-        }
-      } catch {
-        // ignore
-      }
-
-      // If user cancelled or dismissed without paying, navigate to payment screen for retry
-      router.push(`/(customer)/booking/payment/${bookingId}` as any);
+      // 3. Navigate directly to the dedicated Payment Screen
+      console.log('[BOOKING_SUBMIT] Transitioning cleanly to Payment Screen for booking:', bookingId);
+      hasNavigatedRef.current = true;
+      router.replace({
+        pathname: '/(customer)/booking/payment/[id]',
+        params: { id: String(bookingId) },
+      } as any);
+      return;
     } catch (err: any) {
       const status = err.response?.status;
       const validationList = err.response?.data?.validationDetails;
