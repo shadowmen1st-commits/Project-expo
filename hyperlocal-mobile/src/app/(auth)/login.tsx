@@ -220,17 +220,6 @@ export default function LoginScreen() {
               style={styles.submitBtn}
             />
 
-            {/* Explore Demo Customer Account Button */}
-            <TouchableOpacity
-              style={styles.demoAccountBtn}
-              onPress={() => handleLogin('demo@jobnest.com', 'Demo@123')}
-              activeOpacity={0.8}
-              disabled={loading}
-            >
-              <Ionicons name="sparkles" size={16} color={colors.accent} />
-              <Text style={styles.demoAccountBtnText}>Explore Demo Account</Text>
-            </TouchableOpacity>
-
             {/* Browse as Guest Link */}
             <TouchableOpacity
               style={{ alignItems: 'center', paddingVertical: 6 }}
@@ -338,23 +327,6 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: spacing.sm,
-  },
-  demoAccountBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1.5,
-    borderColor: '#FED7AA',
-    paddingVertical: 14,
-    borderRadius: radius.md,
-    marginTop: spacing.xs,
-  },
-  demoAccountBtnText: {
-    color: colors.accent,
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
   },
   footerContainer: {
     flexDirection: 'row',
