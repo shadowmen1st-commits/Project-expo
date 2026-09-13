@@ -199,7 +199,7 @@ export const deleteUser = async (req, res, next) => {
 export const getPendingWorkers = async (req, res, next) => {
     try {
         const pending = await WorkerProfile.find({
-            verificationStatus: { $in: ['PENDING_APPROVAL', 'UNDER_REVIEW', 'MORE_INFO_REQUIRED'] },
+            verificationStatus: { $in: ['PENDING_APPROVAL', 'UNDER_REVIEW', 'MORE_INFO_REQUIRED', 'PENDING', 'SUBMITTED'] },
         }).populate('userId', 'name email phone profileImage status');
         const dtos = [];
         for (const p of pending) {
@@ -768,6 +768,7 @@ export const getCompanyVerificationsList = async (req, res, next) => {
         const results = [];
         for (const profile of profiles) {
             const user = await User.findById(profile.userId).select('name email phone status role').lean();
+            if (!user) continue;
             const docs = await CompanyVerificationDocument.find({ companyId: profile.userId }).lean();
             results.push({
                 ...profile,

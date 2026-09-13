@@ -119,7 +119,7 @@ export default function SignupScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.headerContainer}>
-            <Text style={styles.welcomeText}>Join Jobnest 🚀</Text>
+            <Text style={styles.welcomeText}>Join Shadowman 🚀</Text>
             <Text style={styles.subtitleText}>Create your account to start booking or offering services</Text>
           </View>
 

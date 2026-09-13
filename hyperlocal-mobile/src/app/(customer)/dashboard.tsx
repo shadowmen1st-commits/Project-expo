@@ -141,7 +141,7 @@ export default function CustomerDashboard() {
               )}
             </View>
             <Text style={styles.greetingTitle}>
-              {user ? `Hello, ${user?.name?.split(' ')[0] || 'Customer'} 👋` : 'Welcome to Jobnest 👋'}
+              {user ? `Hello, ${user?.name?.split(' ')[0] || 'Customer'} 👋` : 'Welcome to Shadowman 👋'}
             </Text>
           </View>
 

@@ -56,6 +56,7 @@ export const AdminBookingsPanel = () => {
     const [totalBookings, setTotalBookings] = useState(0);
     const [limit] = useState(15);
     const [error, setError] = useState('');
+    const [updatingId, setUpdatingId] = useState(null);
 
     const searchTimerRef = useRef(null);
 
@@ -67,6 +68,34 @@ export const AdminBookingsPanel = () => {
             setDebouncedSearch(val);
             setPage(1);
         }, 400);
+    };
+
+    const handleOverrideStatus = async (b, targetStatus) => {
+        const rawId = resolveBookingId(b);
+        if (!rawId) return;
+
+        const confirmMsg = targetStatus === 'COMPLETED'
+            ? `Mark Booking #${b.bookingNumber} as COMPLETED?`
+            : `Change status of Booking #${b.bookingNumber} to ${targetStatus}?`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        setUpdatingId(rawId);
+        try {
+            const res = await api.post(`/v1/bookings/${rawId}/override`, {
+                status: targetStatus,
+                reason: `Status updated to ${targetStatus} by Admin`,
+            });
+            if (res.data?.success) {
+                await fetchBookings();
+            } else {
+                alert(res.data?.message || 'Failed to update booking status.');
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating booking status.');
+        } finally {
+            setUpdatingId(null);
+        }
     };
 
     const fetchBookings = useCallback(async () => {
@@ -335,33 +364,35 @@ export const AdminBookingsPanel = () => {
 
                                             {/* Actions */}
                                             <td className="py-3 px-4 text-right">
-                                                {isTrackable && bookingId ? (
-                                                    <div className="track-action-container">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {isTrackable && bookingId && (
                                                         <button
                                                             type="button"
                                                             className="live-tracking-btn"
-                                                            onClick={() => {
-                                                                console.log('[LIVE TRACK CLICK]', {
-                                                                    bookingId,
-                                                                    status,
-                                                                    bookingNumber: b.bookingNumber,
-                                                                });
-
-                                                                navigate(`/admin/tracking/${bookingId}`);
-                                                            }}
+                                                            onClick={() => navigate(`/admin/tracking/${bookingId}`)}
                                                         >
-                                                            🧭 Live Track
+                                                            🧭 Track
                                                         </button>
+                                                    )}
 
-                                                        {!b.latestLocation && !b.workerLocation && (
-                                                            <div className="waiting-gps">
-                                                                Waiting for worker GPS
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-[10px] text-[#A8A29E] italic">N/A</span>
-                                                )}
+                                                    {/* Quick Status Action Dropdown */}
+                                                    <select
+                                                        disabled={updatingId === bId}
+                                                        value=""
+                                                        onChange={(e) => {
+                                                            if (e.target.value) {
+                                                                handleOverrideStatus(b, e.target.value);
+                                                            }
+                                                        }}
+                                                        className="bg-[#FFFDF5] border border-[#FED7AA] text-[#78716C] font-bold text-[10px] px-2 py-1 rounded-lg cursor-pointer focus:outline-none focus:border-[#F97316]"
+                                                    >
+                                                        <option value="">Update Status...</option>
+                                                        <option value="COMPLETED">Mark COMPLETED</option>
+                                                        <option value="IN_PROGRESS">Mark IN PROGRESS</option>
+                                                        <option value="WORKER_EN_ROUTE">Mark EN ROUTE</option>
+                                                        <option value="CANCELLED">Mark CANCELLED</option>
+                                                    </select>
+                                                </div>
                                             </td>
                                         </tr>
                                     );

@@ -387,14 +387,17 @@ export const createBooking = async (req, res, next) => {
  */
 export const getCustomerBookings = async (req, res, next) => {
     const user = req.user;
-    if (!user || user.role !== 'CUSTOMER') {
-        res.status(403).json({ success: false, message: 'Forbidden' });
+    if (!user) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
     }
     try {
-        const { status, page = 1, limit = 20 } = req.query;
-        const query = { customerId: user.userId };
-        if (status) query.bookingStatus = status;
+        const { status, page = 1, limit = 50 } = req.query;
+        const query = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+            ? {}
+            : { customerId: user.userId };
+
+        if (status && status !== 'ALL') query.bookingStatus = status;
 
         const skip = (Number(page) - 1) * Number(limit);
         const bookings = await Booking.find(query)
@@ -427,14 +430,17 @@ export const getCustomerBookings = async (req, res, next) => {
  */
 export const getWorkerBookings = async (req, res, next) => {
     const user = req.user;
-    if (!user || (user.role !== 'WORKER' && user.role !== 'COMPANY')) {
-        res.status(403).json({ success: false, message: 'Forbidden' });
+    if (!user) {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
     }
     try {
         const { status, page = 1, limit = 50 } = req.query;
-        const query = { workerId: user.userId };
-        if (status) query.bookingStatus = status;
+        const query = (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+            ? {}
+            : { workerId: user.userId };
+
+        if (status && status !== 'ALL') query.bookingStatus = status;
 
         const skip = (Number(page) - 1) * Number(limit);
         const bookings = await Booking.find(query)
@@ -482,9 +488,9 @@ export const getBookings = async (req, res, next) => {
             : {};
 
         const bookings = await Booking.find(filter)
-            .populate('customerId', 'name profileImage')
-            .populate('workerId', 'name profileImage')
-            .populate('serviceCategoryId', 'name icon')
+            .populate('customerId', 'name profileImage email phone')
+            .populate('workerId', 'name profileImage email phone')
+            .populate('serviceCategoryId', 'name icon description')
             .sort({ createdAt: -1 });
 
         res.status(200).json({ success: true, bookings: bookings.map(toSafeBookingDTO) });
@@ -590,9 +596,6 @@ export const getAdminBookings = async (req, res, next) => {
             const ping = pingMap.get(b._id.toString());
             return {
                 ...safeDTO,
-                customer: b.customerId,
-                worker: b.workerId,
-                category: b.serviceCategoryId,
                 latestLocation: ping
                     ? {
                           latitude: ping.latitude,

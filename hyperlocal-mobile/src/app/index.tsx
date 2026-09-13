@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius } from '../theme';
 
 export default function IndexScreen() {
@@ -29,11 +28,13 @@ export default function IndexScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.logoBox}>
-          <Ionicons name="home-sharp" size={32} color={colors.primaryDark} />
-        </View>
-        <Text style={styles.logoText}>Jobnest</Text>
-        <Text style={styles.tagline}>Services & Job Marketplace</Text>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 90, height: 90, borderRadius: 20, marginBottom: 16 }}
+          resizeMode="contain"
+        />
+        <Text style={styles.logoText}>Shadowman</Text>
+        <Text style={styles.tagline}>Services & Field Marketplace</Text>
         <ActivityIndicator size="large" color={colors.primaryDark} style={styles.spinner} />
       </View>
     </View>

@@ -67,6 +67,7 @@ export default function AdminBookingsScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [errorState, setErrorState] = useState<'AUTH_ERROR' | 'SERVER_ERROR' | null>(null);
 
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearchChange = (text: string) => {
@@ -75,6 +76,33 @@ export default function AdminBookingsScreen() {
     debounceTimerRef.current = setTimeout(() => {
       setDebouncedSearch(text);
     }, 400);
+  };
+
+  const handleStatusOverride = async (item: any, targetStatus: string) => {
+    const bId = resolveBookingId(item);
+    if (!bId) return;
+
+    setActionLoadingId(bId);
+    try {
+      await api.post(`/bookings/${bId}/override`, {
+        status: targetStatus,
+        reason: `Marked ${targetStatus} by Admin`,
+      });
+      fetchBookings(true);
+    } catch (err: any) {
+      // Try fallback route
+      try {
+        await api.post(`/v1/bookings/${bId}/override`, {
+          status: targetStatus,
+          reason: `Marked ${targetStatus} by Admin`,
+        });
+        fetchBookings(true);
+      } catch (e: any) {
+        // Handle error silently or log
+      }
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const fetchBookings = useCallback(async (isSilent = false) => {
@@ -93,44 +121,28 @@ export default function AdminBookingsScreen() {
       let res: any = null;
       try {
         res = await api.get('/bookings/admin', { params });
-        console.log('[ADMIN BOOKINGS API]', {
-          status: res?.status,
-          success: res?.data?.success,
-          count: res?.data?.bookings?.length,
-          firstBooking: res?.data?.bookings?.[0]
-        });
       } catch (adminErr: any) {
-        console.log('[ADMIN BOOKINGS API ERROR]', adminErr?.response?.status, adminErr?.response?.data || adminErr?.message);
+        // Handled via fallback
       }
 
+      let rawList: any[] = [];
       if (res && res.data?.success) {
-        console.log('[ADMIN BOOKINGS RESPONSE]', {
-          success: res?.data?.success,
-          count: res?.data?.bookings?.length,
-          firstBooking: res?.data?.bookings?.[0]
-            ? {
-                _id: res.data.bookings[0]._id,
-                id: res.data.bookings[0].id,
-                bookingId: res.data.bookings[0].bookingId,
-                bookingNumber: res.data.bookings[0].bookingNumber,
-                bookingStatus: res.data.bookings[0].bookingStatus,
-                status: res.data.bookings[0].status,
-                booking_status: res.data.bookings[0].booking_status,
-                currentStatus: res.data.bookings[0].currentStatus,
-                paymentStatus: res.data.bookings[0].paymentStatus,
-              }
-            : null,
-        });
-        setBookings(res.data.bookings || []);
+        rawList = res.data.bookings || [];
       } else {
         // Fallback to /bookings general endpoint
         const fallbackRes = await api.get('/bookings', { params });
-        console.log('[GENERAL BOOKINGS FALLBACK]', fallbackRes?.status, fallbackRes?.data);
-        const list = Array.isArray(fallbackRes.data)
+        rawList = Array.isArray(fallbackRes.data)
           ? fallbackRes.data
           : fallbackRes.data?.bookings || fallbackRes.data?.data || [];
-        setBookings(list);
       }
+
+      const sorted = [...rawList].sort((a: any, b: any) => {
+        const tA = new Date(a.createdAt || a.updatedAt || a.scheduledStart || 0).getTime();
+        const tB = new Date(b.createdAt || b.updatedAt || b.scheduledStart || 0).getTime();
+        return tB - tA;
+      });
+
+      setBookings(sorted);
     } catch (err: any) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setErrorState('AUTH_ERROR');
@@ -318,44 +330,44 @@ export default function AdminBookingsScreen() {
                     <Text style={styles.dateText}>{dateStr}</Text>
                   </View>
 
-                  {isTrackable ? (
-                    <View style={styles.trackActionContainer}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {status !== 'COMPLETED' && status !== 'CANCELLED' && status !== 'REJECTED' ? (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: colors.success || '#10B981',
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: radius.md,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          opacity: actionLoadingId === bookingId ? 0.6 : 1,
+                        }}
+                        disabled={actionLoadingId === bookingId}
+                        onPress={() => handleStatusOverride(item, 'COMPLETED')}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="checkmark-circle-outline" size={14} color="#FFFFFF" />
+                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>
+                          Mark Complete
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    {isTrackable ? (
                       <TouchableOpacity
                         style={styles.trackButton}
                         onPress={() => {
-                          console.log('[ADMIN_TRACK_CLICK]', {
-                            bookingId,
-                            status,
-                            bookingNumber: item.bookingNumber,
-                          });
-
-                          if (!bookingId) {
-                            console.error('[LIVE TRACK] Missing booking ID');
-                            return;
-                          }
-
+                          if (!bookingId) return;
                           router.push(`/(admin)/tracking/${bookingId}` as any);
                         }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons
-                          name="navigate-outline"
-                          size={16}
-                          color="#FFFFFF"
-                        />
-
-                        <Text style={styles.trackButtonText}>
-                          Live Track
-                        </Text>
+                        <Ionicons name="navigate-outline" size={14} color="#FFFFFF" />
+                        <Text style={styles.trackButtonText}>Track</Text>
                       </TouchableOpacity>
-
-                      {!item.latestLocation && !item.workerLocation ? (
-                        <Text style={styles.waitingGpsText}>
-                          Waiting for worker GPS
-                        </Text>
-                      ) : null}
-                    </View>
-                  ) : null}
+                    ) : null}
+                  </View>
                 </View>
               </View>
             );

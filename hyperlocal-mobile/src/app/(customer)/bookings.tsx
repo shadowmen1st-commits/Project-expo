@@ -44,13 +44,18 @@ export default function CustomerBookingsScreen() {
     setErrorMessage('');
     try {
       if (__DEV__) console.log('AUTH: Fetching customer bookings, user:', user?.email);
-      const res = await api.get('/bookings/customer')
-        .catch(() => api.get('/bookings'))
-        .catch(() => api.get('/bookings/customer/my-bookings'));
+      const res = await api.get('/bookings/customer', { params: { limit: 100 } })
+        .catch(() => api.get('/bookings', { params: { limit: 100 } }))
+        .catch(() => api.get('/bookings/customer/my-bookings', { params: { limit: 100 } }));
       const data = Array.isArray(res?.data)
         ? res.data
         : res?.data?.bookings || res?.data?.data || [];
-      setBookings(data);
+      const sorted = [...data].sort((a: any, b: any) => {
+        const tA = new Date(a.createdAt || a.updatedAt || a.scheduledStart || 0).getTime();
+        const tB = new Date(b.createdAt || b.updatedAt || b.scheduledStart || 0).getTime();
+        return tB - tA;
+      });
+      setBookings(sorted);
     } catch (err: any) {
       if (err.response?.status === 401) {
         setErrorState('AUTH_EXPIRED');

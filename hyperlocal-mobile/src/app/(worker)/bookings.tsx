@@ -46,13 +46,20 @@ export default function WorkerBookingsScreen() {
     setErrorState(null);
     console.log('[WORKER_BOOKINGS_FETCH_START]', { workerId });
     try {
-      let res = await api.get('/bookings/worker').catch(() => api.get('/bookings'));
+      let res = await api.get('/bookings/worker', { params: { limit: 100 } })
+        .catch(() => api.get('/bookings', { params: { limit: 100 } }));
       let data = Array.isArray(res?.data)
         ? res.data
         : res?.data?.bookings || res?.data?.jobs || res?.data?.data || [];
 
-      console.log('[WORKER_BOOKINGS_FETCH_SUCCESS]', { count: data.length });
-      setJobs(data);
+      const sorted = [...data].sort((a: any, b: any) => {
+        const tA = new Date(a.createdAt || a.updatedAt || a.scheduledStart || 0).getTime();
+        const tB = new Date(b.createdAt || b.updatedAt || b.scheduledStart || 0).getTime();
+        return tB - tA;
+      });
+
+      console.log('[WORKER_BOOKINGS_FETCH_SUCCESS]', { count: sorted.length });
+      setJobs(sorted);
 
       const token = await storage.getItem('accessToken');
       if (token && workerId) {

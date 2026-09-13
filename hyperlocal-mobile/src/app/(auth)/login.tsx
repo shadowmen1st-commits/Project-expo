@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -107,10 +108,12 @@ export default function LoginScreen() {
         >
           {/* Header Brand */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="home" size={28} color={colors.accent} />
-            </View>
-            <Text style={styles.title}>Jobnest</Text>
+            <Image
+              source={require('../../../assets/logo.png')}
+              style={{ width: 70, height: 70, borderRadius: 16, marginBottom: 12, alignSelf: 'center' }}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Shadowman</Text>
             <Text style={styles.subtitle}>Welcome back 👋</Text>
             <Text style={styles.subtext}>Sign in to access your account & services</Text>
           </View>
@@ -230,6 +233,47 @@ export default function LoginScreen() {
                 ← Browse Marketplace as Guest
               </Text>
             </TouchableOpacity>
+
+            {/* Demo Accounts Quick Login */}
+            <View style={{ marginTop: spacing.md, padding: spacing.sm, backgroundColor: '#F8FAFC', borderRadius: radius.md, borderWidth: 1, borderColor: '#E2E8F0' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 8, textAlign: 'center' }}>
+                ⚡ Quick Demo Sign In
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#1E293B', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
+                  onPress={() => {
+                    setEmail('admin@test.com');
+                    setPassword('Admin@12345');
+                    handleLogin('admin@test.com', 'Admin@12345');
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>👑 Admin Demo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ backgroundColor: '#0284C7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
+                  onPress={() => {
+                    setEmail('company@test.com');
+                    setPassword('Company@12345');
+                    handleLogin('company@test.com', 'Company@12345');
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>🏢 Company Demo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ backgroundColor: '#16A34A', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
+                  onPress={() => {
+                    setEmail('customer@test.com');
+                    setPassword('Customer@12345');
+                    handleLogin('customer@test.com', 'Customer@12345');
+                  }}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>👤 Customer Demo</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {/* Social Divider */}
             <View style={styles.dividerRow}>

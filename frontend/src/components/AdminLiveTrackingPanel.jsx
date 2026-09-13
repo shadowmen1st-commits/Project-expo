@@ -36,6 +36,9 @@ export const AdminLiveTrackingPanel = () => {
     const [error, setError] = useState('');
     const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
+    const [updatingBookingId, setUpdatingBookingId] = useState(null);
+    const [actionMessage, setActionMessage] = useState('');
+
     const fetchLiveTracking = useCallback(async (isSilent = false) => {
         if (!isSilent) setLoading(true);
         setError('');
@@ -53,6 +56,38 @@ export const AdminLiveTrackingPanel = () => {
             if (!isSilent) setLoading(false);
         }
     }, []);
+
+    const handleUpdateBookingStatus = async (b, targetStatus) => {
+        const rawId = resolveBookingId(b);
+        if (!rawId) return;
+
+        const confirmMsg = targetStatus === 'COMPLETED'
+            ? `Are you sure you want to mark Booking #${b.bookingNumber} as COMPLETED?`
+            : `Are you sure you want to change Booking #${b.bookingNumber} status to ${targetStatus}?`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        setUpdatingBookingId(rawId);
+        setActionMessage('');
+        try {
+            const res = await api.post(`/v1/bookings/${rawId}/override`, {
+                status: targetStatus,
+                reason: `Status updated to ${targetStatus} by Admin from Live Field Tracking Panel`,
+            });
+
+            if (res.data?.success) {
+                setActionMessage(`Booking #${b.bookingNumber || rawId} status updated to ${targetStatus} successfully!`);
+                setTimeout(() => setActionMessage(''), 4000);
+                await fetchLiveTracking(true);
+            } else {
+                alert(res.data?.message || 'Failed to update booking status.');
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating booking status.');
+        } finally {
+            setUpdatingBookingId(null);
+        }
+    };
 
     useEffect(() => {
         fetchLiveTracking();
@@ -90,6 +125,13 @@ export const AdminLiveTrackingPanel = () => {
                 </div>
             </div>
 
+            {actionMessage && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold p-4 rounded-2xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span>{actionMessage}</span>
+                </div>
+            )}
+
             {/* Active Bookings Grid */}
             {loading && activeBookings.length === 0 ? (
                 <div className="bg-white border border-[#FEF3C7] rounded-3xl p-12 text-center text-xs font-bold text-[#78716C] flex flex-col items-center gap-3">
@@ -101,7 +143,7 @@ export const AdminLiveTrackingPanel = () => {
                     {error}
                 </div>
             ) : activeBookings.length === 0 ? (
-                <div className="bg-white border border-[#FEF3C7] rounded-3xl p-12 text-center text-xs text-[#78716C] font-medium space-y-2">
+                <div className="bg-white border border-[#FEF3C7] rounded-3xl p-12 text-center text-xs-[#78716C] font-medium space-y-2">
                     <Radio className="w-8 h-8 text-slate-300 mx-auto" />
                     <p className="font-bold text-[#1C1917]">No Active Field Jobs</p>
                     <p>There are currently no bookings in "Worker En Route" or "In Progress" status.</p>
@@ -110,6 +152,8 @@ export const AdminLiveTrackingPanel = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {activeBookings.map((b, idx) => {
                         const cardKey = String(b.bookingId || b._id || b.id || `tracking-card-${idx}`).trim();
+                        const rawId = resolveBookingId(b);
+                        const isUpdating = updatingBookingId === rawId;
                         const customerCoords =
                             b.addressSnapshot?.latitude && b.addressSnapshot?.longitude
                                 ? { latitude: b.addressSnapshot.latitude, longitude: b.addressSnapshot.longitude }
@@ -207,15 +251,50 @@ export const AdminLiveTrackingPanel = () => {
                                     </div>
                                 </div>
 
-                                {/* Action Button */}
-                                <button
-                                    onClick={() => navigate(`/admin/tracking/${resolveBookingId(b)}`)}
-                                    className="w-full btn-primary-gradient font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition"
-                                >
-                                    <Navigation className="w-3.5 h-3.5" />
-                                    <span>Open Live Tracking Map</span>
-                                    <ArrowUpRight className="w-3.5 h-3.5" />
-                                </button>
+                                {/* Actions Section */}
+                                <div className="space-y-2 pt-2 border-t border-[#FEF3C7]">
+                                    {/* Mark Complete Quick Action */}
+                                    <button
+                                        onClick={() => handleUpdateBookingStatus(b, 'COMPLETED')}
+                                        disabled={isUpdating}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition"
+                                    >
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        <span>{isUpdating ? 'Updating...' : 'Mark Job Complete'}</span>
+                                    </button>
+
+                                    <div className="flex items-center gap-2">
+                                        {/* Status Dropdown Override */}
+                                        <select
+                                            disabled={isUpdating}
+                                            value=""
+                                            onChange={(e) => {
+                                                if (e.target.value) {
+                                                    handleUpdateBookingStatus(b, e.target.value);
+                                                }
+                                            }}
+                                            className="flex-1 bg-[#FFFDF5] border border-[#FED7AA] text-[#78716C] font-semibold text-[11px] px-2 py-2 rounded-xl cursor-pointer focus:outline-none focus:border-[#F97316]"
+                                        >
+                                            <option value="">Change Status...</option>
+                                            <option value="COMPLETED">Mark COMPLETED</option>
+                                            <option value="IN_PROGRESS">Mark IN PROGRESS</option>
+                                            <option value="WORKER_EN_ROUTE">Mark WORKER EN ROUTE</option>
+                                            <option value="STARTED">Mark STARTED</option>
+                                            <option value="CANCELLED">Mark CANCELLED</option>
+                                        </select>
+
+                                        {/* Map Button */}
+                                        <button
+                                            onClick={() => navigate(`/admin/tracking/${resolveBookingId(b)}`)}
+                                            className="bg-[#FFFDF5] hover:bg-[#FEFCE8] border border-[#FED7AA] text-[#F97316] font-bold text-xs px-3 py-2 rounded-xl flex items-center justify-center gap-1 cursor-pointer shadow-xs transition"
+                                            title="Open Live Map"
+                                        >
+                                            <Navigation className="w-3.5 h-3.5" />
+                                            <span>Map</span>
+                                            <ArrowUpRight className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         );
                     })}

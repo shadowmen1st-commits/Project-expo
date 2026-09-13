@@ -55,11 +55,12 @@ export interface CompanyItem {
 
 const extractWorkerId = (item: any): string | null => {
   if (!item || typeof item !== 'object') return null;
+  const target = item.profile || item;
   const rawId =
-    item._id ??
-    item.id ??
-    (typeof item.userId === 'string' ? item.userId : item.userId?._id ?? item.userId?.id) ??
-    (typeof item.workerId === 'string' ? item.workerId : item.workerId?._id ?? item.workerId?.id);
+    target._id ??
+    target.id ??
+    (typeof target.userId === 'string' ? target.userId : target.userId?._id ?? target.userId?.id) ??
+    (typeof target.workerId === 'string' ? target.workerId : target.workerId?._id ?? target.workerId?.id);
 
   if (rawId === null || rawId === undefined) return null;
   const str = String(rawId).trim();
@@ -72,7 +73,15 @@ const normalizeAndDeduplicateWorkers = (rawList: any[]): WorkerItem[] => {
   const normalized: WorkerItem[] = [];
 
   for (let i = 0; i < rawList.length; i++) {
-    const item = rawList[i];
+    const raw = rawList[i];
+    const item = raw.profile
+      ? {
+          ...raw.profile,
+          documents: raw.documents,
+          user: raw.profile.userId,
+          fullName: raw.profile.fullName || raw.profile.userId?.name,
+        }
+      : raw;
     const workerId = extractWorkerId(item);
 
     if (!workerId) continue;
@@ -84,6 +93,40 @@ const normalizeAndDeduplicateWorkers = (rawList: any[]): WorkerItem[] => {
       _id: workerId,
       id: workerId,
       verificationStatus: item.verificationStatus || 'PENDING',
+    });
+  }
+
+  return normalized;
+};
+
+const normalizeCompanies = (rawList: any[]): CompanyItem[] => {
+  if (!Array.isArray(rawList)) return [];
+  const seenIds = new Set<string>();
+  const normalized: CompanyItem[] = [];
+
+  for (let i = 0; i < rawList.length; i++) {
+    const raw = rawList[i];
+    if (!raw || typeof raw !== 'object') continue;
+    const profile = raw.profile || raw;
+    const userObj = raw.user || profile.user || (typeof profile.userId === 'object' ? profile.userId : null);
+
+    const targetId = String(profile._id || raw._id || userObj?._id || profile.userId || '').trim();
+    if (!targetId || seenIds.has(targetId)) continue;
+    seenIds.add(targetId);
+
+    const companyName = profile.companyName || userObj?.name || raw.companyName || 'Corporate Account';
+    const status = profile.verificationStatus || raw.verificationStatus || 'PENDING';
+
+    normalized.push({
+      ...raw,
+      ...profile,
+      _id: targetId,
+      companyName,
+      email: profile.email || userObj?.email || raw.email || '',
+      phone: profile.phone || userObj?.phone || raw.phone || '',
+      verificationStatus: status,
+      user: userObj || undefined,
+      documents: Array.isArray(raw.documents) ? raw.documents : Array.isArray(profile.documents) ? profile.documents : [],
     });
   }
 
@@ -142,21 +185,22 @@ export default function AdminVerificationScreen() {
       setWorkers(normalizeAndDeduplicateWorkers(combinedWorkers));
 
       // 2. Process Companies
-      let companyList: CompanyItem[] = [];
+      let rawCompanyList: any[] = [];
       if (compVerifRes.status === 'fulfilled' && compVerifRes.value.data) {
         const cData = compVerifRes.value.data;
         const list = Array.isArray(cData)
           ? cData
           : cData.verifications || cData.data || cData.companies || [];
-        companyList = list;
-      } else if (compListRes.status === 'fulfilled' && compListRes.value.data) {
+        rawCompanyList = [...rawCompanyList, ...list];
+      }
+      if (compListRes.status === 'fulfilled' && compListRes.value.data) {
         const cData = compListRes.value.data;
         const list = Array.isArray(cData)
           ? cData
           : cData.companies || cData.data || [];
-        companyList = list;
+        rawCompanyList = [...rawCompanyList, ...list];
       }
-      setCompanies(companyList);
+      setCompanies(normalizeCompanies(rawCompanyList));
     } catch (err) {
       console.error('Error fetching admin verification items:', err);
     } finally {
@@ -263,7 +307,7 @@ export default function AdminVerificationScreen() {
   const filteredWorkers = (Array.isArray(workers) ? workers : []).filter((w): w is WorkerItem => {
     if (!w || typeof w !== 'object') return false;
     const status = w.verificationStatus || 'PENDING';
-    if (workerTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING'].includes(status);
+    if (workerTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING', 'UNDER_REVIEW', 'MORE_INFO_REQUIRED', 'SUBMITTED'].includes(status);
     if (workerTab === 'APPROVED') return status === 'APPROVED';
     if (workerTab === 'REJECTED') return status === 'REJECTED';
     return true;
@@ -272,7 +316,7 @@ export default function AdminVerificationScreen() {
   const filteredCompanies = (Array.isArray(companies) ? companies : []).filter((c) => {
     if (!c || typeof c !== 'object') return false;
     const status = c.verificationStatus || 'PENDING';
-    if (companyTab === 'PENDING') return ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION'].includes(status);
+    if (companyTab === 'PENDING') return ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'PENDING_APPROVAL', 'SUBMITTED'].includes(status);
     if (companyTab === 'APPROVED') return ['APPROVED', 'VERIFIED'].includes(status);
     if (companyTab === 'REJECTED') return status === 'REJECTED';
     return true;

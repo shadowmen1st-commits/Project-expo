@@ -7,14 +7,9 @@ const DEFAULT_PUBLIC_HTTPS_BACKEND = 'https://project-expo-md7o.onrender.com';
 export const normalizeApiUrl = (url?: string) => {
   let cleaned = (url || '').trim();
 
-  // If no URL is provided, fallback cleanly to the active HTTPS backend
+  // If no URL is provided, fallback cleanly to live HTTPS backend accessible via Wi-Fi and Mobile Data
   if (!cleaned) {
-    if (__DEV__) {
-      console.warn('[API_CONFIG] EXPO_PUBLIC_API_URL not set in dev, using default public HTTPS backend.');
-      cleaned = `${DEFAULT_PUBLIC_HTTPS_BACKEND}/api`;
-    } else {
-      cleaned = `${DEFAULT_PUBLIC_HTTPS_BACKEND}/api`;
-    }
+    cleaned = 'https://project-expo-md7o.onrender.com/api/v1';
   }
 
   // Remove trailing slashes
@@ -27,15 +22,6 @@ export const normalizeApiUrl = (url?: string) => {
 
   if (!cleaned.endsWith('/api') && !cleaned.endsWith('/api/v1')) {
     cleaned += '/api';
-  }
-
-  // Release environment safety validation
-  if (!__DEV__) {
-    const isLocal = ['localhost', '127.0.0.1', '192.168.', '10.0.', '172.16.', '172.31.'].some(ip => cleaned.includes(ip));
-    const isHttp = cleaned.startsWith('http://');
-    if (isLocal || isHttp) {
-      console.error('[API_CONFIG_SECURITY_VIOLATION] Production APK must not point to local/insecure URL:', cleaned);
-    }
   }
 
   return cleaned;

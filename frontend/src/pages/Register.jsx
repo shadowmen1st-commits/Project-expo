@@ -99,17 +99,15 @@ export const Register = () => {
             <div className="lg:w-1/2 auth-panel-bg p-8 lg:p-16 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-[#FEF3C7]">
                 <div>
                     <div className="flex items-center gap-3 mb-12">
-                        <div className="w-10 h-10 rounded-xl logo-gradient flex items-center justify-center shadow-md">
-                            <span className="text-[#111827] text-xl font-black">J</span>
-                        </div>
-                        <span className="text-2xl font-bold tracking-tight text-[#111827]">
-                            Jobnest<span className="text-[#F97316]">.</span>
+                        <img src="/logo.png" alt="Shadowman" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
+                        <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
+                            Shadowman<span className="text-[#F97316]">.</span>
                         </span>
                     </div>
 
                     <div className="max-w-md my-auto">
                         <h1 className="text-3xl lg:text-4xl font-extrabold text-[#111827] tracking-tight leading-tight mb-4">
-                            Create your <span className="text-highlight-gradient">Jobnest</span> account
+                            Create your <span className="text-highlight-gradient">Shadowman</span> account
                         </h1>
                         <p className="text-[#4B5563] text-base leading-relaxed mb-8">
                             Book reliable local services or start your journey as a verified professional.

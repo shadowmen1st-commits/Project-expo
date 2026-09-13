@@ -61,11 +61,9 @@ export const Login = () => {
                 <div>
                     {/* Jobnest Logo */}
                     <div className="flex items-center gap-3 mb-12">
-                        <div className="w-10 h-10 rounded-xl logo-gradient flex items-center justify-center shadow-md">
-                            <span className="text-[#111827] text-xl font-black">J</span>
-                        </div>
-                        <span className="text-2xl font-bold tracking-tight text-[#111827]">
-                            Jobnest<span className="text-[#F97316]">.</span>
+                        <img src="/logo.png" alt="Shadowman" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
+                        <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
+                            Shadowman<span className="text-[#F97316]">.</span>
                         </span>
                     </div>
 
