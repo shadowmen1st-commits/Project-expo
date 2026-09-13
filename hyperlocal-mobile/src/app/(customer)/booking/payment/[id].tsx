@@ -388,27 +388,6 @@ export default function BookingPaymentScreen() {
                   />
 
                   <TouchableOpacity
-                    style={{
-                      backgroundColor: '#16A34A',
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
-                      borderRadius: radius.xl,
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      gap: 6,
-                      marginBottom: 10,
-                    }}
-                    onPress={handleSimulateTestPayment}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="checkmark-circle-outline" size={18} color="#FFFFFF" />
-                    <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 13 }}>
-                      Simulate Test Payment Success (Instant Confirm)
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
                     style={styles.backBtn}
                     onPress={() => router.replace('/(customer)/bookings')}
                   >

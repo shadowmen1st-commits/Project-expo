@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -108,11 +107,9 @@ export default function LoginScreen() {
         >
           {/* Header Brand */}
           <View style={styles.header}>
-            <Image
-              source={require('../../../assets/logo.png')}
-              style={{ width: 70, height: 70, borderRadius: 16, marginBottom: 12, alignSelf: 'center' }}
-              resizeMode="contain"
-            />
+            <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 12, alignSelf: 'center' }}>
+              <Ionicons name="shield-checkmark" size={36} color={colors.primary} />
+            </View>
             <Text style={styles.title}>Shadowman</Text>
             <Text style={styles.subtitle}>Welcome back 👋</Text>
             <Text style={styles.subtext}>Sign in to access your account & services</Text>
