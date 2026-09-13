@@ -75,7 +75,15 @@ export default function SignupScreen() {
       const loggedUser = await login(email.trim(), password);
 
       if (loggedUser.role === 'WORKER') {
-        router.replace('/(worker)/dashboard');
+        if (
+          loggedUser.verificationStatus === 'APPROVED' ||
+          loggedUser.isKycVerified === true ||
+          loggedUser.verificationBadge === true
+        ) {
+          router.replace('/(worker)/dashboard');
+        } else {
+          router.replace('/(worker)/profile');
+        }
       } else {
         // Check if there is a pending guest booking to resume
         const pendingRaw = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');

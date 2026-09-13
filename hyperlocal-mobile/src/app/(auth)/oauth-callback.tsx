@@ -47,7 +47,15 @@ export default function OAuthCallbackScreen() {
 
       setTimeout(() => {
         if (user.role === 'WORKER') {
-          router.replace('/(worker)/dashboard');
+          if (
+            user.verificationStatus === 'APPROVED' ||
+            user.isKycVerified === true ||
+            user.verificationBadge === true
+          ) {
+            router.replace('/(worker)/dashboard');
+          } else {
+            router.replace('/(worker)/profile');
+          }
         } else if (user.role === 'ADMIN') {
           router.replace('/(admin)/dashboard');
         } else if (user.role === 'COMPANY') {

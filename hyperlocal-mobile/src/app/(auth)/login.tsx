@@ -28,6 +28,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'WORKER'>('CUSTOMER');
+
   useEffect(() => {
     // Perform server health check diagnostic on login screen load
     checkServerHealth().catch(() => {});
@@ -54,7 +56,15 @@ export default function LoginScreen() {
       } else if (loggedInUser?.role === 'COMPANY') {
         router.replace('/(company)/dashboard');
       } else if (loggedInUser?.role === 'WORKER') {
-        router.replace('/(worker)/dashboard');
+        if (
+          loggedInUser.verificationStatus === 'APPROVED' ||
+          loggedInUser.isKycVerified === true ||
+          loggedInUser.verificationBadge === true
+        ) {
+          router.replace('/(worker)/dashboard');
+        } else {
+          router.replace('/(worker)/profile');
+        }
       } else {
         // Check if there is a pending guest booking to resume
         const pendingRaw = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
@@ -114,6 +124,73 @@ export default function LoginScreen() {
               </View>
             )}
 
+            {/* Account Role Selector */}
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 10,
+                  borderWidth: 1.5,
+                  borderColor: selectedRole === 'CUSTOMER' ? colors.primary : colors.border,
+                  borderRadius: radius.md,
+                  backgroundColor: selectedRole === 'CUSTOMER' ? colors.primaryLight : colors.surface,
+                  gap: 6,
+                }}
+                onPress={() => setSelectedRole('CUSTOMER')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="person-outline"
+                  size={18}
+                  color={selectedRole === 'CUSTOMER' ? colors.primaryDark : colors.textMuted}
+                />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: selectedRole === 'CUSTOMER' ? '700' : '600',
+                    color: selectedRole === 'CUSTOMER' ? colors.primaryDark : colors.textSecondary,
+                  }}
+                >
+                  Customer
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 10,
+                  borderWidth: 1.5,
+                  borderColor: selectedRole === 'WORKER' ? colors.primary : colors.border,
+                  borderRadius: radius.md,
+                  backgroundColor: selectedRole === 'WORKER' ? colors.primaryLight : colors.surface,
+                  gap: 6,
+                }}
+                onPress={() => setSelectedRole('WORKER')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="briefcase-outline"
+                  size={18}
+                  color={selectedRole === 'WORKER' ? colors.primaryDark : colors.textMuted}
+                />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: selectedRole === 'WORKER' ? '700' : '600',
+                    color: selectedRole === 'WORKER' ? colors.primaryDark : colors.textSecondary,
+                  }}
+                >
+                  Worker Pro
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <AppInput
               label="Email Address"
               placeholder="name@example.com"
@@ -134,7 +211,7 @@ export default function LoginScreen() {
             />
 
             <AppButton
-              title="Sign In"
+              title={selectedRole === 'WORKER' ? 'Sign In as Worker' : 'Sign In'}
               onPress={() => handleLogin()}
               loading={loading}
               disabled={loading}
@@ -175,8 +252,8 @@ export default function LoginScreen() {
             {/* Google Sign In Button */}
             <GoogleSignInButton
               mode="LOGIN"
-              role="CUSTOMER"
-              label="Continue with Google"
+              role={selectedRole}
+              label={selectedRole === 'WORKER' ? 'Sign in as Worker with Google' : 'Continue with Google'}
               onError={(err) => setError(err)}
             />
           </View>

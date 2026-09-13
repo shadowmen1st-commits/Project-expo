@@ -288,19 +288,39 @@ export default function WorkerDashboard() {
         </View>
 
         {/* Verification Status Card */}
-        <View style={styles.verificationCard}>
+        <View
+          style={[
+            styles.verificationCard,
+            verificationStatus !== 'APPROVED' && { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' },
+          ]}
+        >
           <View style={styles.verifRow}>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
               <Text style={styles.verifLabel}>KYC Verification Status</Text>
-              <View style={{ marginTop: 4 }}>
+              <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                {verificationStatus === 'APPROVED'
+                  ? 'Your worker profile is fully verified & active.'
+                  : ['PENDING_APPROVAL', 'UNDER_REVIEW', 'SUBMITTED'].includes(verificationStatus)
+                  ? 'Under review by Admin team. Updates will appear here.'
+                  : 'Complete your profile photo, rates & KYC documents to get verified.'}
+              </Text>
+              <View style={{ marginTop: 6 }}>
                 <Badge status={verificationStatus} />
               </View>
             </View>
             <TouchableOpacity
-              style={styles.verifBtn}
+              style={[
+                styles.verifBtn,
+                verificationStatus !== 'APPROVED' && { backgroundColor: '#EA580C', borderColor: '#EA580C' },
+              ]}
               onPress={() => router.push('/(worker)/profile')}
             >
-              <Text style={styles.verifBtnText}>
+              <Text
+                style={[
+                  styles.verifBtnText,
+                  verificationStatus !== 'APPROVED' && { color: '#FFFFFF' },
+                ]}
+              >
                 {verificationStatus === 'APPROVED'
                   ? 'View KYC'
                   : ['PENDING_APPROVAL', 'UNDER_REVIEW', 'SUBMITTED'].includes(verificationStatus)
