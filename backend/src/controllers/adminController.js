@@ -19,6 +19,7 @@ import WorkerAssignment from '../models/WorkerAssignment.js';
 import CompanyPayment from '../models/CompanyPayment.js';
 import CompanyVerificationDocument from '../models/CompanyVerificationDocument.js';
 import RefreshToken from '../models/RefreshToken.js';
+import VerificationSubmission from '../models/VerificationSubmission.js';
 
 // ── Admin User Management ─────────────────────────────────────────────────────
 
@@ -274,6 +275,14 @@ export const verifyWorker = async (req, res, next) => {
             reviewedBy: req.user?.userId,
             reviewedAt: new Date(),
             rejectionReason: reason,
+        });
+
+        // Synchronize VerificationSubmission model
+        await VerificationSubmission.updateMany({ workerId: id }, {
+            status: action === 'APPROVED' ? 'APPROVED' : action === 'REJECTED' ? 'REJECTED' : 'SUSPENDED',
+            reviewedBy: req.user?.userId,
+            finalDecisionAt: new Date(),
+            finalComment: reason,
         });
 
         // Save Audit Log
