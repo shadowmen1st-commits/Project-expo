@@ -276,7 +276,7 @@ export const renderCheckoutPage = async (req, res, next) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shadowman Razorpay Checkout</title>
+  <title>Shadowmen Razorpay Checkout</title>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     body {
@@ -338,7 +338,7 @@ export const renderCheckoutPage = async (req, res, next) => {
 </head>
 <body>
   <div class="card">
-    <h2>Shadowman Secure Checkout</h2>
+    <h2>Shadowmen Secure Checkout</h2>
     <p>Official Razorpay Payment Gateway</p>
     <div class="amount-box">
       <div class="amount-label">Amount Payable</div>
@@ -357,7 +357,7 @@ export const renderCheckoutPage = async (req, res, next) => {
       key: "${razorpayKeyId}",
       amount: ${order.amountPaise},
       currency: "${order.currency || 'INR'}",
-      name: "Shadowman",
+      name: "Shadowmen",
       description: "Service Booking #${order.orderNumber}",
       order_id: "${order.providerOrderId}",
       prefill: {

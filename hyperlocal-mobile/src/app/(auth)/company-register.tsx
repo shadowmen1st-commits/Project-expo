@@ -96,7 +96,7 @@ export default function CompanyRegisterScreen() {
       state: state.trim(),
       pincode: pincode.trim(),
       businessType: businessType.trim() || 'Services',
-      description: description.trim() || `Company on Shadowman platform`,
+      description: description.trim() || `Company on Shadowmen platform`,
       gstNumber: gstNumber.trim().toUpperCase() || undefined,
       panNumber: panNumber.trim().toUpperCase() || undefined,
       website: website.trim() || undefined,
@@ -129,7 +129,7 @@ export default function CompanyRegisterScreen() {
 
       Alert.alert(
         'Registration Successful 🎉',
-        'Your company account has been registered successfully on Shadowman! Please sign in with your credentials.',
+        'Your company account has been registered successfully on Shadowmen! Please sign in with your credentials.',
         [
           {
             text: 'Sign In Now',
@@ -167,7 +167,7 @@ export default function CompanyRegisterScreen() {
             </View>
             <Text style={styles.welcomeText}>Register Your Business</Text>
             <Text style={styles.subtitleText}>
-              Onboard and manage staff, team assignments, and bookings on Shadowman
+              Onboard and manage staff, team assignments, and bookings on Shadowmen
             </Text>
           </View>
 

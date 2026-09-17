@@ -71,9 +71,9 @@ export default function CompanyRegister() {
             <div className="lg:w-1/3 auth-panel-bg p-8 lg:p-16 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-[#FEF3C7]">
                 <div>
                     <div className="flex items-center gap-3 mb-12">
-                        <img src="/logo.png" alt="Shadowman" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
+                        <img src="/logo.png" alt="Shadowmen" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
                         <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
-                            Shadowman<span className="text-[#F97316]">.</span>
+                            Shadowmen<span className="text-[#F97316]">.</span>
                         </span>
                     </div>
 
@@ -105,7 +105,7 @@ export default function CompanyRegister() {
                 </div>
 
                 <div className="mt-12 text-xs text-[#9CA3AF]">
-                    © {new Date().getFullYear()} Shadowman Marketplace Services Pvt. Ltd. All rights reserved.
+                    © {new Date().getFullYear()} Shadowmen Marketplace Services Pvt. Ltd. All rights reserved.
                 </div>
             </div>
 

@@ -29,8 +29,8 @@ export const SharedNavbar = () => {
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                     {isHome ? (
                         <div className="flex items-center gap-2.5">
-                            <img src="/logo.png" alt="Shadowman" className="w-8 h-8 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
-                            <span className="text-[#111827] font-extrabold text-lg tracking-tight">Shadowman<span className="text-[#F97316]">.</span></span>
+                            <img src="/logo.png" alt="Shadowmen" className="w-8 h-8 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
+                            <span className="text-[#111827] font-extrabold text-lg tracking-tight">Shadowmen<span className="text-[#F97316]">.</span></span>
                         </div>
                     ) : (
                         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#F97316] font-semibold text-sm cursor-pointer outline-none">
@@ -56,8 +56,8 @@ export const SharedNavbar = () => {
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                     {/* Logo */}
                     <button onClick={() => { navigate('/'); setMobileMenuOpen(false); }} className="flex items-center gap-2.5 cursor-pointer outline-none">
-                        <img src="/logo.png" alt="Shadowman" className="w-8 h-8 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
-                        <span className="text-[#111827] font-extrabold text-lg tracking-tight">Shadowman<span className="text-[#F97316]">.</span></span>
+                        <img src="/logo.png" alt="Shadowmen" className="w-8 h-8 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
+                        <span className="text-[#111827] font-extrabold text-lg tracking-tight">Shadowmen<span className="text-[#F97316]">.</span></span>
                     </button>
 
                     {/* Desktop Nav links */}

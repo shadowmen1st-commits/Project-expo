@@ -132,8 +132,8 @@ export const WorkerDashboard = () => {
             {/* Header */}
             <nav className="border-b border-[#E7E0D8] bg-[#FAF6F0]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <img src="/logo.png" alt="Shadowman" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
-                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">Shadowman<span className="text-[#EAB308]">.</span></span>
+                    <img src="/logo.png" alt="Shadowmen" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
+                    <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">Shadowmen<span className="text-[#EAB308]">.</span></span>
                     <span className="bg-[#F0FDF4] text-[#16A34A] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#86EFAC]">
                         Worker Workspace
                     </span>

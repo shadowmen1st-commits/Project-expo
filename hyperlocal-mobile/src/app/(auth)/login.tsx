@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -28,15 +29,12 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'WORKER'>('CUSTOMER');
-
   useEffect(() => {
     // Perform server health check diagnostic on login screen load
     checkServerHealth().catch(() => {});
   }, []);
 
   const handleLogin = async (customEmail?: any, customPassword?: any) => {
-    // If called directly without explicit string arguments (e.g. from Pressable event), use state
     const targetEmail = typeof customEmail === 'string' && customEmail.length > 0 ? customEmail : email;
     const targetPassword = typeof customPassword === 'string' && customPassword.length > 0 ? customPassword : password;
 
@@ -67,7 +65,10 @@ export default function LoginScreen() {
         }
       } else {
         // Check if there is a pending guest booking to resume
-        const pendingRaw = (await storage.getItem('SHADOWMAN_GUEST_PENDING_BOOKING')) || (await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING'));
+        const pendingRaw =
+          (await storage.getItem('SHADOWMEN_GUEST_PENDING_BOOKING')) ||
+          (await storage.getItem('SHADOWMAN_GUEST_PENDING_BOOKING')) ||
+          (await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING'));
         let targetWorkerId = params.workerId ? String(params.workerId) : '';
         if (pendingRaw) {
           try {
@@ -107,10 +108,12 @@ export default function LoginScreen() {
         >
           {/* Header Brand */}
           <View style={styles.header}>
-            <View style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 12, alignSelf: 'center' }}>
-              <Ionicons name="shield-checkmark" size={36} color={colors.primary} />
-            </View>
-            <Text style={styles.title}>Shadowman</Text>
+            <Image
+              source={require('../../../assets/logo.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Shadowmen</Text>
             <Text style={styles.subtitle}>Welcome back 👋</Text>
             <Text style={styles.subtext}>Sign in to access your account & services</Text>
           </View>
@@ -123,73 +126,6 @@ export default function LoginScreen() {
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             )}
-
-            {/* Account Role Selector */}
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingVertical: 10,
-                  borderWidth: 1.5,
-                  borderColor: selectedRole === 'CUSTOMER' ? colors.primary : colors.border,
-                  borderRadius: radius.md,
-                  backgroundColor: selectedRole === 'CUSTOMER' ? colors.primaryLight : colors.surface,
-                  gap: 6,
-                }}
-                onPress={() => setSelectedRole('CUSTOMER')}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="person-outline"
-                  size={18}
-                  color={selectedRole === 'CUSTOMER' ? colors.primaryDark : colors.textMuted}
-                />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: selectedRole === 'CUSTOMER' ? '700' : '600',
-                    color: selectedRole === 'CUSTOMER' ? colors.primaryDark : colors.textSecondary,
-                  }}
-                >
-                  Customer
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingVertical: 10,
-                  borderWidth: 1.5,
-                  borderColor: selectedRole === 'WORKER' ? colors.primary : colors.border,
-                  borderRadius: radius.md,
-                  backgroundColor: selectedRole === 'WORKER' ? colors.primaryLight : colors.surface,
-                  gap: 6,
-                }}
-                onPress={() => setSelectedRole('WORKER')}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="briefcase-outline"
-                  size={18}
-                  color={selectedRole === 'WORKER' ? colors.primaryDark : colors.textMuted}
-                />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: selectedRole === 'WORKER' ? '700' : '600',
-                    color: selectedRole === 'WORKER' ? colors.primaryDark : colors.textSecondary,
-                  }}
-                >
-                  Worker Pro
-                </Text>
-              </TouchableOpacity>
-            </View>
 
             <AppInput
               label="Email Address"
@@ -211,7 +147,7 @@ export default function LoginScreen() {
             />
 
             <AppButton
-              title={selectedRole === 'WORKER' ? 'Sign In as Worker' : 'Sign In'}
+              title="Sign In"
               onPress={() => handleLogin()}
               loading={loading}
               disabled={loading}
@@ -219,58 +155,6 @@ export default function LoginScreen() {
               size="lg"
               style={styles.submitBtn}
             />
-
-            {/* Browse as Guest Link */}
-            <TouchableOpacity
-              style={{ alignItems: 'center', paddingVertical: 6 }}
-              onPress={() => router.replace('/(customer)/dashboard')}
-              activeOpacity={0.7}
-            >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary }}>
-                ← Browse Marketplace as Guest
-              </Text>
-            </TouchableOpacity>
-
-            {/* Demo Accounts Quick Login */}
-            <View style={{ marginTop: spacing.md, padding: spacing.sm, backgroundColor: '#F8FAFC', borderRadius: radius.md, borderWidth: 1, borderColor: '#E2E8F0' }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 8, textAlign: 'center' }}>
-                ⚡ Quick Demo Sign In
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
-                <TouchableOpacity
-                  style={{ backgroundColor: '#1E293B', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
-                  onPress={() => {
-                    setEmail('admin@test.com');
-                    setPassword('Admin@12345');
-                    handleLogin('admin@test.com', 'Admin@12345');
-                  }}
-                >
-                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>👑 Admin Demo</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ backgroundColor: '#0284C7', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
-                  onPress={() => {
-                    setEmail('company@test.com');
-                    setPassword('Company@12345');
-                    handleLogin('company@test.com', 'Company@12345');
-                  }}
-                >
-                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>🏢 Company Demo</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ backgroundColor: '#16A34A', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm }}
-                  onPress={() => {
-                    setEmail('customer@test.com');
-                    setPassword('Customer@12345');
-                    handleLogin('customer@test.com', 'Customer@12345');
-                  }}
-                >
-                  <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>👤 Customer Demo</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
 
             {/* Social Divider */}
             <View style={styles.dividerRow}>
@@ -282,8 +166,7 @@ export default function LoginScreen() {
             {/* Google Sign In Button */}
             <GoogleSignInButton
               mode="LOGIN"
-              role={selectedRole}
-              label={selectedRole === 'WORKER' ? 'Sign in as Worker with Google' : 'Continue with Google'}
+              label="Continue with Google"
               onError={(err) => setError(err)}
             />
           </View>
@@ -322,14 +205,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     alignItems: 'flex-start',
   },
-  logoBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
+  brandLogo: {
+    width: 68,
+    height: 68,
+    borderRadius: 16,
+    marginBottom: 14,
   },
   title: {
     fontSize: typography.sizes.display,

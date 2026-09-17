@@ -537,7 +537,7 @@ export const CustomerHome = () => {
                 key: orderData.publicKeyId,
                 amount: orderData.amount,
                 currency: orderData.currency || 'INR',
-                name: 'Shadowman',
+                name: 'Shadowmen',
                 description: `Payment for booking #${orderData.bookingNumber}`,
                 order_id: orderData.razorpayOrderId,
                 prefill: {
@@ -676,8 +676,8 @@ export const CustomerHome = () => {
             <nav className="border-b border-[#FEF3C7] bg-[#FFFBEB]/95 backdrop-blur-md sticky top-0 z-45 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3 sm:gap-0">
                 <div className="flex items-center justify-between w-full sm:w-auto">
                     <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Shadowman" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
-                        <span className="font-extrabold text-[#111827] text-xl tracking-tight">Shadowman<span className="text-[#F97316]">.</span></span>
+                        <img src="/logo.png" alt="Shadowmen" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
+                        <span className="font-extrabold text-[#111827] text-xl tracking-tight">Shadowmen<span className="text-[#F97316]">.</span></span>
                         <span className="bg-[#FFEDD5] text-[#F97316] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FED7AA] shadow-sm">
                             Customer
                         </span>

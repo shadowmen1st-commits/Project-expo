@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Shadowman",
-    "slug": "shadowman",
+    "name": "Shadowmen",
+    "slug": "shadowmen",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "shadowman",
+    "scheme": "shadowmen",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash-icon.png",

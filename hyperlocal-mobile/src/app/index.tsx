@@ -33,7 +33,7 @@ export default function IndexScreen() {
           style={{ width: 90, height: 90, borderRadius: 20, marginBottom: 16 }}
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>Shadowman</Text>
+        <Text style={styles.logoText}>Shadowmen</Text>
         <Text style={styles.tagline}>Services & Field Marketplace</Text>
         <ActivityIndicator size="large" color={colors.primaryDark} style={styles.spinner} />
       </View>

@@ -67,7 +67,7 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>App Version</Text>
-            <Text style={styles.infoValue}>1.0.0 (Shadowman Production)</Text>
+            <Text style={styles.infoValue}>1.0.0 (Shadowmen Production)</Text>
           </View>
         </View>
 

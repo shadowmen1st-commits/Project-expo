@@ -113,7 +113,7 @@ export default function BookingPaymentScreen() {
 
       // Persist pending payment context
       await storage.setItem(
-        'SHADOWMAN_PENDING_PAYMENT',
+        'SHADOWMEN_PENDING_PAYMENT',
         JSON.stringify({
           bookingId: bId,
           internalPaymentOrderId,
@@ -128,7 +128,7 @@ export default function BookingPaymentScreen() {
         currency: orderData.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh',
         amount: amountInPaise,
-        name: 'Shadowman',
+        name: 'Shadowmen',
         order_id: razorpayOrderId,
         theme: { color: '#EA580C' },
         prefill: {
@@ -175,6 +175,7 @@ export default function BookingPaymentScreen() {
 
           if (verifyRes.data?.success) {
             console.log('[PAYMENT] Verified! Navigating to booking details...');
+            await storage.removeItem('SHADOWMEN_PENDING_PAYMENT');
             await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
             setIsSuccess(true);
             const targetBookingId = verifyRes.data?.data?.bookingId || bId;
@@ -198,6 +199,7 @@ export default function BookingPaymentScreen() {
         const status = normalizeBookingStatus(bCheck?.bookingStatus || bCheck?.status);
         const pStatus = normalizeBookingStatus(bCheck?.paymentStatus);
         if (pStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS'].includes(status)) {
+          await storage.removeItem('SHADOWMEN_PENDING_PAYMENT');
           await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
           setIsSuccess(true);
           setTimeout(() => {
@@ -235,6 +237,7 @@ export default function BookingPaymentScreen() {
         reason: 'Test payment simulated by customer'
       }).catch(() => null);
 
+      await storage.removeItem('SHADOWMEN_PENDING_PAYMENT');
       await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
       setIsSuccess(true);
       setTimeout(() => {

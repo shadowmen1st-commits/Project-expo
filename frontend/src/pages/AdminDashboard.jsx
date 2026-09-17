@@ -476,8 +476,8 @@ export const AdminDashboard = ({ initialSection = 'analytics' }) => {
             <aside className="w-full lg:w-64 border-r border-[#E7E0D8] bg-white px-6 py-6 flex flex-col justify-between shrink-0 shadow-sm">
                 <div className="space-y-6">
                     <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Shadowman" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
-                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">Shadowman<span className="text-[#EAB308]">.</span></span>
+                        <img src="/logo.png" alt="Shadowmen" className="w-9 h-9 rounded-xl object-contain bg-black p-0.5 shadow-sm" />
+                        <span className="font-extrabold text-[#1C1917] text-xl tracking-tight">Shadowmen<span className="text-[#EAB308]">.</span></span>
                         <span className="bg-[#FEF2F2] text-[#DC2626] text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border border-[#FCA5A5]">
                             Admin
                         </span>

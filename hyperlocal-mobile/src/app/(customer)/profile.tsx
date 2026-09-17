@@ -167,32 +167,15 @@ export default function CustomerProfileScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Join Shadowman</Text>
+            <Text style={styles.sectionTitle}>Join Shadowmen</Text>
             <Text style={{ fontSize: typography.sizes.sm, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 20 }}>
-              Sign in or test with the dedicated Demo Account to book verified home professionals, track real-time GPS locations, and manage safe escrow payments.
+              Sign in or create an account to book verified home professionals, track real-time GPS locations, and manage safe payments.
             </Text>
 
             <AppButton
-              title="Explore Demo Account"
-              onPress={async () => {
-                setDemoLoading(true);
-                try {
-                  await login('demo@jobnest.com', 'Demo@123');
-                } catch (e: any) {
-                  Alert.alert('Demo Login Failed', e.response?.data?.message || 'Unable to sign into demo account.');
-                } finally {
-                  setDemoLoading(false);
-                }
-              }}
-              loading={demoLoading}
-              disabled={demoLoading}
-              variant="primary"
-            />
-            <View style={{ height: spacing.sm }} />
-            <AppButton
-              title="Sign In to Existing Account"
+              title="Sign In to Your Account"
               onPress={() => router.push('/(auth)/login')}
-              variant="outline"
+              variant="primary"
             />
             <View style={{ height: spacing.sm }} />
             <AppButton
