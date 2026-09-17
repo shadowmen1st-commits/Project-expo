@@ -22,11 +22,13 @@ import api from '../../config/api';
 export interface WorkerItem {
   _id: string;
   id: string;
+  submissionId?: string;
   workerId?: string;
   userId?: any;
   fullName?: string;
   primaryCategoryName?: string;
   verificationStatus: string;
+  documents?: any[];
   [key: string]: any;
 }
 
@@ -53,46 +55,75 @@ export interface CompanyItem {
   [key: string]: any;
 }
 
-const extractWorkerId = (item: any): string | null => {
-  if (!item || typeof item !== 'object') return null;
-  const target = item.profile || item;
-  const rawId =
-    target._id ??
-    target.id ??
-    (typeof target.userId === 'string' ? target.userId : target.userId?._id ?? target.userId?.id) ??
-    (typeof target.workerId === 'string' ? target.workerId : target.workerId?._id ?? target.workerId?.id);
-
-  if (rawId === null || rawId === undefined) return null;
-  const str = String(rawId).trim();
-  return str.length > 0 ? str : null;
-};
-
-const normalizeAndDeduplicateWorkers = (rawList: any[]): WorkerItem[] => {
+const normalizeWorkers = (rawList: any[]): WorkerItem[] => {
   if (!Array.isArray(rawList)) return [];
   const seenIds = new Set<string>();
   const normalized: WorkerItem[] = [];
 
   for (let i = 0; i < rawList.length; i++) {
     const raw = rawList[i];
-    const item = raw.profile
-      ? {
-          ...raw.profile,
-          documents: raw.documents,
-          user: raw.profile.userId,
-          fullName: raw.profile.fullName || raw.profile.userId?.name,
-        }
-      : raw;
-    const workerId = extractWorkerId(item);
+    if (!raw || typeof raw !== 'object') continue;
 
-    if (!workerId) continue;
-    if (seenIds.has(workerId)) continue;
+    // Handle VerificationSubmission schema
+    if (raw.workerId && (raw.profileSnapshot || raw.serviceSnapshot || raw.submissionNumber)) {
+      const workerUser = typeof raw.workerId === 'object' ? raw.workerId : null;
+      const workerUserId = String(workerUser?._id || raw.workerId || '').trim();
+      const submissionId = String(raw._id || '').trim();
+      const uniqueKey = workerUserId || submissionId;
+      if (!uniqueKey || seenIds.has(uniqueKey)) continue;
+      seenIds.add(uniqueKey);
 
-    seenIds.add(workerId);
+      normalized.push({
+        _id: submissionId || workerUserId,
+        id: submissionId || workerUserId,
+        submissionId: submissionId || undefined,
+        workerId: workerUserId,
+        userId: workerUser || { name: raw.profileSnapshot?.fullName, email: raw.profileSnapshot?.email },
+        fullName: raw.profileSnapshot?.fullName || workerUser?.name || 'Worker Applicant',
+        primaryCategoryName: raw.serviceSnapshot?.primaryCategoryName || 'General Services',
+        phone: workerUser?.phone || raw.profileSnapshot?.phone || '',
+        bio: raw.profileSnapshot?.bio || '',
+        hourlyRate: raw.profileSnapshot?.hourlyRate || raw.hourlyRate,
+        yearsOfExperience: raw.profileSnapshot?.yearsOfExperience ?? raw.yearsOfExperience,
+        verificationStatus: String(raw.status || 'PENDING_APPROVAL').toUpperCase(),
+        documents: Array.isArray(raw.documentIds) ? raw.documentIds : Array.isArray(raw.documents) ? raw.documents : [],
+        raw,
+      });
+      continue;
+    }
+
+    // Handle WorkerProfile schema
+    const target = raw.profile || raw;
+    const workerUserId = String(
+      (typeof target.userId === 'object' ? target.userId?._id : target.userId) ||
+      (typeof target.workerId === 'object' ? target.workerId?._id : target.workerId) ||
+      target._id ||
+      target.id ||
+      ''
+    ).trim();
+
+    if (!workerUserId || seenIds.has(workerUserId)) continue;
+    seenIds.add(workerUserId);
+
+    const userObj = target.userId && typeof target.userId === 'object' ? target.userId : raw.user || undefined;
+    const fullName = target.fullName || userObj?.name || 'Worker Applicant';
+    const primaryCategoryName = target.primaryCategoryName || target.primaryServiceCategoryId?.name || 'General Services';
+    const status = String(target.verificationStatus || raw.verificationStatus || 'PENDING_APPROVAL').toUpperCase();
+
     normalized.push({
-      ...item,
-      _id: workerId,
-      id: workerId,
-      verificationStatus: item.verificationStatus || 'PENDING',
+      _id: workerUserId,
+      id: workerUserId,
+      workerId: workerUserId,
+      userId: userObj || { name: fullName, email: target.email },
+      fullName,
+      primaryCategoryName,
+      phone: userObj?.phone || target.phone || '',
+      bio: target.bio || '',
+      hourlyRate: target.hourlyRate || raw.hourlyRate,
+      yearsOfExperience: target.yearsOfExperience ?? raw.yearsOfExperience,
+      verificationStatus: status,
+      documents: Array.isArray(raw.documents) ? raw.documents : Array.isArray(target.documents) ? target.documents : [],
+      raw,
     });
   }
 
@@ -115,7 +146,7 @@ const normalizeCompanies = (rawList: any[]): CompanyItem[] => {
     seenIds.add(targetId);
 
     const companyName = profile.companyName || userObj?.name || raw.companyName || 'Corporate Account';
-    const status = profile.verificationStatus || raw.verificationStatus || 'PENDING';
+    const status = String(profile.verificationStatus || raw.verificationStatus || 'PENDING').toUpperCase();
 
     normalized.push({
       ...raw,
@@ -156,33 +187,24 @@ export default function AdminVerificationScreen() {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [pendingWorkersRes, allWorkersRes, compVerifRes, compListRes] = await Promise.allSettled([
+      const [workerVerifRes, pendingWorkersRes, compVerifRes] = await Promise.allSettled([
+        api.get('/admin/worker-verifications?limit=100'),
         api.get('/admin/workers/pending'),
-        api.get('/workers/search'),
         api.get('/admin/company-verifications'),
-        api.get('/admin/companies'),
       ]);
 
       // 1. Process Workers
-      let combinedWorkers: any[] = [];
+      let rawWorkerList: any[] = [];
+      if (workerVerifRes.status === 'fulfilled' && workerVerifRes.value.data?.data) {
+        rawWorkerList = [...rawWorkerList, ...workerVerifRes.value.data.data];
+      }
       if (pendingWorkersRes.status === 'fulfilled' && pendingWorkersRes.value.data) {
         const pList = Array.isArray(pendingWorkersRes.value.data)
           ? pendingWorkersRes.value.data
           : pendingWorkersRes.value.data.workers || pendingWorkersRes.value.data.data || [];
-        combinedWorkers = [...combinedWorkers, ...pList];
+        rawWorkerList = [...rawWorkerList, ...pList];
       }
-      if (allWorkersRes.status === 'fulfilled' && allWorkersRes.value.data) {
-        const aList = Array.isArray(allWorkersRes.value.data)
-          ? allWorkersRes.value.data
-          : allWorkersRes.value.data.data || allWorkersRes.value.data.workers || [];
-        for (const item of aList) {
-          const itemWorkerId = extractWorkerId(item);
-          if (itemWorkerId && !combinedWorkers.some((c) => extractWorkerId(c) === itemWorkerId)) {
-            combinedWorkers.push({ ...item, verificationStatus: item.verificationStatus || 'NOT_SUBMITTED' });
-          }
-        }
-      }
-      setWorkers(normalizeAndDeduplicateWorkers(combinedWorkers));
+      setWorkers(normalizeWorkers(rawWorkerList));
 
       // 2. Process Companies
       let rawCompanyList: any[] = [];
@@ -191,14 +213,7 @@ export default function AdminVerificationScreen() {
         const list = Array.isArray(cData)
           ? cData
           : cData.verifications || cData.data || cData.companies || [];
-        rawCompanyList = [...rawCompanyList, ...list];
-      }
-      if (compListRes.status === 'fulfilled' && compListRes.value.data) {
-        const cData = compListRes.value.data;
-        const list = Array.isArray(cData)
-          ? cData
-          : cData.companies || cData.data || [];
-        rawCompanyList = [...rawCompanyList, ...list];
+        rawCompanyList = list;
       }
       setCompanies(normalizeCompanies(rawCompanyList));
     } catch (err) {
@@ -219,12 +234,23 @@ export default function AdminVerificationScreen() {
   };
 
   // --- Worker Actions ---
-  const handleApproveWorker = async (id: string) => {
-    setActionLoadingId(id);
+  const handleApproveWorker = async (item: WorkerItem) => {
+    const workerUserId = item.workerId || (typeof item.userId === 'object' ? item.userId?._id : item.userId) || item._id;
+    const submissionId = item.submissionId;
+    const targetKey = item._id;
+    setActionLoadingId(targetKey);
     try {
-      await api.post(`/admin/workers/verify/${id}`, { action: 'APPROVED', reason: 'Approved by admin' }).catch(() =>
-        api.patch(`/admin/workers/${id}/approve`)
-      );
+      if (submissionId) {
+        await api.post(`/v1/admin/worker-verifications/${submissionId}/approve`).catch(async () => {
+          if (workerUserId) {
+            await api.post(`/admin/workers/verify/${workerUserId}`, { action: 'APPROVED', reason: 'Approved by admin' });
+          }
+        });
+      } else if (workerUserId) {
+        await api.post(`/admin/workers/verify/${workerUserId}`, { action: 'APPROVED', reason: 'Approved by admin' }).catch(() =>
+          api.patch(`/admin/workers/${workerUserId}/approve`)
+        );
+      }
       Alert.alert('Approved', 'Worker KYC has been approved.');
       fetchAllData();
     } catch (err: any) {
@@ -234,12 +260,26 @@ export default function AdminVerificationScreen() {
     }
   };
 
-  const handleRejectWorker = async (id: string) => {
-    setActionLoadingId(id);
+  const handleRejectWorker = async (item: WorkerItem) => {
+    const workerUserId = item.workerId || (typeof item.userId === 'object' ? item.userId?._id : item.userId) || item._id;
+    const submissionId = item.submissionId;
+    const targetKey = item._id;
+    setActionLoadingId(targetKey);
     try {
-      await api.post(`/admin/workers/verify/${id}`, { action: 'REJECTED', reason: 'Documents incomplete' }).catch(() =>
-        api.patch(`/admin/workers/${id}/reject`, { reason: 'Documents incomplete' })
-      );
+      if (submissionId) {
+        await api.post(`/v1/admin/worker-verifications/${submissionId}/reject`, {
+          reasonCode: 'INVALID_DOCUMENT',
+          comment: 'Documents incomplete or invalid'
+        }).catch(async () => {
+          if (workerUserId) {
+            await api.post(`/admin/workers/verify/${workerUserId}`, { action: 'REJECTED', reason: 'Documents incomplete' });
+          }
+        });
+      } else if (workerUserId) {
+        await api.post(`/admin/workers/verify/${workerUserId}`, { action: 'REJECTED', reason: 'Documents incomplete' }).catch(() =>
+          api.patch(`/admin/workers/${workerUserId}/reject`, { reason: 'Documents incomplete' })
+        );
+      }
       Alert.alert('Rejected', 'Worker application rejected.');
       fetchAllData();
     } catch (err: any) {
@@ -306,19 +346,19 @@ export default function AdminVerificationScreen() {
   // --- Filtering ---
   const filteredWorkers = (Array.isArray(workers) ? workers : []).filter((w): w is WorkerItem => {
     if (!w || typeof w !== 'object') return false;
-    const status = w.verificationStatus || 'PENDING';
-    if (workerTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING', 'UNDER_REVIEW', 'MORE_INFO_REQUIRED', 'SUBMITTED'].includes(status);
-    if (workerTab === 'APPROVED') return status === 'APPROVED';
-    if (workerTab === 'REJECTED') return status === 'REJECTED';
+    const status = String(w.verificationStatus || '').toUpperCase();
+    if (workerTab === 'PENDING') return ['PENDING_APPROVAL', 'PENDING', 'UNDER_REVIEW', 'MORE_INFO_REQUIRED', 'SUBMITTED', 'CHANGES_REQUIRED'].includes(status);
+    if (workerTab === 'APPROVED') return ['APPROVED', 'VERIFIED'].includes(status);
+    if (workerTab === 'REJECTED') return ['REJECTED', 'SUSPENDED'].includes(status);
     return true;
   });
 
   const filteredCompanies = (Array.isArray(companies) ? companies : []).filter((c) => {
     if (!c || typeof c !== 'object') return false;
-    const status = c.verificationStatus || 'PENDING';
-    if (companyTab === 'PENDING') return ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'PENDING_APPROVAL', 'SUBMITTED'].includes(status);
+    const status = String(c.verificationStatus || '').toUpperCase();
+    if (companyTab === 'PENDING') return ['PENDING', 'UNDER_REVIEW', 'NEEDS_INFORMATION', 'PENDING_APPROVAL', 'SUBMITTED', 'CHANGES_REQUIRED'].includes(status);
     if (companyTab === 'APPROVED') return ['APPROVED', 'VERIFIED'].includes(status);
-    if (companyTab === 'REJECTED') return status === 'REJECTED';
+    if (companyTab === 'REJECTED') return ['REJECTED', 'SUSPENDED'].includes(status);
     return true;
   });
 
@@ -399,7 +439,8 @@ export default function AdminVerificationScreen() {
           renderItem={({ item }) => {
             const targetId = item._id;
             const isProcessing = actionLoadingId === targetId;
-            const isPending = ['PENDING_APPROVAL', 'PENDING'].includes(item.verificationStatus);
+            const isPending = ['PENDING_APPROVAL', 'PENDING', 'UNDER_REVIEW', 'SUBMITTED', 'CHANGES_REQUIRED', 'MORE_INFO_REQUIRED'].includes(item.verificationStatus);
+            const docs = Array.isArray(item.documents) ? item.documents : [];
 
             return (
               <View style={styles.card} key={`card-${targetId}`}>
@@ -413,10 +454,64 @@ export default function AdminVerificationScreen() {
                       {item.primaryCategoryName || 'General Services'}
                     </Text>
                     <Text style={styles.emailText}>
-                      {item.userId?.email || 'email@example.com'}
+                      {item.userId?.email || item.email || 'email@example.com'}
+                      {item.phone ? ` • 📞 ${item.phone}` : ''}
                     </Text>
                   </View>
                   <Badge status={item.verificationStatus} />
+                </View>
+
+                {/* Worker Details Grid */}
+                <View style={styles.detailsBox}>
+                  {item.phone ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailKey}>Phone Number:</Text>
+                      <Text style={styles.detailVal}>{item.phone}</Text>
+                    </View>
+                  ) : null}
+                  {item.hourlyRate ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailKey}>Hourly Rate:</Text>
+                      <Text style={styles.detailVal}>₹{item.hourlyRate}/hr</Text>
+                    </View>
+                  ) : null}
+                  {item.yearsOfExperience !== undefined && item.yearsOfExperience !== null ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailKey}>Experience:</Text>
+                      <Text style={styles.detailVal}>{item.yearsOfExperience} Year(s)</Text>
+                    </View>
+                  ) : null}
+                  {item.bio ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailKey}>Bio:</Text>
+                      <Text style={[styles.detailVal, { flex: 1 }]} numberOfLines={2}>{item.bio}</Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                {/* Uploaded Documents List */}
+                <View style={styles.docsSection}>
+                  <Text style={styles.docsSectionTitle}>
+                    Submitted KYC Documents ({docs.length})
+                  </Text>
+                  {docs.length > 0 ? (
+                    docs.map((doc: any, index: number) => {
+                      const formattedType = (doc.documentType || 'DOCUMENT').replace(/_/g, ' ');
+                      const last4 = doc.documentNumberLast4 ? `(•••• ${doc.documentNumberLast4})` : '';
+                      const docStatus = doc.verificationStatus || doc.status || 'PENDING_REVIEW';
+                      return (
+                        <View key={doc._id || `worker-doc-${index}`} style={styles.docItem}>
+                          <Ionicons name="document-text-outline" size={16} color="#475569" />
+                          <Text style={styles.docItemName} numberOfLines={1}>
+                            {formattedType} {last4}
+                          </Text>
+                          <Badge status={docStatus} />
+                        </View>
+                      );
+                    })
+                  ) : (
+                    <Text style={styles.noDocsText}>⚠️ No KYC documents uploaded</Text>
+                  )}
                 </View>
 
                 {isPending ? (
@@ -425,14 +520,14 @@ export default function AdminVerificationScreen() {
                       title="Reject"
                       variant="danger"
                       size="sm"
-                      onPress={() => handleRejectWorker(targetId)}
+                      onPress={() => handleRejectWorker(item)}
                       loading={isProcessing}
                       style={{ flex: 1, marginRight: 8 }}
                     />
                     <Button
                       title="Approve"
                       size="sm"
-                      onPress={() => handleApproveWorker(targetId)}
+                      onPress={() => handleApproveWorker(item)}
                       loading={isProcessing}
                       style={{ flex: 1 }}
                     />

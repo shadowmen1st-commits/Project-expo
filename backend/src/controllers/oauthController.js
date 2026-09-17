@@ -65,6 +65,45 @@ export const startOAuth = async (req, res, next) => {
     }
 };
 
+const sendOAuthResponse = (res, redirectUrl) => {
+    if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://')) {
+        return res.redirect(redirectUrl);
+    }
+    // Custom app scheme (e.g. shadowmen://...)
+    // Send an HTML bridge page that triggers the app deep link immediately
+    const safeUrl = redirectUrl.replace(/"/g, '&quot;');
+    return res.status(200).send(`<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting to Shadowmen App...</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #0F172A; color: #FFFFFF; text-align: center; }
+        .card { background: #1E293B; border-radius: 16px; padding: 32px 24px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #EA580C; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h2 { font-size: 20px; margin: 0 0 10px; color: #FFFFFF; }
+        p { color: #94A3B8; font-size: 14px; margin: 0 0 24px; }
+        a { display: inline-block; background: #EA580C; color: #FFFFFF; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner"></div>
+        <h2>Redirecting to App...</h2>
+        <p>Authentication complete. Returning you to the Shadowmen mobile application.</p>
+        <a href="${safeUrl}">Open App</a>
+    </div>
+    <script>
+        setTimeout(function() {
+            window.location.href = "${safeUrl}";
+        }, 80);
+    </script>
+</body>
+</html>`);
+};
+
 export const oauthCallback = async (req, res, next) => {
     try {
         const providerName = req.params.provider;
@@ -78,14 +117,16 @@ export const oauthCallback = async (req, res, next) => {
         
         if (!state || !code) {
             // Usually this means user cancelled or an error occurred. Redirect to frontend with safe error.
-            return res.redirect(buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: 'OAUTH_CALLBACK_FAILED' }));
+            const redirectUrl = buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: 'OAUTH_CALLBACK_FAILED' });
+            return sendOAuthResponse(res, redirectUrl);
         }
 
         let attempt;
         try {
             attempt = await oauthService.validateStateAndConsumeAttempt(state, providerName.toUpperCase());
         } catch (e) {
-            return res.redirect(buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: e.message }));
+            const redirectUrl = buildRedirectUrl(frontendBase, '/auth/oauth/callback', { oauth: 'failed', errorCode: e.message });
+            return sendOAuthResponse(res, redirectUrl);
         }
 
         try {
@@ -112,7 +153,8 @@ export const oauthCallback = async (req, res, next) => {
             const { user: appUser } = await oauthService.findOrLinkIdentity(providerName.toUpperCase(), identityParams, attempt, req);
 
             if (appUser.status !== 'ACTIVE') {
-                return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'access_denied', errorCode: 'OAUTH_ACCOUNT_DISABLED' }));
+                const redirectUrl = buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'access_denied', errorCode: 'OAUTH_ACCOUNT_DISABLED' });
+                return sendOAuthResponse(res, redirectUrl);
             }
 
             // Create session
@@ -122,11 +164,19 @@ export const oauthCallback = async (req, res, next) => {
             attempt.status = 'COMPLETED';
             await attempt.save();
 
-            return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'success', token: session.accessToken }));
+            const redirectUrl = buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, {
+                oauth: 'success',
+                token: session.accessToken,
+                accessToken: session.accessToken,
+                refreshToken: session.refreshToken
+            });
+
+            return sendOAuthResponse(res, redirectUrl);
         } catch (e) {
             console.error('OAuth Callback Error:', e);
             const errCode = e.message.startsWith('OAUTH_') ? e.message : 'OAUTH_CALLBACK_FAILED';
-            return res.redirect(buildRedirectUrl(frontendBase, attempt.frontendRedirectPath, { oauth: 'failed', errorCode: errCode }));
+            const redirectUrl = buildRedirectUrl(frontendBase, attempt?.frontendRedirectPath || '/auth/oauth/callback', { oauth: 'failed', errorCode: errCode });
+            return sendOAuthResponse(res, redirectUrl);
         }
     } catch (error) {
         next(error);

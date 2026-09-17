@@ -74,6 +74,10 @@ api.interceptors.request.use(
       delete config.headers.Authorization;
     }
 
+    if (config.url && (config.baseURL?.endsWith('/v1') || API_BASE_URL.endsWith('/v1')) && config.url.startsWith('/v1/')) {
+      config.url = config.url.replace(/^\/v1\//, '/');
+    }
+
     console.log('[API_REQUEST]', {
       method: config.method?.toUpperCase(),
       url: config.url,
