@@ -7,7 +7,7 @@ export const colors = {
   surfaceTertiary: '#E5E7EB',
 
   // Primary & Accent Brand Tints
-  primary: '#F59E0B',         // Jobnest Gold / Amber
+  primary: '#F59E0B',         // Shadowman Gold / Amber
   primaryDark: '#D97706',     // Deep Amber
   primaryLight: '#FEF3C7',    // Light Gold Tint
   accent: '#F97316',          // Warm Orange Accent

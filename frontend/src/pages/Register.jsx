@@ -133,7 +133,7 @@ export const Register = () => {
                 </div>
 
                 <div className="mt-12 text-xs text-[#9CA3AF]">
-                    © {new Date().getFullYear()} Jobnest Marketplace Services Pvt. Ltd. All rights reserved.
+                    © {new Date().getFullYear()} Shadowman Marketplace Services Pvt. Ltd. All rights reserved.
                 </div>
             </div>
 
@@ -142,7 +142,7 @@ export const Register = () => {
                 <div className="w-full max-w-md space-y-6 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
                     <div>
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-[#111827] tracking-tight">Create Account</h2>
-                        <p className="text-sm text-[#4B5563] mt-1">Join Jobnest to book or offer local services.</p>
+                        <p className="text-sm text-[#4B5563] mt-1">Join Shadowman to book or offer local services.</p>
                     </div>
 
                     {error && (

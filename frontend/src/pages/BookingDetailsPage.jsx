@@ -286,7 +286,7 @@ export const BookingDetailsPage = () => {
                             <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 flex items-center justify-center text-[#F97316] mb-3">
                                 <Shield className="w-5 h-5 text-[#F97316]" />
                             </div>
-                            <h2 className="text-sm font-black text-[#1C1917] mb-1.5">JobNest Escrow Vault</h2>
+                            <h2 className="text-sm font-black text-[#1C1917] mb-1.5">Shadowman Escrow Vault</h2>
                             <p className="text-xs text-[#78716C] leading-relaxed">
                                 Your payment is safely held in escrow. Funds will only be released to the technician after you inspect and approve the completed job.
                             </p>

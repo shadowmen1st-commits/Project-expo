@@ -143,6 +143,10 @@ export const createApp = () => {
     app.get('/api/categories/:id', getCategoryById);
     app.get('/api/services', getCategories);
     app.get('/api/services/:id', getCategoryById);
+    app.get('/api/v1/categories', getCategories);
+    app.get('/api/v1/categories/:id', getCategoryById);
+    app.get('/api/v1/services', getCategories);
+    app.get('/api/v1/services/:id', getCategoryById);
     const healthLimiter = rateLimit({
         windowMs: 60000,
         max: process.env.NODE_ENV === 'test' ? 100000 : 50000,

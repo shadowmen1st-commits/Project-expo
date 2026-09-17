@@ -105,7 +105,7 @@ export default function CompanyRegister() {
                 </div>
 
                 <div className="mt-12 text-xs text-[#9CA3AF]">
-                    © {new Date().getFullYear()} Jobnest Marketplace Services Pvt. Ltd. All rights reserved.
+                    © {new Date().getFullYear()} Shadowman Marketplace Services Pvt. Ltd. All rights reserved.
                 </div>
             </div>
 

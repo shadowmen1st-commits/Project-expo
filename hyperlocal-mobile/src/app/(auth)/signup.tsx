@@ -86,7 +86,7 @@ export default function SignupScreen() {
         }
       } else {
         // Check if there is a pending guest booking to resume
-        const pendingRaw = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
+        const pendingRaw = (await storage.getItem('SHADOWMAN_GUEST_PENDING_BOOKING')) || (await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING'));
         let targetWorkerId = '';
         if (pendingRaw) {
           try {

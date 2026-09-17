@@ -113,7 +113,7 @@ export default function BookingPaymentScreen() {
 
       // Persist pending payment context
       await storage.setItem(
-        'JOBNEST_PENDING_PAYMENT',
+        'SHADOWMAN_PENDING_PAYMENT',
         JSON.stringify({
           bookingId: bId,
           internalPaymentOrderId,
@@ -125,13 +125,12 @@ export default function BookingPaymentScreen() {
 
       const options = {
         description: `Payment for Booking #${bId.substring(0, 8)}`,
-        image: 'https://jobnest.com/logo.png',
         currency: orderData.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh',
         amount: amountInPaise,
-        name: 'JobNest',
+        name: 'Shadowman',
         order_id: razorpayOrderId,
-        theme: { color: '#2563EB' },
+        theme: { color: '#EA580C' },
         prefill: {
           email: user?.email || 'customer@example.com',
           contact: user?.phone || '9999999999',
@@ -176,7 +175,7 @@ export default function BookingPaymentScreen() {
 
           if (verifyRes.data?.success) {
             console.log('[PAYMENT] Verified! Navigating to booking details...');
-            await storage.removeItem('JOBNEST_PENDING_PAYMENT');
+            await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
             setIsSuccess(true);
             const targetBookingId = verifyRes.data?.data?.bookingId || bId;
             setTimeout(() => {
@@ -199,7 +198,7 @@ export default function BookingPaymentScreen() {
         const status = normalizeBookingStatus(bCheck?.bookingStatus || bCheck?.status);
         const pStatus = normalizeBookingStatus(bCheck?.paymentStatus);
         if (pStatus === 'PAID' || ['CONFIRMED', 'PAID', 'WORKER_EN_ROUTE', 'ARRIVED', 'STARTED', 'IN_PROGRESS'].includes(status)) {
-          await storage.removeItem('JOBNEST_PENDING_PAYMENT');
+          await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
           setIsSuccess(true);
           setTimeout(() => {
             router.replace({
@@ -236,7 +235,7 @@ export default function BookingPaymentScreen() {
         reason: 'Test payment simulated by customer'
       }).catch(() => null);
 
-      await storage.removeItem('JOBNEST_PENDING_PAYMENT');
+      await storage.removeItem('SHADOWMAN_PENDING_PAYMENT');
       setIsSuccess(true);
       setTimeout(() => {
         router.replace({

@@ -6,7 +6,7 @@ import api from '../config/api';
 import { storage } from '../utils/storage';
 import { colors, spacing, radius, typography, shadows } from '../theme';
 
-export const PENDING_PAYMENT_STORAGE_KEY = 'JOBNEST_PENDING_PAYMENT';
+export const PENDING_PAYMENT_STORAGE_KEY = 'SHADOWMAN_PENDING_PAYMENT';
 
 export default function PaymentCallbackScreen() {
   const router = useRouter();

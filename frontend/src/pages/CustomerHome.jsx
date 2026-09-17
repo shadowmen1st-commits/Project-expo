@@ -537,7 +537,7 @@ export const CustomerHome = () => {
                 key: orderData.publicKeyId,
                 amount: orderData.amount,
                 currency: orderData.currency || 'INR',
-                name: 'JobNest Services',
+                name: 'Shadowman',
                 description: `Payment for booking #${orderData.bookingNumber}`,
                 order_id: orderData.razorpayOrderId,
                 prefill: {

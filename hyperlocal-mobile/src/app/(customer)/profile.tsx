@@ -167,7 +167,7 @@ export default function CustomerProfileScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Join Jobnest</Text>
+            <Text style={styles.sectionTitle}>Join Shadowman</Text>
             <Text style={{ fontSize: typography.sizes.sm, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 20 }}>
               Sign in or test with the dedicated Demo Account to book verified home professionals, track real-time GPS locations, and manage safe escrow payments.
             </Text>

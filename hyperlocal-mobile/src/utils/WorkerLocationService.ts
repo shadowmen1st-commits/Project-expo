@@ -163,7 +163,7 @@ export const WorkerLocationService = {
           deferredUpdatesInterval: 5000,
           showsBackgroundLocationIndicator: true,
           foregroundService: {
-            notificationTitle: 'JobNest - Live Service Active',
+            notificationTitle: 'Shadowman - Live Service Active',
             notificationBody: 'Sharing location for your active customer booking.',
             notificationColor: '#EA580C',
           },

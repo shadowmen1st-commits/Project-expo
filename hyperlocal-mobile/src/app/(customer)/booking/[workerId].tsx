@@ -257,7 +257,7 @@ export default function CreateBookingScreen() {
   useEffect(() => {
     const restorePendingBooking = async () => {
       try {
-        const rawPending = await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING');
+        const rawPending = (await storage.getItem('SHADOWMAN_GUEST_PENDING_BOOKING')) || (await storage.getItem('JOBNEST_GUEST_PENDING_BOOKING'));
         if (rawPending) {
           const pending = JSON.parse(rawPending);
           if (pending && (!pending.workerId || pending.workerId === canonicalParamId)) {
@@ -276,6 +276,7 @@ export default function CreateBookingScreen() {
             if (pending.selectedLat) setSelectedLat(pending.selectedLat);
             if (pending.selectedLng) setSelectedLng(pending.selectedLng);
             if (user) {
+              await storage.removeItem('SHADOWMAN_GUEST_PENDING_BOOKING');
               await storage.removeItem('JOBNEST_GUEST_PENDING_BOOKING');
             }
           }
@@ -539,7 +540,7 @@ export default function CreateBookingScreen() {
         selectedLng,
         locationSource,
       };
-      await storage.setItem('JOBNEST_GUEST_PENDING_BOOKING', JSON.stringify(pending));
+      await storage.setItem('SHADOWMAN_GUEST_PENDING_BOOKING', JSON.stringify(pending));
       router.push({
         pathname: '/(auth)/login',
         params: {
@@ -589,7 +590,7 @@ export default function CreateBookingScreen() {
           longitude: Number(selectedLng ?? customerLng ?? 77.2090),
           source: locationSource === 'GPS' ? 'GPS' : 'MANUAL',
         },
-        customerNotes: instructions.trim() || 'Jobnest Mobile Service Request',
+        customerNotes: instructions.trim() || 'Shadowman Mobile Service Request',
       };
 
       const res = await api.post('/bookings', payload);
@@ -622,7 +623,7 @@ export default function CreateBookingScreen() {
         if (orderRes?.data) {
           const orderData = orderRes.data?.data || orderRes.data;
           await storage.setItem(
-            'JOBNEST_PENDING_PAYMENT',
+            'SHADOWMAN_PENDING_PAYMENT',
             JSON.stringify({
               bookingId,
               internalPaymentOrderId: orderData.internalPaymentOrderId || orderData.orderId,

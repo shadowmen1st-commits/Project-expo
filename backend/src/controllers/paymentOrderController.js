@@ -268,7 +268,7 @@ export const renderCheckoutPage = async (req, res, next) => {
             ? config.RAZORPAY_KEY_ID 
             : 'rzp_test_TS38Ger2YMCfWh';
         const customerName = order.customerId?.name || 'Customer';
-        const customerEmail = order.customerId?.email || 'customer@jobnest.com';
+        const customerEmail = order.customerId?.email || 'customer@shadowman.com';
         const customerPhone = order.customerId?.phone || '9999999999';
 
         const html = `<!DOCTYPE html>
@@ -276,7 +276,7 @@ export const renderCheckoutPage = async (req, res, next) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobNest Razorpay Checkout</title>
+  <title>Shadowman Razorpay Checkout</title>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     body {
@@ -338,7 +338,7 @@ export const renderCheckoutPage = async (req, res, next) => {
 </head>
 <body>
   <div class="card">
-    <h2>JobNest Secure Checkout</h2>
+    <h2>Shadowman Secure Checkout</h2>
     <p>Official Razorpay Payment Gateway</p>
     <div class="amount-box">
       <div class="amount-label">Amount Payable</div>
@@ -357,7 +357,7 @@ export const renderCheckoutPage = async (req, res, next) => {
       key: "${razorpayKeyId}",
       amount: ${order.amountPaise},
       currency: "${order.currency || 'INR'}",
-      name: "JobNest Services",
+      name: "Shadowman",
       description: "Service Booking #${order.orderNumber}",
       order_id: "${order.providerOrderId}",
       prefill: {
@@ -365,10 +365,10 @@ export const renderCheckoutPage = async (req, res, next) => {
         email: "${customerEmail.replace(/"/g, '')}",
         contact: "${customerPhone.replace(/"/g, '')}"
       },
-      theme: { color: "#F59E0B" },
+      theme: { color: "#EA580C" },
       retry: { enabled: true, max_count: 3 },
       handler: function(response) {
-        var callbackUrl = 'jobnest://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id || '') +
+        var callbackUrl = 'shadowman://payment-callback?razorpay_order_id=' + encodeURIComponent(response.razorpay_order_id || '') +
                           '&razorpay_payment_id=' + encodeURIComponent(response.razorpay_payment_id || '') +
                           '&razorpay_signature=' + encodeURIComponent(response.razorpay_signature || '') +
                           '&internalPaymentOrderId=${order._id}';
@@ -376,7 +376,7 @@ export const renderCheckoutPage = async (req, res, next) => {
       },
       modal: {
         ondismiss: function() {
-          window.location.href = 'jobnest://payment-callback?cancelled=true';
+          window.location.href = 'shadowman://payment-callback?cancelled=true';
         }
       }
     };
@@ -393,7 +393,7 @@ export const renderCheckoutPage = async (req, res, next) => {
           const desc = (resp && resp.error && resp.error.description) || 'Payment Failed';
           document.getElementById('debugMsg').innerText = 'Payment failed: ' + desc;
           setTimeout(function() {
-            window.location.href = 'jobnest://payment-callback?error=' + encodeURIComponent(desc);
+            window.location.href = 'shadowman://payment-callback?error=' + encodeURIComponent(desc);
           }, 800);
         });
         rzp.open();
@@ -419,7 +419,7 @@ export const renderCheckoutPage = async (req, res, next) => {
 
 /**
  * ALL /api/v1/payments/callback
- * Accepts Razorpay redirect callback (GET/POST) and forwards 302 to jobnest:// scheme.
+ * Accepts Razorpay redirect callback (GET/POST) and forwards 302 to shadowman:// scheme.
  */
 export const handlePaymentRedirectCallback = (req, res) => {
     const data = req.method === 'POST' ? req.body : req.query;
@@ -431,7 +431,7 @@ export const handlePaymentRedirectCallback = (req, res) => {
     if (internalPaymentOrderId) q.set('internalPaymentOrderId', internalPaymentOrderId);
     if (error) q.set('error', typeof error === 'string' ? error : JSON.stringify(error));
     if (cancelled) q.set('cancelled', 'true');
-    const redirectUrl = `jobnest://payment-callback?${q.toString()}`;
+    const redirectUrl = `shadowman://payment-callback?${q.toString()}`;
     return res.redirect(302, redirectUrl);
 };
 
