@@ -330,25 +330,19 @@ export default function AdminBookingsScreen() {
                     <Text style={styles.dateText}>{dateStr}</Text>
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.footerActions}>
                     {status !== 'COMPLETED' && status !== 'CANCELLED' && status !== 'REJECTED' ? (
                       <TouchableOpacity
-                        style={{
-                          backgroundColor: colors.success || '#10B981',
-                          paddingHorizontal: 10,
-                          paddingVertical: 6,
-                          borderRadius: radius.md,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 4,
-                          opacity: actionLoadingId === bookingId ? 0.6 : 1,
-                        }}
+                        style={[
+                          styles.markCompleteBtn,
+                          { opacity: actionLoadingId === bookingId ? 0.6 : 1 },
+                        ]}
                         disabled={actionLoadingId === bookingId}
                         onPress={() => handleStatusOverride(item, 'COMPLETED')}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="checkmark-circle-outline" size={14} color="#FFFFFF" />
-                        <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>
+                        <Ionicons name="checkmark-circle-outline" size={13} color="#FFFFFF" />
+                        <Text style={styles.markCompleteBtnText}>
                           Mark Complete
                         </Text>
                       </TouchableOpacity>
@@ -363,7 +357,7 @@ export default function AdminBookingsScreen() {
                         }}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="navigate-outline" size={14} color="#FFFFFF" />
+                        <Ionicons name="navigate-outline" size={13} color="#FFFFFF" />
                         <Text style={styles.trackButtonText}>Track</Text>
                       </TouchableOpacity>
                     ) : null}
@@ -487,19 +481,33 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
-    gap: spacing.md,
+    gap: 8,
+    flexWrap: 'wrap',
   },
   footerInfo: {
     flex: 1,
-    minWidth: 100,
+    minWidth: 80,
   },
-  trackActionContainer: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: 120,
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     flexShrink: 0,
-    zIndex: 100,
-    elevation: 10,
+    justifyContent: 'flex-end',
+  },
+  markCompleteBtn: {
+    backgroundColor: colors.success || '#10B981',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  markCompleteBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   priceText: {
     fontSize: typography.sizes.md,
@@ -515,24 +523,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 115,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 8,
-    zIndex: 100,
-    elevation: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    gap: 4,
   },
   trackButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    marginLeft: 5,
-  },
-  waitingGpsText: {
-    fontSize: 9,
-    color: '#D97706',
-    fontWeight: '600',
-    marginTop: 4,
-    fontStyle: 'italic',
   },
 });
