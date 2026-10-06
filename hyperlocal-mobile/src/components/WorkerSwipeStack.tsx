@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   cardHeaderImageArea: {
     height: 220,
     width: '100%',
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: colors.primaryLight,
     position: 'relative',
   },
   avatarImage: {

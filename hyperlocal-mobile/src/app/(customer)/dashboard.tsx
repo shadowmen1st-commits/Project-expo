@@ -96,71 +96,80 @@ export default function CustomerDashboard() {
 
   return (
     <View style={styles.container}>
+      {/* 1. Header Greeting & Dynamic Real GPS Location (FIXED TOP) */}
+      <View style={[styles.header, { 
+        paddingTop: Math.max(insets.top, 16), 
+        backgroundColor: colors.background,
+        paddingBottom: 12,
+        marginBottom: 0,
+        zIndex: 10,
+        elevation: 2,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight
+      }]}>
+        <View style={styles.headerLeft}>
+          <View style={styles.locationPill}>
+            {locationLoading ? (
+              <>
+                <ActivityIndicator size="small" color={colors.accent} style={{ transform: [{ scale: 0.75 }], marginRight: 2 }} />
+                <Text style={styles.locationText}>Detecting your location...</Text>
+              </>
+            ) : locationError ? (
+              <>
+                <Ionicons name="alert-circle-outline" size={13} color={colors.error} />
+                <Text style={[styles.locationText, { color: colors.error }]}>Location Unavailable</Text>
+                <TouchableOpacity
+                  onPress={() => refreshLocation(true)}
+                  style={styles.locationRefreshBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="refresh-outline" size={13} color={colors.error} />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="location-sharp" size={13} color={colors.accent} />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {displayName || city || 'Current Location'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => refreshLocation(true)}
+                  style={styles.locationRefreshBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="refresh-outline" size={13} color={colors.accent} />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+          <Text style={styles.greetingTitle}>
+            SHADOWMEN
+          </Text>
+        </View>
+
+        {user ? (
+          <TouchableOpacity onPress={() => router.push('/(customer)/profile')} activeOpacity={0.8}>
+            <ProfileAvatar user={user} size="lg" showBadge />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/login')}
+            style={styles.signInHeaderBtn}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="log-in-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.signInHeaderBtnText}>Sign In</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, 16) }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 16 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryDark]} />
         }
       >
-        {/* 1. Header Greeting & Dynamic Real GPS Location */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.locationPill}>
-              {locationLoading ? (
-                <>
-                  <ActivityIndicator size="small" color={colors.accent} style={{ transform: [{ scale: 0.75 }], marginRight: 2 }} />
-                  <Text style={styles.locationText}>Detecting your location...</Text>
-                </>
-              ) : locationError ? (
-                <>
-                  <Ionicons name="alert-circle-outline" size={13} color={colors.error} />
-                  <Text style={[styles.locationText, { color: colors.error }]}>Location Unavailable</Text>
-                  <TouchableOpacity
-                    onPress={() => refreshLocation(true)}
-                    style={styles.locationRefreshBtn}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="refresh-outline" size={13} color={colors.error} />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="location-sharp" size={13} color={colors.accent} />
-                  <Text style={styles.locationText} numberOfLines={1}>
-                    {displayName || city || 'Current Location'}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => refreshLocation(true)}
-                    style={styles.locationRefreshBtn}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="refresh-outline" size={13} color={colors.accent} />
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-            <Text style={styles.greetingTitle}>
-              {user ? `Hello, ${user?.name?.split(' ')[0] || 'Customer'} 👋` : 'Welcome to SHADOWMEN 👋'}
-            </Text>
-          </View>
-
-          {user ? (
-            <TouchableOpacity onPress={() => router.push('/(customer)/profile')} activeOpacity={0.8}>
-              <ProfileAvatar user={user} size="lg" showBadge />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => router.push('/(auth)/login')}
-              style={styles.signInHeaderBtn}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="log-in-outline" size={16} color="#FFFFFF" />
-              <Text style={styles.signInHeaderBtnText}>Sign In</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
         {/* 2. Search / Quick Bar */}
         <TouchableOpacity
           style={styles.searchBar}
@@ -208,61 +217,7 @@ export default function CustomerDashboard() {
           )}
         </View>
 
-        {/* 6. Featured Promotional Card */}
-        <View style={styles.promoBanner}>
-          <View style={styles.promoContent}>
-            <View style={styles.promoTag}>
-              <Text style={styles.promoTagText}>SHADOWMEN GUARANTEE</Text>
-            </View>
-            <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
-            <Text style={styles.promoSub}>Upfront pricing, live GPS tracking and escrow-protected payments.</Text>
-          </View>
-          <View style={styles.promoIconBox}>
-            <Ionicons name="shield-checkmark" size={44} color={colors.primaryDark} />
-          </View>
-        </View>
 
-        {/* 7. Recent Active Bookings */}
-        {recentBookings.length > 0 && (
-          <View style={styles.recentBookingContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Booking</Text>
-              <TouchableOpacity onPress={() => router.push('/(customer)/bookings')}>
-                <Text style={styles.seeAllText}>View All</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={styles.recentBookingCard}
-              onPress={() => router.push(`/(customer)/booking/details/${recentBookings[0]._id || recentBookings[0].id}`)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.recentBookingRow}>
-                <View style={styles.bookingIconBox}>
-                  <Ionicons name="calendar-outline" size={22} color={colors.accent} />
-                </View>
-                <View style={{ flex: 1, marginLeft: spacing.md }}>
-                  <Text style={styles.recentBookingTitle}>
-                    {recentBookings[0].category?.name || recentBookings[0].serviceCategoryName || recentBookings[0].categoryName || 'Home Service Request'}
-                  </Text>
-                  <Text style={styles.recentBookingSub}>
-                    {formatBookingDateTimeIST(recentBookings[0].scheduledStart || recentBookings[0].bookingDate, recentBookings[0].bookingTime)}
-                  </Text>
-                </View>
-                <View style={styles.statusPill}>
-                  <Text style={styles.recentBookingStatus}>{recentBookings[0].bookingStatus || recentBookings[0].status || 'ACTIVE'}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* 8. Footer Note */}
-        <View style={styles.footerNote}>
-          <Ionicons name="sparkles" size={16} color={colors.accent} />
-          <Text style={styles.footerNoteText}>
-            100% Background-Checked Professionals • Safe & Secure Payments
-          </Text>
-        </View>
       </ScrollView>
     </View>
   );
