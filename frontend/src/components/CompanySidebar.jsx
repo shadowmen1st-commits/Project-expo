@@ -46,11 +46,8 @@ export default function CompanySidebar({ activeTab, setActiveTab, onLogout, comp
             <div>
                 <div className="flex items-center justify-between mb-6 lg:mb-8">
                     <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Shadowmen" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-xs" />
                         <div className="flex flex-col">
-                            <span className="text-sm font-extrabold tracking-tight text-[#171717]">
-                                Shadowmen<span className="text-[#F97316]">.</span>
-                            </span>
+                            <span className="text-[#F5A800] font-extrabold text-2xl tracking-tight">SHADOWMEN</span>
                             <span className="text-[10px] uppercase tracking-wider text-[#F97316] font-extrabold">COMPANY</span>
                         </div>
                     </div>

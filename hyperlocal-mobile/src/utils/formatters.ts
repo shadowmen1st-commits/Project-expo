@@ -1,5 +1,5 @@
 /**
- * Deterministic formatters for Hyperlocal Booking Platform Mobile App
+ * Deterministic formatters for SHADOWMEN Booking Platform Mobile App
  */
 
 export function formatBookingDateIST(value: any): string {

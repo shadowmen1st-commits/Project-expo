@@ -476,7 +476,7 @@ export default function CompanyDashboard() {
                                     <span className="text-[#171717] text-base font-black">S</span>
                                 </div>
                                 <span className="text-sm font-bold tracking-tight text-[#171717]">
-                                    Shadowmen<span className="text-[#F97316]">.</span>
+                                    <span className="text-[#F5A800] font-extrabold text-xl tracking-tight">SHADOWMEN</span>
                                 </span>
                             </div>
                             {companyInfo?.verificationStatus === 'VERIFIED' ? (

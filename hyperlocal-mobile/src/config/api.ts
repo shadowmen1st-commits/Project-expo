@@ -226,15 +226,15 @@ api.interceptors.response.use(
       let userFriendlyMsg = 'Internet connection unavailable.';
 
       if (code === 'ECONNABORTED' || code === 'ETIMEDOUT' || msg.includes('timeout')) {
-        userFriendlyMsg = 'Shadowmen server request timed out. Please check your connection and try again.';
+        userFriendlyMsg = 'SHADOWMEN server request timed out. Please check your connection and try again.';
       } else if (code === 'ENOTFOUND' || code === 'EAI_AGAIN' || msg.includes('not found') || msg.includes('unknown host')) {
-        userFriendlyMsg = 'Unable to reach Shadowmen server. Please verify your internet connection.';
+        userFriendlyMsg = 'Unable to reach SHADOWMEN server. Please verify your internet connection.';
       } else if (code === 'ECONNREFUSED' || msg.includes('connection refused')) {
-        userFriendlyMsg = 'Shadowmen server is temporarily unavailable.';
+        userFriendlyMsg = 'SHADOWMEN server is temporarily unavailable.';
       } else if (code.includes('SSL') || code.includes('CERT') || msg.includes('ssl') || msg.includes('cert')) {
         userFriendlyMsg = 'Secure SSL/TLS connection failed. Please verify your device connection.';
       } else if (msg.includes('network request failed') || msg.includes('network error')) {
-        userFriendlyMsg = 'Unable to connect to Shadowmen server. Please check your network connection.';
+        userFriendlyMsg = 'Unable to connect to SHADOWMEN server. Please check your network connection.';
       }
 
       console.error('[API_NETWORK_ERROR]', {
@@ -260,11 +260,11 @@ api.interceptors.response.use(
       } else if (status === 429) {
         error.userMessage = serverMsg || 'Too many requests. Please wait a moment and try again.';
       } else if (status === 502) {
-        error.userMessage = 'Shadowmen gateway error (502). Server is starting up or reloading.';
+        error.userMessage = 'SHADOWMEN gateway error (502). Server is starting up or reloading.';
       } else if (status === 503) {
-        error.userMessage = serverMsg || 'Shadowmen service is temporarily unavailable (503).';
+        error.userMessage = serverMsg || 'SHADOWMEN service is temporarily unavailable (503).';
       } else if (status >= 500) {
-        error.userMessage = serverMsg || 'Shadowmen server encountered an error. Please try again.';
+        error.userMessage = serverMsg || 'SHADOWMEN server encountered an error. Please try again.';
       } else {
         error.userMessage = serverMsg || error.message || 'Request failed. Please try again.';
       }

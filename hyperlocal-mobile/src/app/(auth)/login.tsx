@@ -108,12 +108,7 @@ export default function LoginScreen() {
         >
           {/* Header Brand */}
           <View style={styles.header}>
-            <Image
-              source={require('../../../assets/logo.png')}
-              style={styles.brandLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Shadowmen</Text>
+            <Text style={styles.title}>SHADOWMEN</Text>
             <Text style={styles.subtitle}>Welcome back 👋</Text>
             <Text style={styles.subtext}>Sign in to access your account & services</Text>
           </View>

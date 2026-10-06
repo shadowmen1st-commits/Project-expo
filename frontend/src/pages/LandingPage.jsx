@@ -89,7 +89,7 @@ const WhyChooseUsSection = () => {
         <section id="why-choose-us" className="py-24 px-6 bg-[#FFFBEB]" ref={ref}>
             <div className="max-w-7xl mx-auto">
                 <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                    <p className="text-[#F97316] text-sm font-semibold uppercase tracking-wider mb-3">Why HyperLocal</p>
+                    <p className="text-[#F97316] text-sm font-semibold uppercase tracking-wider mb-3">Why SHADOWMEN</p>
                     <h2 className="text-4xl md:text-5xl font-black text-[#111827] mb-4">Quality Service, Guaranteed Trust</h2>
                     <p className="text-[#4B5563] max-w-xl mx-auto font-normal">We are committed to providing the safest, most reliable, and highly professional experience at your doorstep.</p>
                 </div>

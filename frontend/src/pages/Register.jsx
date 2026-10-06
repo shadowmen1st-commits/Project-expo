@@ -99,15 +99,12 @@ export const Register = () => {
             <div className="lg:w-1/2 auth-panel-bg p-8 lg:p-16 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-[#FEF3C7]">
                 <div>
                     <div className="flex items-center gap-3 mb-12">
-                        <img src="/logo.png" alt="Shadowmen" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
-                        <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
-                            Shadowmen<span className="text-[#F97316]">.</span>
-                        </span>
+                        <span className="text-[#F5A800] font-extrabold text-2xl tracking-tight">SHADOWMEN</span>
                     </div>
 
                     <div className="max-w-md my-auto">
                         <h1 className="text-3xl lg:text-4xl font-extrabold text-[#111827] tracking-tight leading-tight mb-4">
-                            Create your <span className="text-highlight-gradient">Shadowmen</span> account
+                            Create your <span className="text-highlight-gradient">SHADOWMEN</span> account
                         </h1>
                         <p className="text-[#4B5563] text-base leading-relaxed mb-8">
                             Book reliable local services or start your journey as a verified professional.
@@ -142,7 +139,7 @@ export const Register = () => {
                 <div className="w-full max-w-md space-y-6 bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md shadow-orange-50/40">
                     <div>
                         <h2 className="text-2xl lg:text-3xl font-extrabold text-[#111827] tracking-tight">Create Account</h2>
-                        <p className="text-sm text-[#4B5563] mt-1">Join Shadowmen to book or offer local services.</p>
+                        <p className="text-sm text-[#4B5563] mt-1">Join SHADOWMEN to book or offer local services.</p>
                     </div>
 
                     {error && (

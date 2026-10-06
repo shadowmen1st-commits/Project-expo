@@ -59,12 +59,9 @@ export const Login = () => {
             {/* Left Brand Panel */}
             <div className="lg:w-1/2 auth-panel-bg p-8 lg:p-16 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-[#FEF3C7]">
                 <div>
-                    {/* Shadowmen Logo */}
+                    {/* SHADOWMEN Logo */}
                     <div className="flex items-center gap-3 mb-12">
-                        <img src="/logo.png" alt="Shadowmen" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
-                        <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
-                            Shadowmen<span className="text-[#F97316]">.</span>
-                        </span>
+                        <span className="text-[#F5A800] font-extrabold text-2xl tracking-tight">SHADOWMEN</span>
                     </div>
 
                     {/* Main Brand Messaging */}

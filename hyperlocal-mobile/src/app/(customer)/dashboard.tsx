@@ -141,7 +141,7 @@ export default function CustomerDashboard() {
               )}
             </View>
             <Text style={styles.greetingTitle}>
-              {user ? `Hello, ${user?.name?.split(' ')[0] || 'Customer'} 👋` : 'Welcome to Shadowmen 👋'}
+              {user ? `Hello, ${user?.name?.split(' ')[0] || 'Customer'} 👋` : 'Welcome to SHADOWMEN 👋'}
             </Text>
           </View>
 
@@ -212,7 +212,7 @@ export default function CustomerDashboard() {
         <View style={styles.promoBanner}>
           <View style={styles.promoContent}>
             <View style={styles.promoTag}>
-              <Text style={styles.promoTagText}>HYPERLOCAL GUARANTEE</Text>
+              <Text style={styles.promoTagText}>SHADOWMEN GUARANTEE</Text>
             </View>
             <Text style={styles.promoTitle}>Verified Professionals at Your Doorstep</Text>
             <Text style={styles.promoSub}>Upfront pricing, live GPS tracking and escrow-protected payments.</Text>

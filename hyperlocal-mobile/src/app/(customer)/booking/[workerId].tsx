@@ -594,7 +594,7 @@ export default function CreateBookingScreen() {
           longitude: Number(selectedLng ?? customerLng ?? 77.2090),
           source: locationSource === 'GPS' ? 'GPS' : 'MANUAL',
         },
-        customerNotes: instructions.trim() || 'Shadowmen Mobile Service Request',
+        customerNotes: instructions.trim() || 'SHADOWMEN Mobile Service Request',
       };
 
       const res = await api.post('/bookings', payload);

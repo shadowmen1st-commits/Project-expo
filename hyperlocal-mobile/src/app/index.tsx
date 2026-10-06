@@ -28,12 +28,7 @@ export default function IndexScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Image
-          source={require('../../assets/logo.png')}
-          style={{ width: 90, height: 90, borderRadius: 20, marginBottom: 16 }}
-          resizeMode="contain"
-        />
-        <Text style={styles.logoText}>Shadowmen</Text>
+        <Text style={styles.logoText}>SHADOWMEN</Text>
         <Text style={styles.tagline}>Services & Field Marketplace</Text>
         <ActivityIndicator size="large" color={colors.primaryDark} style={styles.spinner} />
       </View>

@@ -31,7 +31,7 @@ const WORKER_REVIEWS = [
         name: 'Suresh Kumar',
         city: 'Hyderabad',
         job: 'Electrician Specialist',
-        quote: "I used to wait days for clients. Now, HyperLocal matches me with 3-4 local switchboard and wiring bookings daily. I earn around ₹48,000 every single month now, paid directly to my bank.",
+        quote: "I used to wait days for clients. Now, SHADOWMEN matches me with 3-4 local switchboard and wiring bookings daily. I earn around ₹48,000 every single month now, paid directly to my bank.",
         avatar: 'SK',
         stars: 5,
     },
@@ -121,7 +121,7 @@ export const ForWorkersPage = () => {
                 <div className="bg-white border border-[#E7E0D8] rounded-3xl p-8 relative overflow-hidden shadow-sm">
                     <div className="text-center mb-8">
                         <h2 className="text-2xl md:text-3xl font-black mb-2 text-[#1C1917]">How much can you earn?</h2>
-                        <p className="text-[#78716C] text-xs md:text-sm">Drag slider scales to estimate your potential payouts on HyperLocal.</p>
+                        <p className="text-[#78716C] text-xs md:text-sm">Drag slider scales to estimate your potential payouts on SHADOWMEN.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -171,7 +171,7 @@ export const ForWorkersPage = () => {
             <section className="max-w-6xl mx-auto px-6 mt-24">
                 <div className="text-center mb-16">
                     <p className="text-[#EAB308] text-sm font-semibold uppercase tracking-wider mb-2">Designed for Specialists</p>
-                    <h2 className="text-3xl md:text-4xl font-black text-[#1C1917]">Why Join HyperLocal?</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-[#1C1917]">Why Join SHADOWMEN?</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

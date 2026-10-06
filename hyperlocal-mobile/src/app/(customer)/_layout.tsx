@@ -25,7 +25,7 @@ export default function CustomerLayout() {
   }, [user?.role, loading]);
 
   if (loading) {
-    return <LoadingState message="Loading Shadowmen..." />;
+    return <LoadingState message="Loading SHADOWMEN..." />;
   }
 
   return (

@@ -314,7 +314,7 @@ export default function CompanyVerification() {
                 <div className="flex items-center justify-between border-b border-[#FFF7D6] pb-6">
                     <div className="flex items-center gap-3">
                         <span className="text-2xl font-black tracking-tight text-[#171717]">
-                            HyperLocal<span className="text-[#F97316]">.</span>
+                            <span className="text-[#F5A800] font-extrabold text-xl tracking-tight">SHADOWMEN</span>
                         </span>
                         <span className="bg-[#FFF7D6] text-[#F97316] text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider">
                             COMPANY VERIFICATION

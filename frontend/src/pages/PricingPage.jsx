@@ -79,7 +79,7 @@ const FAQS = [
     },
     {
         q: 'How does the commission model work?',
-        a: 'HyperLocal charges a platform fee ranging from 5%–10% on each booking amount. Workers receive the rest directly to their wallet, with weekly payout cycles.',
+        a: 'SHADOWMEN charges a platform fee ranging from 5%–10% on each booking amount. Workers receive the rest directly to their wallet, with weekly payout cycles.',
     },
     {
         q: 'Can I switch plans anytime?',

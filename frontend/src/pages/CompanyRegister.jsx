@@ -71,10 +71,7 @@ export default function CompanyRegister() {
             <div className="lg:w-1/3 auth-panel-bg p-8 lg:p-16 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-[#FEF3C7]">
                 <div>
                     <div className="flex items-center gap-3 mb-12">
-                        <img src="/logo.png" alt="Shadowmen" className="w-10 h-10 rounded-xl object-contain bg-black p-0.5 shadow-md" />
-                        <span className="text-2xl font-extrabold tracking-tight text-[#111827]">
-                            Shadowmen<span className="text-[#F97316]">.</span>
-                        </span>
+                        <span className="text-[#F5A800] font-extrabold text-2xl tracking-tight">SHADOWMEN</span>
                     </div>
 
                     <div className="max-w-md my-auto space-y-6">
@@ -114,7 +111,7 @@ export default function CompanyRegister() {
                 <div className="w-full max-w-2xl bg-white border border-[#FEF3C7] rounded-3xl p-8 shadow-md">
                     <div className="mb-6">
                         <h2 className="text-2xl font-extrabold text-[#111827] tracking-tight">Create Company Account</h2>
-                        <p className="text-xs text-[#4B5563] mt-1">Delhi/NCR Hyperlocal Part-time Job Marketplace</p>
+                        <p className="text-xs text-[#4B5563] mt-1">Delhi/NCR SHADOWMEN Part-time Job Marketplace</p>
                     </div>
 
                     {error && (

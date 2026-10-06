@@ -491,7 +491,7 @@ export const WorkerOnboarding = () => {
                     <div className="w-9 h-9 rounded-xl logo-gradient flex items-center justify-center font-black text-white text-base">
                         H
                     </div>
-                    <span className="font-extrabold text-[#1C1917] text-xl">HyperLocal<span className="text-[#EAB308]">.</span></span>
+                    <span className="text-[#F5A800] font-extrabold text-xl tracking-tight">SHADOWMEN</span>
                     <span className="bg-[#FEFCE8] text-[#EAB308] text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FEF08A]">
                         Verification Wizard
                     </span>

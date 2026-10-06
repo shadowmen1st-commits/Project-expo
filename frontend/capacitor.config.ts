@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hyperlocal.marketplace',
-  appName: 'HyperLocal',
+  appId: 'com.SHADOWMEN.marketplace',
+  appName: 'SHADOWMEN',
   webDir: 'dist',
   plugins: {
     CapacitorHttp: {

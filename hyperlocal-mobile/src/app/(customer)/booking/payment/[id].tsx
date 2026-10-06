@@ -128,7 +128,7 @@ export default function BookingPaymentScreen() {
         currency: orderData.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TS38Ger2YMCfWh',
         amount: amountInPaise,
-        name: 'Shadowmen',
+        name: 'SHADOWMEN',
         order_id: razorpayOrderId,
         theme: { color: '#EA580C' },
         prefill: {

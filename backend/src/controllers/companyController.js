@@ -665,7 +665,7 @@ export const createCompanyWorker = async (req, res, next) => {
 
         await new Notification({
             recipientId: workerUser._id,
-            title: 'Welcome to HyperLocal Marketplace',
+            title: 'Welcome to SHADOWMEN Marketplace',
             message: `You have been added to the workforce pool by company.`,
             type: 'INFO'
         }).save();

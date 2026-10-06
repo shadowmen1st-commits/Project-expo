@@ -167,7 +167,7 @@ export default function CustomerProfileScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Join Shadowmen</Text>
+            <Text style={styles.sectionTitle}>Join SHADOWMEN</Text>
             <Text style={{ fontSize: typography.sizes.sm, color: colors.textSecondary, marginBottom: spacing.md, lineHeight: 20 }}>
               Sign in or create an account to book verified home professionals, track real-time GPS locations, and manage safe payments.
             </Text>

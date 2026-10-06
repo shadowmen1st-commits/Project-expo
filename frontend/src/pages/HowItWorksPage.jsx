@@ -90,7 +90,7 @@ export const HowItWorksPage = () => {
                     </div>
 
                     <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight tracking-tight text-[#1C1917]">
-                        How <span className="text-highlight-gradient">HyperLocal Works</span>
+                        How <span className="text-highlight-gradient">SHADOWMEN Works</span>
                     </h1>
 
                     <p className="text-[#78716C] text-base md:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
