@@ -106,7 +106,8 @@ const processQueue = (error: any, token: string | null = null) => {
  * Public health check diagnostic helper
  */
 export const checkServerHealth = async (): Promise<{ ok: boolean; status?: number; data?: any; error?: string }> => {
-  const healthEndpoint = `${API_BASE_URL}/v1/health`;
+  const baseForHealth = API_BASE_URL.replace(/\/v1\/?$/, '');
+  const healthEndpoint = `${baseForHealth}/v1/health`;
   try {
     const res = await axios.get(healthEndpoint, { timeout: 10000 });
     console.log('[SERVER_HEALTH]', {
@@ -117,7 +118,7 @@ export const checkServerHealth = async (): Promise<{ ok: boolean; status?: numbe
     return { ok: res.status === 200, status: res.status, data: res.data };
   } catch (err: any) {
     try {
-      const fallbackUrl = `${API_BASE_URL}/health`;
+      const fallbackUrl = `${baseForHealth}/health`;
       const fallbackRes = await axios.get(fallbackUrl, { timeout: 10000 });
       console.log('[SERVER_HEALTH]', {
         reachable: true,

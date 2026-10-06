@@ -49,9 +49,6 @@ export const createApp = () => {
         next();
     });
 
-    // Health Check (Public - before any middleware)
-    app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'UP', service: 'project-expo-api', timestamp: new Date().toISOString() }));
-
     app.use(helmet({
         contentSecurityPolicy: {
             directives: {
@@ -68,7 +65,14 @@ export const createApp = () => {
     }));
     const isOriginAllowed = (origin) => {
         if (!origin) return true;
-        if (config.CORS_ALLOWED_ORIGINS.includes(origin)) return true;
+        if (config.CORS_ALLOWED_ORIGINS && config.CORS_ALLOWED_ORIGINS.includes(origin)) return true;
+        
+        // Environment provided origins via process.env.ALLOWED_ORIGINS
+        if (process.env.ALLOWED_ORIGINS) {
+            const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+            if (allowedOrigins.includes(origin)) return true;
+        }
+
         if (/^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
         if (/^capacitor:\/\/localhost$/.test(origin) || /^https:\/\/localhost$/.test(origin)) return true;
         if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin)) return true;
@@ -106,6 +110,9 @@ export const createApp = () => {
         ],
         optionsSuccessStatus: 200
     }));
+
+    // Health Check (Public - after CORS)
+    app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => res.status(200).json({ status: 'UP', service: 'project-expo-api', timestamp: new Date().toISOString() }));
     app.use('/api/v1/webhooks', rawBodyMiddleware, webhookRoutes);
     app.use(browserOriginGuard(config.CORS_ALLOWED_ORIGINS));
     app.use(express.json({ limit: '2mb' }));
