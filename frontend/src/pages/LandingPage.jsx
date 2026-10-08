@@ -5,6 +5,7 @@ import SharedNavbar from '../components/SharedNavbar';
 import { UserCategoryBanner } from '../components/UserCategoryBanner';
 import { HomeBannerCarousel } from '../components/HomeBannerCarousel';
 import { Sparkles, Wrench, Zap, Heart, Leaf, Paintbrush, Bath, PawPrint, ChevronRight, Search, Calendar, CreditCard, Star, ShieldCheck, Clock, Coins, ThumbsUp } from 'lucide-react';
+import SharedFooter from '../components/SharedFooter';
 
 
 const STEPS = [
@@ -305,6 +306,7 @@ export const LandingPage = () => {
                     </div>
                 </div>
             </section>
+            <SharedFooter />
         </div>
     );
 };
