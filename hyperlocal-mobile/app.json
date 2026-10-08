@@ -2,7 +2,7 @@
   "expo": {
     "name": "SHADOWMAN",
     "slug": "shadowmen",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "shadowmen",
@@ -22,6 +22,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.hyperlocalmobile",
+      "versionCode": 2,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
