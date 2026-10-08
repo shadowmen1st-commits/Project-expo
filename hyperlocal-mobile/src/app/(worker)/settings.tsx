@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config/api';
+import api from '../../config/api';
 
 export default function WorkerSettingsScreen() {
   const router = useRouter();
@@ -13,6 +14,30 @@ export default function WorkerSettingsScreen() {
 
   const [instantAlerts, setInstantAlerts] = useState(true);
   const [autoAccept, setAutoAccept] = useState(false);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account and associated data? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete Account", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete('/auth/delete-account');
+              Alert.alert("Success", "Account deleted successfully.");
+              await logout();
+              router.replace('/(auth)/login');
+            } catch (e: any) {
+              Alert.alert("Error", e.response?.data?.message || "Failed to delete account. Please contact support.");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -64,6 +89,14 @@ export default function WorkerSettingsScreen() {
             router.replace('/(auth)/login');
           }}
           style={{ marginTop: 12 }}
+        />
+
+        <Button
+          title="Delete Account"
+          variant="outline"
+          onPress={handleDeleteAccount}
+          style={{ marginTop: 12, borderColor: '#DC2626' }}
+          textStyle={{ color: '#DC2626' }}
         />
       </ScrollView>
     </SafeAreaView>

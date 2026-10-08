@@ -11,6 +11,7 @@ const SharedFooter = () => {
                 </div>
                 <div className="flex gap-6 text-sm text-gray-300">
                     <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                    <Link to="/delete-account" className="hover:text-white transition-colors">Delete Account</Link>
                 </div>
             </div>
             <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">

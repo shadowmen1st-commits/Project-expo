@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { MobileHeader } from '../../components/MobileHeader';
 import { AppButton } from '../../components/AppButton';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../config/api';
 import { API_BASE_URL } from '../../config/api';
 import { colors, spacing, typography, radius, shadows } from '../../theme';
 
@@ -20,6 +21,29 @@ export default function SettingsScreen() {
     } catch (e) {
       console.error('Logout error:', e);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account and associated data? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete Account", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete('/auth/delete-account');
+              Alert.alert("Success", "Account deleted successfully.");
+              await logout();
+            } catch (e: any) {
+              Alert.alert("Error", e.response?.data?.message || "Failed to delete account. Please contact support.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -77,6 +101,15 @@ export default function SettingsScreen() {
           icon="log-out-outline"
           onPress={handleSignOut}
           style={{ marginTop: spacing.md }}
+        />
+
+        <AppButton
+          title="Delete Account"
+          variant="outline"
+          icon="trash-outline"
+          onPress={handleDeleteAccount}
+          style={{ marginTop: spacing.md, borderColor: '#DC2626' }}
+          textStyle={{ color: '#DC2626' }}
         />
       </ScrollView>
     </View>

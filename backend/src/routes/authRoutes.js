@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
-import { register, login, refresh, logout, me, updateProfile, changePassword, uploadProfileImage, deleteProfileImage } from '../controllers/authController.js';
+import { register, login, refresh, logout, me, updateProfile, changePassword, uploadProfileImage, deleteProfileImage, deleteAccount } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/auth.js';
 import oauthRoutes from './oauthRoutes.js';
 
@@ -32,6 +32,7 @@ router.put('/profile', authMiddleware, updateProfile);
 router.put('/change-password', authMiddleware, changePassword);
 router.post('/profile-image', authMiddleware, upload.single('file'), uploadProfileImage);
 router.delete('/profile-image', authMiddleware, deleteProfileImage);
+router.delete('/delete-account', authMiddleware, deleteAccount);
 router.use('/oauth', oauthRoutes);
 
 export default router;

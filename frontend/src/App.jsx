@@ -10,6 +10,7 @@ import ForWorkersPage from './pages/ForWorkersPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import DeleteAccountPage from './pages/DeleteAccountPage';
 import { CustomerHome } from './pages/CustomerHome';
 import WorkerDashboard from './pages/WorkerDashboard';
 import WorkerOnboarding from './pages/WorkerOnboarding';
@@ -127,6 +128,7 @@ function AppRoutes() {
       <Route path="/for-workers" element={<ForWorkersPage />}/>
       <Route path="/pricing" element={<PricingPage />}/>
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />}/>
+      <Route path="/delete-account" element={<DeleteAccountPage />}/>
       <Route path="/login" element={<Login />}/>
       <Route path="/register" element={<Register />}/>
       <Route path="/register/company" element={<CompanyRegister />}/>

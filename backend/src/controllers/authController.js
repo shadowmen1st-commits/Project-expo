@@ -174,3 +174,49 @@ export const deleteProfileImage=async(req,res,next)=>{
     }
 };
 
+export const deleteAccount = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        
+        if (user.status === 'DELETED') {
+            return res.status(400).json({ success: false, message: 'Account is already deleted.' });
+        }
+
+        // Anonymize personal info and set to DELETED
+        const timestamp = Date.now();
+        user.name = 'Deleted User';
+        user.email = `deleted_${userId}_${timestamp}@shadowmen.in`;
+        user.phone = null; 
+        user.passwordHash = undefined;
+        user.status = 'DELETED';
+        user.deletedAt = new Date();
+        user.profileImage = null;
+        user.authenticationMethods = [];
+        
+        await user.save();
+        
+        if (user.role === 'WORKER') {
+            await WorkerProfile.findOneAndUpdate({ userId: user._id }, {
+                isPubliclyVisible: false,
+                isOnline: false,
+                verificationStatus: 'NOT_SUBMITTED'
+            });
+        }
+        
+        // Revoke all tokens
+        await RefreshToken.updateMany({ userId: user._id }, { isRevoked: true });
+        clearSessionCookies(res);
+        
+        await audit(user, 'AUTH_ACCOUNT_DELETED', req);
+        
+        return res.status(200).json({ success: true, message: 'Account deleted successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
