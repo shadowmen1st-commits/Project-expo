@@ -13,6 +13,7 @@ export const colors = {
   accent: '#F97316',          // Warm Orange Accent
   accentDark: '#EA580C',
   accentLight: '#FFF7ED',
+  navy: '#061426',            // Brand Navy
 
   // Typography
   textPrimary: '#0F172A',     // Dark Navy / Black

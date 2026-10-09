@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#061426"
     },
     "ios": {
       "icon": "./assets/icon.png"
@@ -22,16 +22,16 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.hyperlocalmobile",
-      "versionCode": 2,
+      "versionCode": 4,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
         "ACCESS_WIFI_STATE",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "FOREGROUND_SERVICE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
@@ -44,7 +44,6 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location for live service tracking.",
           "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location to track worker arrival.",
-          "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
       ]

@@ -105,13 +105,24 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           {/* Header Brand */}
-          <View style={styles.header}>
-            <Text style={styles.title}>SHADOWMEN</Text>
-            <Text style={styles.subtitle}>Welcome back 👋</Text>
-            <Text style={styles.subtext}>Sign in to access your account & services</Text>
+          <View style={styles.topBrandArea}>
+            <Image
+              source={require('../../../assets/shadowmen-logo.jpg')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.tagline}>Your Trusted Service Partner</Text>
           </View>
+
+          {/* Form Sheet */}
+          <View style={styles.sheetContainer}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Welcome Back</Text>
+              <Text style={styles.sheetSubtitle}>Sign in to access your account & services</Text>
+            </View>
 
           {/* Form */}
           <View style={styles.formContainer}>
@@ -180,6 +191,7 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -189,39 +201,51 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: (colors as any).navy || '#061426',
   },
   scrollContent: {
     flexGrow: 1,
-    padding: spacing.xl,
+    justifyContent: 'space-between',
+  },
+  topBrandArea: {
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.xxl * 1.5,
+    paddingHorizontal: spacing.xl,
   },
-  header: {
+  logoImage: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    marginBottom: spacing.md,
+  },
+  tagline: {
+    color: '#CBD5E1', // Light slate
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.medium,
+  },
+  sheetContainer: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.xl,
+    paddingTop: spacing.xl * 1.2,
+    flex: 1,
+    ...shadows.lg,
+  },
+  sheetHeader: {
+    alignItems: 'center',
     marginBottom: spacing.xl,
-    alignItems: 'flex-start',
   },
-  brandLogo: {
-    width: 68,
-    height: 68,
-    borderRadius: 16,
-    marginBottom: 14,
-  },
-  title: {
-    fontSize: typography.sizes.display,
-    fontWeight: typography.weights.bold,
-    color: colors.accent,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: typography.sizes.xl,
+  sheetTitle: {
+    fontSize: typography.sizes.xxl,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
   },
-  subtext: {
+  sheetSubtitle: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
-    marginTop: 4,
   },
   formContainer: {
     gap: spacing.md,

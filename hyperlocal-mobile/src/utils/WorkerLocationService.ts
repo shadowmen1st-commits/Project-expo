@@ -138,15 +138,6 @@ export const WorkerLocationService = {
         return false;
       }
 
-      // Check background permission on Android
-      if (Platform.OS === 'android') {
-        const bgPerm = await Location.getBackgroundPermissionsAsync().catch(() => null);
-        if (!bgPerm || bgPerm.status !== Location.PermissionStatus.GRANTED) {
-          // If background permission is not granted, skip background updates gracefully
-          console.log('[WorkerLocationService] Background location permission not granted; using foreground updates only.');
-          return false;
-        }
-      }
 
       // 3. Check if already started
       const isAlreadyRunning = await this.isTrackingActive();
